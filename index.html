@@ -145,6 +145,126 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/07/07/semantic-html-tags-overview/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/07/07/semantic-html-tags-overview/" class="post-title-link" itemprop="url">semantic-html-tags-overview</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2024-07-07 15:49:03 / Modified: 15:49:49" itemprop="dateCreated datePublished" datetime="2024-07-07T15:49:03+09:00">2024-07-07</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="시맨틱-HTML-태그-소개"><a href="#시맨틱-HTML-태그-소개" class="headerlink" title="시맨틱 HTML 태그 소개"></a>시맨틱 HTML 태그 소개</h1><p>시맨틱(semantic) HTML 태그는 웹 문서의 구조와 의미를 명확히 전달하기 위해 사용됩니다. 이러한 태그들은 검색 엔진 최적화(SEO)와 웹 접근성을 향상시키는 데 도움을 줍니다. 대표적인 시맨틱 HTML 태그를 살펴보겠습니다.</p>
+<h2 id="대표적인-시맨틱-HTML-태그"><a href="#대표적인-시맨틱-HTML-태그" class="headerlink" title="대표적인 시맨틱 HTML 태그"></a>대표적인 시맨틱 HTML 태그</h2><ol>
+<li><strong><code>&lt;header&gt;</code></strong>: 웹 페이지나 섹션의 머리말을 정의합니다. 로고, 탐색 메뉴, 로그인 폼 등과 같은 요소를 포함할 수 있습니다.</li>
+<li><strong><code>&lt;nav&gt;</code></strong>: 탐색 링크의 그룹을 정의합니다. 이는 페이지의 메인 메뉴나 사이트 내에서 중요한 링크를 담는 데 사용됩니다.</li>
+<li><strong><code>&lt;main&gt;</code></strong>: 문서의 주요 콘텐츠를 정의합니다. 보통 한 페이지에 하나만 존재하며, 페이지의 핵심 내용을 담습니다.</li>
+<li><strong><code>&lt;section&gt;</code></strong>: 문서나 애플리케이션의 섹션을 정의합니다. 일반적으로 제목(<code>&lt;h1&gt;</code>~&#96;<h6>&#96;)과 함께 사용되며, 관련된 콘텐츠를 그룹화합니다.</li>
+<li><strong><code>&lt;article&gt;</code></strong>: 독립적으로 구성되거나 재사용 가능한 콘텐츠를 정의합니다. 뉴스 기사, 포럼 게시물, 블로그 포스트 등과 같은 콘텐츠를 담을 수 있습니다.</li>
+<li><strong><code>&lt;aside&gt;</code></strong>: 본문 이외의 부가 콘텐츠를 정의합니다. 주로 사이드바나 콜아웃 박스 등에 사용되며, 부가 정보나 광고 등을 담습니다.</li>
+<li><strong><code>&lt;footer&gt;</code></strong>: 문서나 섹션의 바닥글을 정의합니다. 보통 저작권 정보, 연락처 정보, 사이트 링크 등을 포함합니다.</li>
+</ol>
+<h2 id="시맨틱-HTML-예제-코드"><a href="#시맨틱-HTML-예제-코드" class="headerlink" title="시맨틱 HTML 예제 코드"></a>시맨틱 HTML 예제 코드</h2><p>아래는 시맨틱 HTML 태그들을 사용한 간단한 웹 페이지 예제입니다.</p>
+<pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Semantic HTML Example&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+    &lt;header&gt;
+        &lt;h1&gt;My Website&lt;/h1&gt;
+        &lt;nav&gt;
+            &lt;ul&gt;
+                &lt;li&gt;&lt;a href=&quot;#&quot;&gt;Home&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href=&quot;#&quot;&gt;About&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href=&quot;#&quot;&gt;Contact&lt;/a&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+        &lt;/nav&gt;
+    &lt;/header&gt;
+
+    &lt;main&gt;
+        &lt;section&gt;
+            &lt;h2&gt;About Us&lt;/h2&gt;
+            &lt;p&gt;Welcome to our website! We provide...&lt;/p&gt;
+        &lt;/section&gt;
+
+        &lt;section&gt;
+            &lt;h2&gt;Our Services&lt;/h2&gt;
+            &lt;article&gt;
+                &lt;h3&gt;Service 1&lt;/h3&gt;
+                &lt;p&gt;Description of Service 1...&lt;/p&gt;
+            &lt;/article&gt;
+            &lt;article&gt;
+                &lt;h3&gt;Service 2&lt;/h3&gt;
+                &lt;p&gt;Description of Service 2...&lt;/p&gt;
+            &lt;/article&gt;
+        &lt;/section&gt;
+    &lt;/main&gt;
+
+    &lt;aside&gt;
+        &lt;h2&gt;Advertisement&lt;/h2&gt;
+        &lt;p&gt;Check out our special offers!&lt;/p&gt;
+    &lt;/aside&gt;
+
+    &lt;footer&gt;
+        &lt;p&gt;&amp;copy; 2024 My Website. All rights reserved.&lt;/p&gt;
+    &lt;/footer&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2024/07/07/hello-world/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -277,7 +397,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">1</span>
+          <span class="site-state-item-count">2</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
