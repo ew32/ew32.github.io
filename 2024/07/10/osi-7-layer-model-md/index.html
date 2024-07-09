@@ -20,19 +20,19 @@
     var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="JPA에서 Repository와 Mapper 비교JPA (Java Persistence API)에서는 Repository와 Mapper 두 가지 주요 데이터 액세스 방법이 있으며, 어떤 것을 선택해야 하는지는 프로젝트의 요구 사항과 특성에 따라 다를 수 있습니다. 아래에서 Repository와 Mapper를 비교하고, Mapper를 사용하는 케이스에 대해">
+  <meta name="description" content="OSI 7 Layer ModelOSI (Open Systems Interconnection) 모델은 네트워크 프로토콜을 이해하고 구현하는 데 사용되는 개념적 프레임워크로, 7개의 계층으로 구성되어 있습니다. 각 계층은 특정 기능을 수행하며, 바로 위와 아래의 계층과 통신합니다. 다음은 각 계층에 대한 설명입니다. 1. 물리 계층 (Physical Layer">
 <meta property="og:type" content="article">
-<meta property="og:title" content="jpa_repository_vs_mapper_comparison">
-<meta property="og:url" content="http://ew32.github.io/2024/07/07/jpa-repository-vs-mapper-comparison/index.html">
+<meta property="og:title" content="osi_7_layer_model.md">
+<meta property="og:url" content="http://ew32.github.io/2024/07/10/osi-7-layer-model-md/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="JPA에서 Repository와 Mapper 비교JPA (Java Persistence API)에서는 Repository와 Mapper 두 가지 주요 데이터 액세스 방법이 있으며, 어떤 것을 선택해야 하는지는 프로젝트의 요구 사항과 특성에 따라 다를 수 있습니다. 아래에서 Repository와 Mapper를 비교하고, Mapper를 사용하는 케이스에 대해">
+<meta property="og:description" content="OSI 7 Layer ModelOSI (Open Systems Interconnection) 모델은 네트워크 프로토콜을 이해하고 구현하는 데 사용되는 개념적 프레임워크로, 7개의 계층으로 구성되어 있습니다. 각 계층은 특정 기능을 수행하며, 바로 위와 아래의 계층과 통신합니다. 다음은 각 계층에 대한 설명입니다. 1. 물리 계층 (Physical Layer">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2024-07-07T07:09:30.000Z">
-<meta property="article:modified_time" content="2024-07-07T07:09:46.255Z">
+<meta property="article:published_time" content="2024-07-09T15:53:31.000Z">
+<meta property="article:modified_time" content="2024-07-09T15:54:02.427Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://ew32.github.io/2024/07/07/jpa-repository-vs-mapper-comparison/">
+<link rel="canonical" href="http://ew32.github.io/2024/07/10/osi-7-layer-model-md/">
 
 
 <script id="page-configurations">
@@ -45,7 +45,7 @@
   };
 </script>
 
-  <title>jpa_repository_vs_mapper_comparison | Hexo</title>
+  <title>osi_7_layer_model.md | Hexo</title>
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
     <script>
@@ -159,7 +159,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://ew32.github.io/2024/07/07/jpa-repository-vs-mapper-comparison/">
+    <link itemprop="mainEntityOfPage" href="http://ew32.github.io/2024/07/10/osi-7-layer-model-md/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -172,7 +172,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          jpa_repository_vs_mapper_comparison
+          osi_7_layer_model.md
         </h1>
 
         <div class="post-meta">
@@ -183,7 +183,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2024-07-07 16:09:30 / Modified: 16:09:46" itemprop="dateCreated datePublished" datetime="2024-07-07T16:09:30+09:00">2024-07-07</time>
+              <time title="Created: 2024-07-10 00:53:31 / Modified: 00:54:02" itemprop="dateCreated datePublished" datetime="2024-07-10T00:53:31+09:00">2024-07-10</time>
             </span>
 
           
@@ -197,75 +197,35 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="JPA에서-Repository와-Mapper-비교"><a href="#JPA에서-Repository와-Mapper-비교" class="headerlink" title="JPA에서 Repository와 Mapper 비교"></a>JPA에서 Repository와 Mapper 비교</h1><p>JPA (Java Persistence API)에서는 Repository와 Mapper 두 가지 주요 데이터 액세스 방법이 있으며, 어떤 것을 선택해야 하는지는 프로젝트의 요구 사항과 특성에 따라 다를 수 있습니다. 아래에서 Repository와 Mapper를 비교하고, Mapper를 사용하는 케이스에 대해 설명하겠습니다.</p>
-<h2 id="Repository"><a href="#Repository" class="headerlink" title="Repository"></a>Repository</h2><ul>
-<li><strong>Repository</strong>는 JPA를 기반으로 하는 ORM(Object-Relational Mapping) 기술을 사용하는 대표적인 방법입니다.</li>
-<li>JPA Repository를 사용하면 데이터베이스와 객체 간의 매핑을 자동으로 처리하므로, 객체 지향적인 방식으로 데이터를 다루기 용이합니다.</li>
-<li>CRUD(Create, Read, Update, Delete) 작업을 쉽게 수행할 수 있으며, Query Methods를 사용하여 복잡한 검색 쿼리를 생성할 수 있습니다.</li>
-<li>일반적으로 도메인 객체와 JPA 엔티티를 직접 사용하는 방식으로 데이터 액세스를 수행합니다.</li>
+        <h1 id="OSI-7-Layer-Model"><a href="#OSI-7-Layer-Model" class="headerlink" title="OSI 7 Layer Model"></a>OSI 7 Layer Model</h1><p>OSI (Open Systems Interconnection) 모델은 네트워크 프로토콜을 이해하고 구현하는 데 사용되는 개념적 프레임워크로, 7개의 계층으로 구성되어 있습니다. 각 계층은 특정 기능을 수행하며, 바로 위와 아래의 계층과 통신합니다. 다음은 각 계층에 대한 설명입니다.</p>
+<h2 id="1-물리-계층-Physical-Layer"><a href="#1-물리-계층-Physical-Layer" class="headerlink" title="1. 물리 계층 (Physical Layer)"></a>1. 물리 계층 (Physical Layer)</h2><ul>
+<li><strong>기능</strong>: 장치 간의 물리적 연결을 담당. 전기적 신호, 광 신호, 라디오 신호 등의 형태로 데이터를 전송.</li>
+<li><strong>예</strong>: 케이블, 스위치, 허브</li>
 </ul>
-<h2 id="Mapper"><a href="#Mapper" class="headerlink" title="Mapper"></a>Mapper</h2><ul>
-<li><strong>Mapper</strong>는 SQL 직접 사용이 가능하며, MyBatis와 같은 데이터베이스 액세스 프레임워크를 사용하는 방법입니다.</li>
-<li>Repository와는 다르게 SQL 쿼리를 직접 작성하고 매핑을 수동으로 처리해야 합니다.</li>
-<li>복잡한 SQL 쿼리를 작성하고 최적화할 때 유용하며, Repository로 처리하기 어려운 성능 최적화 작업을 수행할 수 있습니다.</li>
-<li>이미 존재하는 데이터베이스 스키마와의 통합이 필요한 경우나, 기존 프로젝트의 데이터 액세스 레이어를 대체할 때 사용하기 좋습니다.</li>
+<h2 id="2-데이터-링크-계층-Data-Link-Layer"><a href="#2-데이터-링크-계층-Data-Link-Layer" class="headerlink" title="2. 데이터 링크 계층 (Data Link Layer)"></a>2. 데이터 링크 계층 (Data Link Layer)</h2><ul>
+<li><strong>기능</strong>: 물리 계층에서 오류 없는 데이터 전송을 보장. MAC 주소를 사용하여 장치 간 데이터를 전송하며, 프레임을 형성하고 오류 검출을 수행.</li>
+<li><strong>예</strong>: 이더넷, 스위치</li>
 </ul>
-<h2 id="Repository와-Mapper-비교"><a href="#Repository와-Mapper-비교" class="headerlink" title="Repository와 Mapper 비교"></a>Repository와 Mapper 비교</h2><table>
-<thead>
-<tr>
-<th>항목</th>
-<th>Repository</th>
-<th>Mapper</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>사용 기술</td>
-<td>JPA, Hibernate 등 ORM 프레임워크</td>
-<td>MyBatis 등 SQL 매퍼 프레임워크</td>
-</tr>
-<tr>
-<td>데이터 매핑 방식</td>
-<td>자동 매핑</td>
-<td>수동 매핑</td>
-</tr>
-<tr>
-<td>쿼리 작성 방식</td>
-<td>메서드 이름 기반, JPQL</td>
-<td>직접 SQL 작성</td>
-</tr>
-<tr>
-<td>CRUD 작업</td>
-<td>쉽게 수행 가능</td>
-<td>직접 쿼리 작성 필요</td>
-</tr>
-<tr>
-<td>성능 최적화</td>
-<td>ORM 최적화에 의존</td>
-<td>직접 최적화 가능</td>
-</tr>
-<tr>
-<td>복잡한 쿼리 처리</td>
-<td>어려울 수 있음</td>
-<td>유연하게 처리 가능</td>
-</tr>
-<tr>
-<td>기존 DB 스키마 통합</td>
-<td>제한적</td>
-<td>유연하게 통합 가능</td>
-</tr>
-<tr>
-<td>객체 지향적 접근</td>
-<td>강력한 객체 지향 지원</td>
-<td>SQL 중심 접근</td>
-</tr>
-</tbody></table>
-<h2 id="Mapper를-사용하는-케이스"><a href="#Mapper를-사용하는-케이스" class="headerlink" title="Mapper를 사용하는 케이스"></a>Mapper를 사용하는 케이스</h2><ol>
-<li><strong>복잡한 SQL 쿼리</strong>: 만약 프로젝트에서 복잡한 데이터베이스 쿼리를 자주 실행해야 하거나, 특정 비즈니스 로직에 맞춘 맞춤형 쿼리를 사용해야 하는 경우, Mapper를 사용하면 더 유연하게 대처할 수 있습니다.</li>
-<li><strong>레거시 시스템 통합</strong>: 이미 존재하는 데이터베이스와 통합해야 할 때, Mapper를 사용하여 기존 스키마와의 매핑을 수동으로 처리할 수 있습니다.</li>
-<li><strong>성능 최적화</strong>: Repository로는 성능 최적화를 수행하기 어려운 경우, Mapper를 사용하여 데이터베이스 액세스 작업을 최적화할 수 있습니다.</li>
-<li><strong>특정 데이터베이스 기능 활용</strong>: Mapper를 사용하면 특정 데이터베이스 특성을 직접 활용할 수 있으므로, 특정 데이터베이스에 종속적인 작업을 수행해야 하는 경우 유용합니다.</li>
-</ol>
-<h2 id="결론"><a href="#결론" class="headerlink" title="결론"></a>결론</h2><p>Repository와 Mapper를 혼합해서 사용하는 것도 가능합니다. 프로젝트의 요구 사항에 따라서 Repository를 사용하여 기본적인 데이터 액세스를 처리하고, Mapper를 사용하여 복잡한 쿼리나 특정 데이터베이스 작업을 수행하는 것도 가능합니다.</p>
+<h2 id="3-네트워크-계층-Network-Layer"><a href="#3-네트워크-계층-Network-Layer" class="headerlink" title="3. 네트워크 계층 (Network Layer)"></a>3. 네트워크 계층 (Network Layer)</h2><ul>
+<li><strong>기능</strong>: 데이터를 목적지까지 전달하는 경로를 결정. IP 주소를 사용하여 패킷을 라우팅하고 네트워크 간 데이터 전송을 관리.</li>
+<li><strong>예</strong>: IP, 라우터</li>
+</ul>
+<h2 id="4-전송-계층-Transport-Layer"><a href="#4-전송-계층-Transport-Layer" class="headerlink" title="4. 전송 계층 (Transport Layer)"></a>4. 전송 계층 (Transport Layer)</h2><ul>
+<li><strong>기능</strong>: 종단 간 데이터 전송을 담당. TCP, UDP 프로토콜을 사용하여 데이터의 신뢰성, 흐름 제어 및 오류 복구를 관리.</li>
+<li><strong>예</strong>: TCP, UDP</li>
+</ul>
+<h2 id="5-세션-계층-Session-Layer"><a href="#5-세션-계층-Session-Layer" class="headerlink" title="5. 세션 계층 (Session Layer)"></a>5. 세션 계층 (Session Layer)</h2><ul>
+<li><strong>기능</strong>: 통신 세션을 설정, 관리 및 종료. 세션 복구와 체크포인트를 제공하여 통신 중단 시 재개 가능.</li>
+<li><strong>예</strong>: NetBIOS, PPTP</li>
+</ul>
+<h2 id="6-표현-계층-Presentation-Layer"><a href="#6-표현-계층-Presentation-Layer" class="headerlink" title="6. 표현 계층 (Presentation Layer)"></a>6. 표현 계층 (Presentation Layer)</h2><ul>
+<li><strong>기능</strong>: 데이터 형식 변환, 암호화, 압축 등의 기능을 수행. 애플리케이션 계층과 세션 계층 간 데이터 표현을 관리.</li>
+<li><strong>예</strong>: SSL&#x2F;TLS, JPEG, MPEG</li>
+</ul>
+<h2 id="7-응용-계층-Application-Layer"><a href="#7-응용-계층-Application-Layer" class="headerlink" title="7. 응용 계층 (Application Layer)"></a>7. 응용 계층 (Application Layer)</h2><ul>
+<li><strong>기능</strong>: 최종 사용자와 직접 상호작용하는 애플리케이션 서비스 제공. 다양한 네트워크 서비스와 애플리케이션을 지원.</li>
+<li><strong>예</strong>: HTTP, FTP, SMTP, DNS</li>
+</ul>
 
     </div>
 
@@ -281,13 +241,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2024/07/07/semantic-html-tags-overview/" rel="prev" title="semantic-html-tags-overview">
-      <i class="fa fa-chevron-left"></i> semantic-html-tags-overview
+    <a href="/2024/07/08/network-and-disk-based-file-systems-md/" rel="prev" title="network_and_disk_based_file_systems.md">
+      <i class="fa fa-chevron-left"></i> network_and_disk_based_file_systems.md
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2024/07/07/understanding-public-private-key-encryption/" rel="next" title="understanding-public-private-key-encryption">
-      understanding-public-private-key-encryption <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -346,7 +303,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#JPA%EC%97%90%EC%84%9C-Repository%EC%99%80-Mapper-%EB%B9%84%EA%B5%90"><span class="nav-number">1.</span> <span class="nav-text">JPA에서 Repository와 Mapper 비교</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Repository"><span class="nav-number">1.1.</span> <span class="nav-text">Repository</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Mapper"><span class="nav-number">1.2.</span> <span class="nav-text">Mapper</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Repository%EC%99%80-Mapper-%EB%B9%84%EA%B5%90"><span class="nav-number">1.3.</span> <span class="nav-text">Repository와 Mapper 비교</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Mapper%EB%A5%BC-%EC%82%AC%EC%9A%A9%ED%95%98%EB%8A%94-%EC%BC%80%EC%9D%B4%EC%8A%A4"><span class="nav-number">1.4.</span> <span class="nav-text">Mapper를 사용하는 케이스</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B2%B0%EB%A1%A0"><span class="nav-number">1.5.</span> <span class="nav-text">결론</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#OSI-7-Layer-Model"><span class="nav-number">1.</span> <span class="nav-text">OSI 7 Layer Model</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%EB%AC%BC%EB%A6%AC-%EA%B3%84%EC%B8%B5-Physical-Layer"><span class="nav-number">1.1.</span> <span class="nav-text">1. 물리 계층 (Physical Layer)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EB%A7%81%ED%81%AC-%EA%B3%84%EC%B8%B5-Data-Link-Layer"><span class="nav-number">1.2.</span> <span class="nav-text">2. 데이터 링크 계층 (Data Link Layer)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EA%B3%84%EC%B8%B5-Network-Layer"><span class="nav-number">1.3.</span> <span class="nav-text">3. 네트워크 계층 (Network Layer)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%EC%A0%84%EC%86%A1-%EA%B3%84%EC%B8%B5-Transport-Layer"><span class="nav-number">1.4.</span> <span class="nav-text">4. 전송 계층 (Transport Layer)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%EC%84%B8%EC%85%98-%EA%B3%84%EC%B8%B5-Session-Layer"><span class="nav-number">1.5.</span> <span class="nav-text">5. 세션 계층 (Session Layer)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%ED%91%9C%ED%98%84-%EA%B3%84%EC%B8%B5-Presentation-Layer"><span class="nav-number">1.6.</span> <span class="nav-text">6. 표현 계층 (Presentation Layer)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-%EC%9D%91%EC%9A%A9-%EA%B3%84%EC%B8%B5-Application-Layer"><span class="nav-number">1.7.</span> <span class="nav-text">7. 응용 계층 (Application Layer)</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
