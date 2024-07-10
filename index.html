@@ -154,6 +154,152 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://ew32.github.io/2024/07/11/os-scheduling-algorithms-md/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/07/11/os-scheduling-algorithms-md/" class="post-title-link" itemprop="url">os-scheduling-algorithms.md</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2024-07-11 00:59:17 / Modified: 00:59:46" itemprop="dateCreated datePublished" datetime="2024-07-11T00:59:17+09:00">2024-07-11</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="OS-스케줄링"><a href="#OS-스케줄링" class="headerlink" title="OS 스케줄링"></a>OS 스케줄링</h1><p>운영 체제(OS, Operating System) 스케줄링은 시스템의 자원을 효율적으로 사용하고, 사용자에게 공정한 서비스 제공을 목적으로 프로세스나 스레드의 실행 순서를 결정하는 방법이다. 스케줄링 알고리즘은 CPU, 메모리, 디스크 I&#x2F;O 등의 자원을 어떤 순서로 할당할지를 결정한다.</p>
+<h2 id="스케줄링의-목표"><a href="#스케줄링의-목표" class="headerlink" title="스케줄링의 목표"></a>스케줄링의 목표</h2><ul>
+<li><strong>효율성</strong>: 자원의 최대한 활용</li>
+<li><strong>공정성</strong>: 모든 프로세스가 공정하게 자원을 사용할 수 있도록 보장</li>
+<li><strong>응답 시간 최소화</strong>: 사용자에게 빠른 응답 시간 제공</li>
+<li><strong>처리량 최대화</strong>: 주어진 시간 내에 최대한 많은 작업 처리</li>
+<li><strong>대기 시간 최소화</strong>: 프로세스가 대기하는 시간을 최소화</li>
+<li><strong>우선순위 보장</strong>: 중요하거나 우선순위가 높은 작업을 먼저 처리</li>
+</ul>
+<h2 id="스케줄링의-종류"><a href="#스케줄링의-종류" class="headerlink" title="스케줄링의 종류"></a>스케줄링의 종류</h2><h3 id="1-선점형-스케줄링-Preemptive-Scheduling"><a href="#1-선점형-스케줄링-Preemptive-Scheduling" class="headerlink" title="1. 선점형 스케줄링 (Preemptive Scheduling)"></a>1. 선점형 스케줄링 (Preemptive Scheduling)</h3><p>운영 체제가 프로세스를 강제로 중단시키고 다른 프로세스로 교체할 수 있는 스케줄링 방법.</p>
+<ul>
+<li><strong>라운드 로빈 (Round Robin)</strong>: 각 프로세스는 동일한 시간 할당을 받아 실행되고, 할당 시간이 끝나면 다음 프로세스로 교체된다.</li>
+<li><strong>SRT (Shortest Remaining Time)</strong>: 남은 실행 시간이 가장 짧은 프로세스를 우선 실행한다.</li>
+<li><strong>다단계 큐 (Multilevel Queue)</strong>: 프로세스를 여러 우선순위 큐로 나누어 각각의 큐에서 독립적으로 스케줄링한다.</li>
+<li><strong>다단계 피드백 큐 (Multilevel Feedback Queue)</strong>: 프로세스가 CPU를 많이 사용하면 낮은 우선순위 큐로 이동시키고, 적게 사용하면 높은 우선순위 큐로 이동시킨다.</li>
+</ul>
+<h3 id="2-비선점형-스케줄링-Non-preemptive-Scheduling"><a href="#2-비선점형-스케줄링-Non-preemptive-Scheduling" class="headerlink" title="2. 비선점형 스케줄링 (Non-preemptive Scheduling)"></a>2. 비선점형 스케줄링 (Non-preemptive Scheduling)</h3><p>프로세스가 자발적으로 CPU를 반환할 때까지 실행을 계속하는 스케줄링 방법.</p>
+<ul>
+<li><strong>FCFS (First-Come, First-Served)</strong>: 먼저 도착한 프로세스를 먼저 실행한다.</li>
+<li><strong>SJF (Shortest Job First)</strong>: 실행 시간이 가장 짧은 프로세스를 먼저 실행한다.</li>
+<li><strong>우선순위 스케줄링 (Priority Scheduling)</strong>: 우선순위가 높은 프로세스를 먼저 실행한다.</li>
+<li><strong>HRRN (Highest Response Ratio Next)</strong>: 응답률이 가장 높은 프로세스를 먼저 실행한다.</li>
+</ul>
+<h2 id="컨텍스트-스위칭-오버헤드"><a href="#컨텍스트-스위칭-오버헤드" class="headerlink" title="컨텍스트 스위칭 오버헤드"></a>컨텍스트 스위칭 오버헤드</h2><p>컨텍스트 스위칭은 CPU가 현재 실행 중인 프로세스의 상태(컨텍스트)를 저장하고, 다른 프로세스의 상태를 불러오는 작업이다. 이 과정은 다음과 같은 단계를 포함한다:</p>
+<ol>
+<li>현재 실행 중인 프로세스의 레지스터와 프로그램 카운터 값을 저장</li>
+<li>다른 프로세스의 저장된 레지스터와 프로그램 카운터 값을 복원</li>
+<li>메모리 매핑 테이블 등의 시스템 자원을 새 프로세스에 맞게 조정</li>
+</ol>
+<p>컨텍스트 스위칭 오버헤드는 이 과정에서 발생하는 시간 및 자원 소모를 의미한다. 잦은 컨텍스트 스위칭은 시스템 성능을 저하시킬 수 있다. 특히, 다음과 같은 이유로 오버헤드가 발생한다:</p>
+<ul>
+<li><strong>CPU 레지스터 저장 및 복원</strong>: 레지스터를 저장하고 복원하는 작업이 빈번하게 발생</li>
+<li><strong>캐시 미스 증가</strong>: 프로세스 전환 시 캐시 메모리에 저장된 데이터가 무효화되어 캐시 미스가 증가</li>
+<li><strong>메모리 매핑 테이블 업데이트</strong>: 메모리 관리 유닛(MMU)의 테이블을 새 프로세스에 맞게 업데이트</li>
+</ul>
+<h2 id="스케줄링-알고리즘-비교"><a href="#스케줄링-알고리즘-비교" class="headerlink" title="스케줄링 알고리즘 비교"></a>스케줄링 알고리즘 비교</h2><table>
+<thead>
+<tr>
+<th>알고리즘</th>
+<th>선점형&#x2F;비선점형</th>
+<th>장점</th>
+<th>단점</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FCFS</td>
+<td>비선점형</td>
+<td>구현이 간단하고 공정함</td>
+<td>대기 시간이 길어질 수 있음</td>
+</tr>
+<tr>
+<td>SJF</td>
+<td>비선점형</td>
+<td>평균 대기 시간이 최소화됨</td>
+<td>실행 시간을 미리 알기 어려움</td>
+</tr>
+<tr>
+<td>Priority Scheduling</td>
+<td>비선점형</td>
+<td>중요한 작업을 우선 처리</td>
+<td>기아 현상이 발생할 수 있음</td>
+</tr>
+<tr>
+<td>Round Robin</td>
+<td>선점형</td>
+<td>응답 시간이 일정하고 공정함</td>
+<td>컨텍스트 스위칭 오버헤드가 있음</td>
+</tr>
+<tr>
+<td>SRT</td>
+<td>선점형</td>
+<td>짧은 작업이 빨리 끝남</td>
+<td>컨텍스트 스위칭 오버헤드가 있음</td>
+</tr>
+<tr>
+<td>Multilevel Queue</td>
+<td>선점형</td>
+<td>우선순위에 따라 작업을 분리하여 처리</td>
+<td>특정 큐에 작업이 몰릴 수 있음</td>
+</tr>
+<tr>
+<td>Multilevel Feedback Queue</td>
+<td>선점형</td>
+<td>다양한 작업 특성에 대응 가능</td>
+<td>구현이 복잡하고 컨텍스트 스위칭 오버헤드가 있음</td>
+</tr>
+</tbody></table>
+<p>각 스케줄링 알고리즘은 시스템의 목표와 상황에 따라 적절하게 선택되어야 한다.</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://ew32.github.io/2024/07/10/osi-7-layer-model-md/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -809,7 +955,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
