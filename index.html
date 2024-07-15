@@ -154,6 +154,91 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://ew32.github.io/2024/07/16/difference-between-get-and-post-md/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/07/16/difference-between-get-and-post-md/" class="post-title-link" itemprop="url">difference-between-get-and-post.md</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2024-07-16 00:12:42 / Modified: 00:13:06" itemprop="dateCreated datePublished" datetime="2024-07-16T00:12:42+09:00">2024-07-16</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="HTTP-GET과-POST의-차이"><a href="#HTTP-GET과-POST의-차이" class="headerlink" title="HTTP GET과 POST의 차이"></a>HTTP GET과 POST의 차이</h1><p>HTTP 프로토콜에서 GET과 POST는 가장 일반적으로 사용되는 두 가지 요청 메서드입니다. 이 둘은 여러 면에서 다릅니다.</p>
+<h2 id="GET"><a href="#GET" class="headerlink" title="GET"></a>GET</h2><ul>
+<li><strong>용도</strong>: 데이터를 서버에서 가져올 때 사용됩니다.</li>
+<li><strong>파라미터 전송 방식</strong>: URL에 쿼리 스트링 형태로 포함됩니다.</li>
+<li><strong>캐싱</strong>: 대부분의 브라우저와 중간 캐시 서버에서 GET 요청에 대한 응답을 캐시합니다.<ul>
+<li><strong>캐싱의 이점</strong>: 동일한 요청을 여러 번 보내는 경우, 서버의 부하를 줄이고 응답 속도를 높일 수 있습니다.</li>
+<li><strong>캐싱의 작동 방식</strong>: 브라우저는 동일한 URL로 요청을 보낼 때, 서버로부터의 응답이 변경되지 않았다는 것을 확인하면 저장된 캐시된 데이터를 사용합니다.</li>
+<li><strong>Cache-Control 헤더</strong>: 서버는 <code>Cache-Control</code> 헤더를 사용하여 클라이언트와 중간 캐시 서버에 캐싱 정책을 전달할 수 있습니다.</li>
+</ul>
+</li>
+<li><strong>데이터 길이</strong>: URL 길이에 제한이 있습니다.</li>
+<li><strong>안전성</strong>: 데이터 조회용으로 사용되어 서버의 상태를 변경하지 않습니다.</li>
+<li><strong>즐겨찾기</strong>: 요청이 URL에 저장되므로 즐겨찾기에 추가할 수 있습니다.</li>
+<li><strong>보안</strong>: URL에 파라미터가 포함되므로 민감한 정보를 전달하기에 적합하지 않습니다.</li>
+</ul>
+<h2 id="POST"><a href="#POST" class="headerlink" title="POST"></a>POST</h2><ul>
+<li><strong>용도</strong>: 서버에 데이터를 전송할 때 사용됩니다.</li>
+<li><strong>파라미터 전송 방식</strong>: 요청 본문(body)에 포함됩니다.</li>
+<li><strong>캐싱</strong>: 기본적으로 캐시되지 않습니다.</li>
+<li><strong>데이터 길이</strong>: 전송하는 데이터의 길이에 제한이 없습니다.</li>
+<li><strong>안전성</strong>: 주로 데이터 작성, 업데이트, 삭제와 같이 서버의 상태를 변경하는 작업에 사용됩니다.</li>
+<li><strong>즐겨찾기</strong>: 요청 본문에 데이터가 포함되므로 즐겨찾기에 추가하기 어렵습니다.</li>
+<li><strong>보안</strong>: URL에 파라미터가 포함되지 않으므로 민감한 정보를 전달하기에 더 적합합니다.</li>
+</ul>
+<h2 id="참고"><a href="#참고" class="headerlink" title="참고"></a>참고</h2><ul>
+<li>GET 메서드는 데이터 조회에 적합하며, POST 메서드는 데이터 전송 및 서버 상태 변경에 적합합니다.</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://ew32.github.io/2024/07/11/os-scheduling-algorithms-md/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -955,7 +1040,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
