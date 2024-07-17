@@ -150,7 +150,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://ew32.github.io/2024/07/17/session-cookie-jwt-comparison-md/">
+    <link itemprop="mainEntityOfPage" href="http://ew32.github.io/2024/07/18/session-cookie-jwt-comparison-md/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -164,7 +164,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2024/07/17/session-cookie-jwt-comparison-md/" class="post-title-link" itemprop="url">session_cookie_jwt_comparison.md</a>
+            <a href="/2024/07/18/session-cookie-jwt-comparison-md/" class="post-title-link" itemprop="url">session_cookie_jwt_comparison.md</a>
         </h2>
 
         <div class="post-meta">
@@ -175,7 +175,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2024-07-17 23:54:59 / Modified: 23:55:24" itemprop="dateCreated datePublished" datetime="2024-07-17T23:54:59+09:00">2024-07-17</time>
+              <time title="Created: 2024-07-18 00:44:24 / Modified: 00:44:45" itemprop="dateCreated datePublished" datetime="2024-07-18T00:44:24+09:00">2024-07-18</time>
             </span>
 
           
@@ -222,7 +222,22 @@
 </ul>
 </li>
 </ul>
-<h2 id="JWT-JSON-Web-Token-의-장점과-보안-우려-사항"><a href="#JWT-JSON-Web-Token-의-장점과-보안-우려-사항" class="headerlink" title="JWT(JSON Web Token)의 장점과 보안 우려 사항"></a>JWT(JSON Web Token)의 장점과 보안 우려 사항</h2><h3 id="JWT의-장점"><a href="#JWT의-장점" class="headerlink" title="JWT의 장점"></a>JWT의 장점</h3><h4 id="1-상태-비저장-Stateless"><a href="#1-상태-비저장-Stateless" class="headerlink" title="1. 상태 비저장(Stateless)"></a>1. 상태 비저장(Stateless)</h4><ul>
+<h2 id="JWT-JSON-Web-Token-설명"><a href="#JWT-JSON-Web-Token-설명" class="headerlink" title="JWT(JSON Web Token) 설명"></a>JWT(JSON Web Token) 설명</h2><ul>
+<li><strong>개념</strong>: JSON Web Token(JWT)는 JSON 객체를 사용해 파티 간에 정보를 안전하게 전송하기 위한 개방형 표준(RFC 7519)이다.</li>
+<li><strong>구성 요소</strong>:<ul>
+<li><strong>Header</strong>: 토큰의 타입(JWT)과 해싱 알고리즘 정보를 포함.</li>
+<li><strong>Payload</strong>: 토큰에 담을 정보(클레임)를 포함.</li>
+<li><strong>Signature</strong>: 토큰의 무결성을 검증하기 위한 서명.</li>
+</ul>
+</li>
+<li><strong>작동 방식</strong>:<ul>
+<li>클라이언트가 인증을 요청하면 서버는 클라이언트의 정보를 바탕으로 JWT를 생성해 응답한다.</li>
+<li>클라이언트는 서버로부터 받은 JWT를 저장하고, 이후 요청 시마다 HTTP 헤더에 JWT를 포함해 전송한다.</li>
+<li>서버는 전송받은 JWT의 서명을 검증하고, 페이로드의 정보를 바탕으로 클라이언트를 인증한다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="JWT의-장점과-보안-우려-사항"><a href="#JWT의-장점과-보안-우려-사항" class="headerlink" title="JWT의 장점과 보안 우려 사항"></a>JWT의 장점과 보안 우려 사항</h2><h3 id="JWT의-장점"><a href="#JWT의-장점" class="headerlink" title="JWT의 장점"></a>JWT의 장점</h3><h4 id="1-상태-비저장-Stateless"><a href="#1-상태-비저장-Stateless" class="headerlink" title="1. 상태 비저장(Stateless)"></a>1. 상태 비저장(Stateless)</h4><ul>
 <li><strong>서버 부하 감소</strong>: JWT는 서버에 상태를 저장하지 않으므로, 각 요청을 처리하기 위해 서버가 사용자 상태를 유지할 필요가 없다. 이로 인해 서버 부하가 감소하고, 확장성이 향상된다.</li>
 <li><strong>확장성</strong>: 서버 간 세션 동기화가 필요하지 않아, 수평 확장(horizontal scaling)이 용이하다.</li>
 </ul>

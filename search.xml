@@ -403,7 +403,7 @@
   </entry>
   <entry>
     <title>session_cookie_jwt_comparison.md</title>
-    <url>/2024/07/17/session-cookie-jwt-comparison-md/</url>
+    <url>/2024/07/18/session-cookie-jwt-comparison-md/</url>
     <content><![CDATA[<h1 id="세션-쿠키-JWT-JSON-Web-Token-의-설명-및-비교"><a href="#세션-쿠키-JWT-JSON-Web-Token-의-설명-및-비교" class="headerlink" title="세션, 쿠키, JWT(JSON Web Token)의 설명 및 비교"></a>세션, 쿠키, JWT(JSON Web Token)의 설명 및 비교</h1><h2 id="세션-Session-과-쿠키-Cookie-설명"><a href="#세션-Session-과-쿠키-Cookie-설명" class="headerlink" title="세션(Session)과 쿠키(Cookie) 설명"></a>세션(Session)과 쿠키(Cookie) 설명</h2><h3 id="세션-Session"><a href="#세션-Session" class="headerlink" title="세션(Session)"></a>세션(Session)</h3><ul>
 <li><strong>개념</strong>: 서버에서 생성된 세션 ID를 클라이언트의 쿠키에 저장하여 인증을 관리하는 방식.</li>
 <li><strong>작동 방식</strong>:<ul>
@@ -437,7 +437,22 @@
 </ul>
 </li>
 </ul>
-<h2 id="JWT-JSON-Web-Token-의-장점과-보안-우려-사항"><a href="#JWT-JSON-Web-Token-의-장점과-보안-우려-사항" class="headerlink" title="JWT(JSON Web Token)의 장점과 보안 우려 사항"></a>JWT(JSON Web Token)의 장점과 보안 우려 사항</h2><h3 id="JWT의-장점"><a href="#JWT의-장점" class="headerlink" title="JWT의 장점"></a>JWT의 장점</h3><h4 id="1-상태-비저장-Stateless"><a href="#1-상태-비저장-Stateless" class="headerlink" title="1. 상태 비저장(Stateless)"></a>1. 상태 비저장(Stateless)</h4><ul>
+<h2 id="JWT-JSON-Web-Token-설명"><a href="#JWT-JSON-Web-Token-설명" class="headerlink" title="JWT(JSON Web Token) 설명"></a>JWT(JSON Web Token) 설명</h2><ul>
+<li><strong>개념</strong>: JSON Web Token(JWT)는 JSON 객체를 사용해 파티 간에 정보를 안전하게 전송하기 위한 개방형 표준(RFC 7519)이다.</li>
+<li><strong>구성 요소</strong>:<ul>
+<li><strong>Header</strong>: 토큰의 타입(JWT)과 해싱 알고리즘 정보를 포함.</li>
+<li><strong>Payload</strong>: 토큰에 담을 정보(클레임)를 포함.</li>
+<li><strong>Signature</strong>: 토큰의 무결성을 검증하기 위한 서명.</li>
+</ul>
+</li>
+<li><strong>작동 방식</strong>:<ul>
+<li>클라이언트가 인증을 요청하면 서버는 클라이언트의 정보를 바탕으로 JWT를 생성해 응답한다.</li>
+<li>클라이언트는 서버로부터 받은 JWT를 저장하고, 이후 요청 시마다 HTTP 헤더에 JWT를 포함해 전송한다.</li>
+<li>서버는 전송받은 JWT의 서명을 검증하고, 페이로드의 정보를 바탕으로 클라이언트를 인증한다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="JWT의-장점과-보안-우려-사항"><a href="#JWT의-장점과-보안-우려-사항" class="headerlink" title="JWT의 장점과 보안 우려 사항"></a>JWT의 장점과 보안 우려 사항</h2><h3 id="JWT의-장점"><a href="#JWT의-장점" class="headerlink" title="JWT의 장점"></a>JWT의 장점</h3><h4 id="1-상태-비저장-Stateless"><a href="#1-상태-비저장-Stateless" class="headerlink" title="1. 상태 비저장(Stateless)"></a>1. 상태 비저장(Stateless)</h4><ul>
 <li><strong>서버 부하 감소</strong>: JWT는 서버에 상태를 저장하지 않으므로, 각 요청을 처리하기 위해 서버가 사용자 상태를 유지할 필요가 없다. 이로 인해 서버 부하가 감소하고, 확장성이 향상된다.</li>
 <li><strong>확장성</strong>: 서버 간 세션 동기화가 필요하지 않아, 수평 확장(horizontal scaling)이 용이하다.</li>
 </ul>
