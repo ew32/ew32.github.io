@@ -2,7 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://ew32.github.io/2024/08/06/hello-world/</loc>
+    <loc>http://ew32.github.io/2024/07/18/session-cookie-jwt-comparison-md/</loc>
+    
+    <lastmod>2024-08-06</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://ew32.github.io/2024/07/16/difference-between-get-and-post-md/</loc>
     
     <lastmod>2024-08-06</lastmod>
     
@@ -13,16 +22,70 @@
   <url>
     <loc>http://ew32.github.io/2024/07/20/cloud-computing-overview-md/</loc>
     
-    <lastmod>2024-07-19</lastmod>
+    <lastmod>2024-08-06</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://ew32.github.io/2024/07/18/session-cookie-jwt-comparison-md/</loc>
+    <loc>http://ew32.github.io/2024/07/11/os-scheduling-algorithms-md/</loc>
     
-    <lastmod>2024-07-17</lastmod>
+    <lastmod>2024-08-06</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://ew32.github.io/2024/07/07/understanding-public-private-key-encryption/</loc>
+    
+    <lastmod>2024-08-06</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://ew32.github.io/2024/07/08/network-and-disk-based-file-systems-md/</loc>
+    
+    <lastmod>2024-08-06</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://ew32.github.io/2024/07/10/osi-7-layer-model-md/</loc>
+    
+    <lastmod>2024-08-06</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://ew32.github.io/2024/07/07/jpa-repository-vs-mapper-comparison/</loc>
+    
+    <lastmod>2024-08-06</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://ew32.github.io/2024/07/07/semantic-html-tags-overview/</loc>
+    
+    <lastmod>2024-08-06</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://ew32.github.io/2024/08/06/hello-world/</loc>
+    
+    <lastmod>2024-08-06</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -32,69 +95,6 @@
     <loc>http://ew32.github.io/categories/index.html</loc>
     
     <lastmod>2024-07-16</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://ew32.github.io/2024/07/16/difference-between-get-and-post-md/</loc>
-    
-    <lastmod>2024-07-15</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://ew32.github.io/2024/07/11/os-scheduling-algorithms-md/</loc>
-    
-    <lastmod>2024-07-10</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://ew32.github.io/2024/07/10/osi-7-layer-model-md/</loc>
-    
-    <lastmod>2024-07-09</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://ew32.github.io/2024/07/08/network-and-disk-based-file-systems-md/</loc>
-    
-    <lastmod>2024-07-08</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://ew32.github.io/2024/07/07/understanding-public-private-key-encryption/</loc>
-    
-    <lastmod>2024-07-07</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://ew32.github.io/2024/07/07/jpa-repository-vs-mapper-comparison/</loc>
-    
-    <lastmod>2024-07-07</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://ew32.github.io/2024/07/07/semantic-html-tags-overview/</loc>
-    
-    <lastmod>2024-07-07</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>

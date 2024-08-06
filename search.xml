@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>difference-between-get-and-post.md</title>
+    <title>HTTP GET과 POST의 차이점</title>
     <url>/2024/07/16/difference-between-get-and-post-md/</url>
     <content><![CDATA[<h1 id="HTTP-GET과-POST의-차이"><a href="#HTTP-GET과-POST의-차이" class="headerlink" title="HTTP GET과 POST의 차이"></a>HTTP GET과 POST의 차이</h1><p>HTTP 프로토콜에서 GET과 POST는 가장 일반적으로 사용되는 두 가지 요청 메서드입니다. 이 둘은 여러 면에서 다릅니다.</p>
 <h2 id="GET"><a href="#GET" class="headerlink" title="GET"></a>GET</h2><ul>
@@ -33,7 +33,7 @@
 ]]></content>
   </entry>
   <entry>
-    <title>network_and_disk_based_file_systems.md</title>
+    <title>네트워크 및 디스크 기반 파일 시스템</title>
     <url>/2024/07/08/network-and-disk-based-file-systems-md/</url>
     <content><![CDATA[<h2 id="네트워크-기반-파일-시스템-Network-based-File-System"><a href="#네트워크-기반-파일-시스템-Network-based-File-System" class="headerlink" title="네트워크 기반 파일 시스템(Network-based File System)"></a>네트워크 기반 파일 시스템(Network-based File System)</h2><p>네트워크 기반 파일 시스템은 파일이 로컬 디스크가 아닌 네트워크에 연결된 서버에 저장되는 시스템입니다. 사용자와 애플리케이션은 파일이 로컬에 있는 것처럼 접근할 수 있지만 실제 파일은 네트워크를 통해 접근됩니다. 대표적인 네트워크 기반 파일 시스템으로는 NFS(Network File System), SMB(Server Message Block), 그리고 DFS(Distributed File System) 등이 있습니다.</p>
 <h3 id="주요-특징"><a href="#주요-특징" class="headerlink" title="주요 특징"></a>주요 특징</h3><ul>
@@ -113,7 +113,7 @@
 ]]></content>
   </entry>
   <entry>
-    <title>os-scheduling-algorithms.md</title>
+    <title>운영체제 스케줄링 알고리즘</title>
     <url>/2024/07/11/os-scheduling-algorithms-md/</url>
     <content><![CDATA[<h1 id="OS-스케줄링"><a href="#OS-스케줄링" class="headerlink" title="OS 스케줄링"></a>OS 스케줄링</h1><p>운영 체제(OS, Operating System) 스케줄링은 시스템의 자원을 효율적으로 사용하고, 사용자에게 공정한 서비스 제공을 목적으로 프로세스나 스레드의 실행 순서를 결정하는 방법이다. 스케줄링 알고리즘은 CPU, 메모리, 디스크 I&#x2F;O 등의 자원을 어떤 순서로 할당할지를 결정한다.</p>
 <h2 id="스케줄링의-목표"><a href="#스케줄링의-목표" class="headerlink" title="스케줄링의 목표"></a>스케줄링의 목표</h2><ul>
@@ -206,7 +206,7 @@
 ]]></content>
   </entry>
   <entry>
-    <title>osi_7_layer_model.md</title>
+    <title>OSI 7 계층 모델</title>
     <url>/2024/07/10/osi-7-layer-model-md/</url>
     <content><![CDATA[<h1 id="OSI-7-Layer-Model"><a href="#OSI-7-Layer-Model" class="headerlink" title="OSI 7 Layer Model"></a>OSI 7 Layer Model</h1><p>OSI (Open Systems Interconnection) 모델은 네트워크 프로토콜을 이해하고 구현하는 데 사용되는 개념적 프레임워크로, 7개의 계층으로 구성되어 있습니다. 각 계층은 특정 기능을 수행하며, 바로 위와 아래의 계층과 통신합니다. 다음은 각 계층에 대한 설명입니다.</p>
 <h2 id="1-물리-계층-Physical-Layer"><a href="#1-물리-계층-Physical-Layer" class="headerlink" title="1. 물리 계층 (Physical Layer)"></a>1. 물리 계층 (Physical Layer)</h2><ul>
@@ -240,7 +240,7 @@
 ]]></content>
   </entry>
   <entry>
-    <title>semantic-html-tags-overview</title>
+    <title>시맨틱 HTML 태그 개요</title>
     <url>/2024/07/07/semantic-html-tags-overview/</url>
     <content><![CDATA[<h1 id="시맨틱-HTML-태그-소개"><a href="#시맨틱-HTML-태그-소개" class="headerlink" title="시맨틱 HTML 태그 소개"></a>시맨틱 HTML 태그 소개</h1><p>시맨틱(semantic) HTML 태그는 웹 문서의 구조와 의미를 명확히 전달하기 위해 사용됩니다. 이러한 태그들은 검색 엔진 최적화(SEO)와 웹 접근성을 향상시키는 데 도움을 줍니다. 대표적인 시맨틱 HTML 태그를 살펴보겠습니다.</p>
 <h2 id="대표적인-시맨틱-HTML-태그"><a href="#대표적인-시맨틱-HTML-태그" class="headerlink" title="대표적인 시맨틱 HTML 태그"></a>대표적인 시맨틱 HTML 태그</h2><ol>
@@ -307,7 +307,7 @@
 ]]></content>
   </entry>
   <entry>
-    <title>understanding-public-private-key-encryption</title>
+    <title>공개 키와 비밀 키 암호화 이해</title>
     <url>/2024/07/07/understanding-public-private-key-encryption/</url>
     <content><![CDATA[<h1 id="공개키와-개인키-암호화에-대한-이해"><a href="#공개키와-개인키-암호화에-대한-이해" class="headerlink" title="공개키와 개인키 암호화에 대한 이해"></a>공개키와 개인키 암호화에 대한 이해</h1><p>공개키 암호화는 데이터를 안전하게 전송하고, 디지털 서명을 생성하는 데 중요한 비대칭 키 암호화 방식입니다. 이 방식은 공개키와 개인키라는 두 개의 키를 사용하여 작동합니다.</p>
 <h2 id="공개키-Public-Key"><a href="#공개키-Public-Key" class="headerlink" title="공개키 (Public Key)"></a>공개키 (Public Key)</h2><ul>
@@ -328,7 +328,7 @@
 ]]></content>
   </entry>
   <entry>
-    <title>jpa_repository_vs_mapper_comparison</title>
+    <title>JPA 리포지토리와 매퍼 비교</title>
     <url>/2024/07/07/jpa-repository-vs-mapper-comparison/</url>
     <content><![CDATA[<h1 id="JPA에서-Repository와-Mapper-비교"><a href="#JPA에서-Repository와-Mapper-비교" class="headerlink" title="JPA에서 Repository와 Mapper 비교"></a>JPA에서 Repository와 Mapper 비교</h1><p>JPA (Java Persistence API)에서는 Repository와 Mapper 두 가지 주요 데이터 액세스 방법이 있으며, 어떤 것을 선택해야 하는지는 프로젝트의 요구 사항과 특성에 따라 다를 수 있습니다. 아래에서 Repository와 Mapper를 비교하고, Mapper를 사용하는 케이스에 대해 설명하겠습니다.</p>
 <h2 id="Repository"><a href="#Repository" class="headerlink" title="Repository"></a>Repository</h2><ul>
@@ -402,7 +402,7 @@
 ]]></content>
   </entry>
   <entry>
-    <title>session_cookie_jwt_comparison.md</title>
+    <title>세션, 쿠키, JWT 비교</title>
     <url>/2024/07/18/session-cookie-jwt-comparison-md/</url>
     <content><![CDATA[<h1 id="세션-쿠키-JWT-JSON-Web-Token-의-설명-및-비교"><a href="#세션-쿠키-JWT-JSON-Web-Token-의-설명-및-비교" class="headerlink" title="세션, 쿠키, JWT(JSON Web Token)의 설명 및 비교"></a>세션, 쿠키, JWT(JSON Web Token)의 설명 및 비교</h1><h2 id="세션-Session-과-쿠키-Cookie-설명"><a href="#세션-Session-과-쿠키-Cookie-설명" class="headerlink" title="세션(Session)과 쿠키(Cookie) 설명"></a>세션(Session)과 쿠키(Cookie) 설명</h2><h3 id="세션-Session"><a href="#세션-Session" class="headerlink" title="세션(Session)"></a>세션(Session)</h3><ul>
 <li><strong>개념</strong>: 서버에서 생성된 세션 ID를 클라이언트의 쿠키에 저장하여 인증을 관리하는 방식.</li>
@@ -654,7 +654,7 @@
 ]]></content>
   </entry>
   <entry>
-    <title>cloud_computing_overview.md</title>
+    <title>클라우드 컴퓨팅 개요</title>
     <url>/2024/07/20/cloud-computing-overview-md/</url>
     <content><![CDATA[<h1 id="클라우드-컴퓨팅의-이해"><a href="#클라우드-컴퓨팅의-이해" class="headerlink" title="클라우드 컴퓨팅의 이해"></a>클라우드 컴퓨팅의 이해</h1><h2 id="클라우드-컴퓨팅의-개념"><a href="#클라우드-컴퓨팅의-개념" class="headerlink" title="클라우드 컴퓨팅의 개념"></a>클라우드 컴퓨팅의 개념</h2><p>클라우드 컴퓨팅은 인터넷을 통해 서버, 저장소, 데이터베이스, 네트워크, 소프트웨어 등을 제공하는 기술이다. 이는 물리적 하드웨어 없이도 다양한 IT 자원을 필요에 따라 사용하고 관리할 수 있게 해준다.</p>
 <h2 id="클라우드-컴퓨팅의-유형"><a href="#클라우드-컴퓨팅의-유형" class="headerlink" title="클라우드 컴퓨팅의 유형"></a>클라우드 컴퓨팅의 유형</h2><h3 id="IaaS-Infrastructure-as-a-Service"><a href="#IaaS-Infrastructure-as-a-Service" class="headerlink" title="IaaS (Infrastructure as a Service)"></a>IaaS (Infrastructure as a Service)</h3><p>기본 인프라 자원을 제공한다. 가상화된 컴퓨팅 리소스, 스토리지, 네트워킹 등을 포함한다. 사용자는 운영체제, 애플리케이션 등을 직접 설치하고 관리한다.</p>
