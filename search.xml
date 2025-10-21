@@ -789,4 +789,119 @@
         <tag>SEO</tag>
       </tags>
   </entry>
+  <entry>
+    <title>MoneyPrinter AI 비디오 생성 도구 설치</title>
+    <url>/2025/10/22/moneyprinter-installation/</url>
+    <content><![CDATA[<p>WSL Ubuntu 환경에서 MoneyPrinter AI 비디오 생성 도구를 설치하는 과정입니다.</p>
+<span id="more"></span>
+
+<h2 id="📌-사전-요구사항"><a href="#📌-사전-요구사항" class="headerlink" title="📌 사전 요구사항"></a>📌 사전 요구사항</h2><ul>
+<li>WSL Ubuntu 24.04</li>
+<li>Python 3.11.9 (Pyenv 설치)</li>
+<li>Git</li>
+</ul>
+<blockquote>
+<p>개발 환경 구축은 <a href="/wsl-ubuntu-dev-environment">이전 포스트</a> 참고</p>
+</blockquote>
+<hr>
+<h2 id="📥-MoneyPrinter-설치"><a href="#📥-MoneyPrinter-설치" class="headerlink" title="📥 MoneyPrinter 설치"></a>📥 MoneyPrinter 설치</h2><h3 id="저장소-클론"><a href="#저장소-클론" class="headerlink" title="저장소 클론"></a>저장소 클론</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/FujiwaraChoki/MoneyPrinterV2.git</span><br><span class="line"><span class="built_in">cd</span> MoneyPrinterV2</span><br></pre></td></tr></table></figure>
+
+<h3 id="Python-버전-설정-및-가상환경-생성"><a href="#Python-버전-설정-및-가상환경-생성" class="headerlink" title="Python 버전 설정 및 가상환경 생성"></a>Python 버전 설정 및 가상환경 생성</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pyenv <span class="built_in">local</span> 3.11.9</span><br><span class="line">python -m venv venv</span><br><span class="line"><span class="built_in">source</span> venv/bin/activate</span><br></pre></td></tr></table></figure>
+
+<h3 id="의존성-설치"><a href="#의존성-설치" class="headerlink" title="의존성 설치"></a>의존성 설치</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install -r requirements.txt</span><br><span class="line">pip install g4f==0.5.0.1</span><br><span class="line">pip install moviepy==1.0.3</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="🦊-Firefox-설치"><a href="#🦊-Firefox-설치" class="headerlink" title="🦊 Firefox 설치"></a>🦊 Firefox 설치</h2><p>MoneyPrinter는 Firefox를 사용하므로 수동 설치 필요</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> /opt</span><br><span class="line"><span class="built_in">sudo</span> wget https://download.mozilla.org/?product=firefox-latest-ssl&amp;os=linux64&amp;lang=en-US -O firefox.tar.xz</span><br><span class="line"><span class="built_in">sudo</span> tar xf firefox.tar.xz</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">ln</span> -s /opt/firefox/firefox /usr/local/bin/firefox</span><br></pre></td></tr></table></figure>
+
+<h3 id="오디오-라이브러리-설치"><a href="#오디오-라이브러리-설치" class="headerlink" title="오디오 라이브러리 설치"></a>오디오 라이브러리 설치</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install libasound2t64</span><br><span class="line"><span class="built_in">sudo</span> apt install libdbus-glib-1-2</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="🎨-ImageMagick-설정"><a href="#🎨-ImageMagick-설정" class="headerlink" title="🎨 ImageMagick 설정"></a>🎨 ImageMagick 설정</h2><h3 id="ImageMagick-설치"><a href="#ImageMagick-설치" class="headerlink" title="ImageMagick 설치"></a>ImageMagick 설치</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install imagemagick</span><br></pre></td></tr></table></figure>
+
+<h3 id="정책-파일-수정"><a href="#정책-파일-수정" class="headerlink" title="정책 파일 수정"></a>정책 파일 수정</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nano /etc/ImageMagick-6/policy.xml</span><br></pre></td></tr></table></figure>
+
+<p>파일 내에 다음 라인 추가:</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">policy</span> <span class="attr">domain</span>=<span class="string">&quot;path&quot;</span> <span class="attr">rights</span>=<span class="string">&quot;read|write&quot;</span> <span class="attr">pattern</span>=<span class="string">&quot;@*&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="✅-실행"><a href="#✅-실행" class="headerlink" title="✅ 실행"></a>✅ 실행</h2><p>MoneyPrinter 실행:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> ~/MoneyPrinterV2</span><br><span class="line"><span class="built_in">source</span> venv/bin/activate</span><br><span class="line">python main.py</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="💡-참고"><a href="#💡-참고" class="headerlink" title="💡 참고"></a>💡 참고</h2><ul>
+<li>g4f 버전은 0.5.0.1로 고정 (최신 버전 호환성 문제)</li>
+<li>moviepy 버전은 1.0.3 사용 권장</li>
+<li>ImageMagick 정책 수정은 비디오 생성에 필요</li>
+</ul>
+]]></content>
+      <categories>
+        <category>AI도구</category>
+      </categories>
+      <tags>
+        <tag>MoneyPrinter</tag>
+        <tag>AI</tag>
+        <tag>Python</tag>
+        <tag>Ubuntu</tag>
+        <tag>WSL</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>WSL Ubuntu 개발 환경 구축 (Zsh + Pyenv)</title>
+    <url>/2025/10/22/wsl-ubuntu-dev-environment/</url>
+    <content><![CDATA[<p>WSL Ubuntu 24.04에서 Zsh 터미널과 Python 개발 환경을 구축하는 과정입니다.</p>
+<span id="more"></span>
+
+<h2 id="📋-WSL-관리"><a href="#📋-WSL-관리" class="headerlink" title="📋 WSL 관리"></a>📋 WSL 관리</h2><h3 id="WSL-목록-조회"><a href="#WSL-목록-조회" class="headerlink" title="WSL 목록 조회"></a>WSL 목록 조회</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">wsl --list --all</span><br></pre></td></tr></table></figure>
+
+<h3 id="WSL-삭제"><a href="#WSL-삭제" class="headerlink" title="WSL 삭제"></a>WSL 삭제</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">wsl --unregister Ubuntu-24.04</span><br></pre></td></tr></table></figure>
+
+<h3 id="WSL-설치"><a href="#WSL-설치" class="headerlink" title="WSL 설치"></a>WSL 설치</h3><p>Microsoft Store에서 Ubuntu 24.04 설치</p>
+<hr>
+<h2 id="🔧-시스템-업데이트"><a href="#🔧-시스템-업데이트" class="headerlink" title="🔧 시스템 업데이트"></a>🔧 시스템 업데이트</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt update &amp;&amp; <span class="built_in">sudo</span> apt upgrade -y</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="🎨-Zsh-환경-구축"><a href="#🎨-Zsh-환경-구축" class="headerlink" title="🎨 Zsh 환경 구축"></a>🎨 Zsh 환경 구축</h2><h3 id="Zsh-설치"><a href="#Zsh-설치" class="headerlink" title="Zsh 설치"></a>Zsh 설치</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install zsh -y</span><br></pre></td></tr></table></figure>
+
+<h3 id="Oh-My-Zsh-설치"><a href="#Oh-My-Zsh-설치" class="headerlink" title="Oh My Zsh 설치"></a>Oh My Zsh 설치</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sh -c <span class="string">&quot;<span class="subst">$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Powerlevel10k-테마-설치"><a href="#Powerlevel10k-테마-설치" class="headerlink" title="Powerlevel10k 테마 설치"></a>Powerlevel10k 테마 설치</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> --depth=1 https://github.com/romkatv/powerlevel10k.git <span class="variable">$&#123;ZSH_CUSTOM:-<span class="variable">$HOME</span>/.oh-my-zsh/custom&#125;</span>/themes/powerlevel10k</span><br></pre></td></tr></table></figure>
+
+<h3 id="테마-적용"><a href="#테마-적용" class="headerlink" title="테마 적용"></a>테마 적용</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sed -i <span class="string">&#x27;s|^ZSH_THEME=.*|ZSH_THEME=&quot;powerlevel10k/powerlevel10k&quot;|&#x27;</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
+
+<h3 id="Git-및-fzf-설치"><a href="#Git-및-fzf-설치" class="headerlink" title="Git 및 fzf 설치"></a>Git 및 fzf 설치</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install git fzf -y</span><br></pre></td></tr></table></figure>
+
+<h3 id="플러그인-설치"><a href="#플러그인-설치" class="headerlink" title="플러그인 설치"></a>플러그인 설치</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/zsh-users/zsh-autosuggestions <span class="variable">$&#123;ZSH_CUSTOM:-~/.oh-my-zsh/custom&#125;</span>/plugins/zsh-autosuggestions</span><br><span class="line">git <span class="built_in">clone</span> https://github.com/zsh-users/zsh-syntax-highlighting.git <span class="variable">$&#123;ZSH_CUSTOM:-~/.oh-my-zsh/custom&#125;</span>/plugins/zsh-syntax-highlighting</span><br></pre></td></tr></table></figure>
+
+<h3 id="플러그인-활성화"><a href="#플러그인-활성화" class="headerlink" title="플러그인 활성화"></a>플러그인 활성화</h3><p><code>~/.zshrc</code> 파일에서 플러그인 설정:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">plugins=(git zsh-autosuggestions zsh-syntax-highlighting)</span><br></pre></td></tr></table></figure>
+
+<h3 id="설정-적용"><a href="#설정-적용" class="headerlink" title="설정 적용"></a>설정 적용</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="🐍-Python-환경-구축-Pyenv"><a href="#🐍-Python-환경-구축-Pyenv" class="headerlink" title="🐍 Python 환경 구축 (Pyenv)"></a>🐍 Python 환경 구축 (Pyenv)</h2><h3 id="Pyenv-의존성-설치"><a href="#Pyenv-의존성-설치" class="headerlink" title="Pyenv 의존성 설치"></a>Pyenv 의존성 설치</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install -y make build-essential libssl-dev zlib1g-dev \</span><br><span class="line">libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \</span><br><span class="line">libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev git</span><br></pre></td></tr></table></figure>
+
+<h3 id="Pyenv-설치"><a href="#Pyenv-설치" class="headerlink" title="Pyenv 설치"></a>Pyenv 설치</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">curl https://pyenv.run | bash</span><br></pre></td></tr></table></figure>
+
+<h3 id="Pyenv-환경-변수-설정"><a href="#Pyenv-환경-변수-설정" class="headerlink" title="Pyenv 환경 변수 설정"></a>Pyenv 환경 변수 설정</h3><p><code>~/.zshrc</code> 파일 끝에 추가:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">export</span> PATH=<span class="string">&quot;<span class="variable">$HOME</span>/.pyenv/bin:<span class="variable">$PATH</span>&quot;</span></span><br><span class="line"><span class="built_in">eval</span> <span class="string">&quot;<span class="subst">$(pyenv init --path)</span>&quot;</span></span><br><span class="line"><span class="built_in">eval</span> <span class="string">&quot;<span class="subst">$(pyenv init -)</span>&quot;</span></span><br><span class="line"><span class="built_in">eval</span> <span class="string">&quot;<span class="subst">$(pyenv virtualenv-init -)</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="설정-적용-1"><a href="#설정-적용-1" class="headerlink" title="설정 적용"></a>설정 적용</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
+
+<h3 id="Python-3-11-9-설치"><a href="#Python-3-11-9-설치" class="headerlink" title="Python 3.11.9 설치"></a>Python 3.11.9 설치</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pyenv install 3.11.9</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="✅-완료"><a href="#✅-완료" class="headerlink" title="✅ 완료"></a>✅ 완료</h2><p>기본 개발 환경 구축이 완료되었습니다!</p>
+]]></content>
+      <categories>
+        <category>개발환경</category>
+      </categories>
+      <tags>
+        <tag>Python</tag>
+        <tag>Ubuntu</tag>
+        <tag>WSL</tag>
+        <tag>Zsh</tag>
+        <tag>Pyenv</tag>
+      </tags>
+  </entry>
 </search>

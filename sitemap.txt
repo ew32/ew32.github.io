@@ -1,3 +1,5 @@
+http://ew32.github.io/2025/10/22/moneyprinter-installation/
+http://ew32.github.io/2025/10/22/wsl-ubuntu-dev-environment/
 http://ew32.github.io/1970/01/01/hello-world/
 http://ew32.github.io/2024/07/08/network-and-disk-based-file-systems-md/
 http://ew32.github.io/2024/07/20/cloud-computing-overview-md/
@@ -54,6 +56,13 @@ http://ew32.github.io/tags/HTML/
 http://ew32.github.io/tags/%EC%8B%9C%EB%A7%A8%ED%8B%B1/
 http://ew32.github.io/tags/%EC%9B%B9-%ED%91%9C%EC%A4%80/
 http://ew32.github.io/tags/SEO/
+http://ew32.github.io/tags/MoneyPrinter/
+http://ew32.github.io/tags/AI/
+http://ew32.github.io/tags/Python/
+http://ew32.github.io/tags/Ubuntu/
+http://ew32.github.io/tags/WSL/
+http://ew32.github.io/tags/Zsh/
+http://ew32.github.io/tags/Pyenv/
 http://ew32.github.io/categories/Network/
 http://ew32.github.io/categories/Cloud/
 http://ew32.github.io/categories/System/
@@ -72,3 +81,5 @@ http://ew32.github.io/categories/Security/Cryptography/
 http://ew32.github.io/categories/Frontend/HTML/
 http://ew32.github.io/categories/Backend/Java/Database/
 http://ew32.github.io/categories/Backend/Security/Authentication/
+http://ew32.github.io/categories/AI%EB%8F%84%EA%B5%AC/
+http://ew32.github.io/categories/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/
