@@ -87,8 +87,8 @@
       </tags>
   </entry>
   <entry>
-    <title>헬로 월드1234511</title>
-    <url>/2025/12/15/hello-world/</url>
+    <title>헬로 월드</title>
+    <url>/2025/12/17/hello-world/</url>
     <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
 <h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
 
@@ -898,6 +898,326 @@
         <tag>쿠키</tag>
         <tag>JWT</tag>
         <tag>인증</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Windows 패키지 관리자 Chocolatey 완벽 가이드</title>
+    <url>/2025/12/17/windows-package-manager-chocolatey/</url>
+    <content><![CDATA[<h2 id="Chocolatey란"><a href="#Chocolatey란" class="headerlink" title="Chocolatey란?"></a>Chocolatey란?</h2><p>Chocolatey는 Windows용 커맨드라인 패키지 관리자입니다. Linux의 apt나 yum, macOS의 Homebrew와 같이 Windows에서도 명령어 한 줄로 소프트웨어를 설치, 업데이트, 제거할 수 있도록 해주는 강력한 도구입니다.</p>
+<p>웹사이트를 방문하고, 설치 파일을 다운로드하고, 다음-다음-완료를 반복하는 번거로운 과정 없이 터미널에서 간단한 명령어로 개발 환경을 구축할 수 있습니다.</p>
+<h2 id="Chocolatey의-장점"><a href="#Chocolatey의-장점" class="headerlink" title="Chocolatey의 장점"></a>Chocolatey의 장점</h2><h3 id="1-빠른-설치와-설정"><a href="#1-빠른-설치와-설정" class="headerlink" title="1. 빠른 설치와 설정"></a>1. 빠른 설치와 설정</h3><p>GUI 기반 설치 과정을 거치지 않고 명령어 한 줄로 소프트웨어를 설치할 수 있습니다.</p>
+<h3 id="2-자동화-가능"><a href="#2-자동화-가능" class="headerlink" title="2. 자동화 가능"></a>2. 자동화 가능</h3><p>스크립트를 통해 개발 환경을 자동으로 구성할 수 있어, 새로운 컴퓨터를 세팅하거나 팀원의 환경을 통일할 때 매우 유용합니다.</p>
+<h3 id="3-일괄-업데이트"><a href="#3-일괄-업데이트" class="headerlink" title="3. 일괄 업데이트"></a>3. 일괄 업데이트</h3><p>설치된 모든 패키지를 한 번에 업데이트할 수 있어 소프트웨어 관리가 편리합니다.</p>
+<h3 id="4-의존성-관리"><a href="#4-의존성-관리" class="headerlink" title="4. 의존성 관리"></a>4. 의존성 관리</h3><p>패키지 설치 시 필요한 의존성을 자동으로 처리해줍니다.</p>
+<h3 id="5-광범위한-패키지"><a href="#5-광범위한-패키지" class="headerlink" title="5. 광범위한 패키지"></a>5. 광범위한 패키지</h3><p>8,000개 이상의 패키지를 지원하며, Git, Node.js, Python, Docker 등 개발에 필요한 거의 모든 도구를 제공합니다.</p>
+<h2 id="Chocolatey-설치-방법"><a href="#Chocolatey-설치-방법" class="headerlink" title="Chocolatey 설치 방법"></a>Chocolatey 설치 방법</h2><h3 id="사전-요구사항"><a href="#사전-요구사항" class="headerlink" title="사전 요구사항"></a>사전 요구사항</h3><ul>
+<li>Windows 7+ &#x2F; Windows Server 2003+</li>
+<li>PowerShell v2+ (Windows 7 이상에는 기본 포함)</li>
+<li>.NET Framework 4+ (대부분의 최신 Windows에 기본 포함)</li>
+</ul>
+<h3 id="설치-단계"><a href="#설치-단계" class="headerlink" title="설치 단계"></a>설치 단계</h3><p><strong>1. PowerShell을 관리자 권한으로 실행</strong></p>
+<ul>
+<li>시작 메뉴에서 “PowerShell” 검색</li>
+<li>“Windows PowerShell”을 우클릭하여 “관리자 권한으로 실행”</li>
+</ul>
+<p><strong>2. 실행 정책 확인</strong></p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">Get-ExecutionPolicy</span></span><br></pre></td></tr></table></figure>
+
+<p>만약 결과가 <code>Restricted</code>라면 다음 명령어를 실행:</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">Set-ExecutionPolicy</span> Bypass <span class="literal">-Scope</span> <span class="keyword">Process</span> <span class="literal">-Force</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>3. Chocolatey 설치</strong></p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">Set-ExecutionPolicy</span> Bypass <span class="literal">-Scope</span> <span class="keyword">Process</span> <span class="literal">-Force</span>; [<span class="type">System.Net.ServicePointManager</span>]::SecurityProtocol = [<span class="type">System.Net.ServicePointManager</span>]::SecurityProtocol <span class="operator">-bor</span> <span class="number">3072</span>; <span class="built_in">iex</span> ((<span class="built_in">New-Object</span> System.Net.WebClient).DownloadString(<span class="string">&#x27;https://community.chocolatey.org/install.ps1&#x27;</span>))</span><br></pre></td></tr></table></figure>
+
+<p><strong>4. 설치 확인</strong></p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">choco <span class="literal">--version</span></span><br></pre></td></tr></table></figure>
+
+<p>버전 정보가 출력되면 설치 완료입니다.</p>
+<h2 id="기본-사용법"><a href="#기본-사용법" class="headerlink" title="기본 사용법"></a>기본 사용법</h2><h3 id="패키지-검색"><a href="#패키지-검색" class="headerlink" title="패키지 검색"></a>패키지 검색</h3><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">choco search 패키지명</span><br></pre></td></tr></table></figure>
+
+<p>예시:</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">choco search nodejs</span><br></pre></td></tr></table></figure>
+
+<h3 id="패키지-설치"><a href="#패키지-설치" class="headerlink" title="패키지 설치"></a>패키지 설치</h3><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">choco install 패키지명 <span class="literal">-y</span></span><br></pre></td></tr></table></figure>
+
+<p><code>-y</code> 옵션은 모든 프롬프트에 자동으로 “Yes”를 선택합니다.</p>
+<p>예시:</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Git 설치</span></span><br><span class="line">choco install git <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Node.js 설치</span></span><br><span class="line">choco install nodejs <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Visual Studio Code 설치</span></span><br><span class="line">choco install vscode <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 여러 패키지 동시 설치</span></span><br><span class="line">choco install git nodejs vscode <span class="literal">-y</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="패키지-업데이트"><a href="#패키지-업데이트" class="headerlink" title="패키지 업데이트"></a>패키지 업데이트</h3><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 특정 패키지 업데이트</span></span><br><span class="line">choco upgrade 패키지명 <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 모든 패키지 업데이트</span></span><br><span class="line">choco upgrade all <span class="literal">-y</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="패키지-제거"><a href="#패키지-제거" class="headerlink" title="패키지 제거"></a>패키지 제거</h3><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">choco uninstall 패키지명 <span class="literal">-y</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="설치된-패키지-목록-확인"><a href="#설치된-패키지-목록-확인" class="headerlink" title="설치된 패키지 목록 확인"></a>설치된 패키지 목록 확인</h3><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">choco list <span class="literal">--local-only</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="유용한-명령어"><a href="#유용한-명령어" class="headerlink" title="유용한 명령어"></a>유용한 명령어</h2><h3 id="패키지-정보-확인"><a href="#패키지-정보-확인" class="headerlink" title="패키지 정보 확인"></a>패키지 정보 확인</h3><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">choco info 패키지명</span><br></pre></td></tr></table></figure>
+
+<h3 id="오래된-패키지-확인"><a href="#오래된-패키지-확인" class="headerlink" title="오래된 패키지 확인"></a>오래된 패키지 확인</h3><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">choco outdated</span><br></pre></td></tr></table></figure>
+
+<h3 id="Chocolatey-자체-업데이트"><a href="#Chocolatey-자체-업데이트" class="headerlink" title="Chocolatey 자체 업데이트"></a>Chocolatey 자체 업데이트</h3><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">choco upgrade chocolatey <span class="literal">-y</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="캐시-정리"><a href="#캐시-정리" class="headerlink" title="캐시 정리"></a>캐시 정리</h3><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">choco cache clean</span><br></pre></td></tr></table></figure>
+
+<h2 id="개발-환경-한-번에-구성하기"><a href="#개발-환경-한-번에-구성하기" class="headerlink" title="개발 환경 한 번에 구성하기"></a>개발 환경 한 번에 구성하기</h2><p>새로운 Windows 컴퓨터에서 개발 환경을 빠르게 구축하는 예시:</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 기본 개발 도구</span></span><br><span class="line">choco install git nodejs python vscode <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 버전 관리 및 터미널</span></span><br><span class="line">choco install github<span class="literal">-desktop</span> powershell<span class="literal">-core</span> <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 브라우저</span></span><br><span class="line">choco install googlechrome firefox <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 데이터베이스</span></span><br><span class="line">choco install mysql postgresql <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 컨테이너 및 가상화</span></span><br><span class="line">choco install docker<span class="literal">-desktop</span> virtualbox <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 기타 유틸리티</span></span><br><span class="line">choco install <span class="number">7</span>zip notepadplusplus <span class="literal">-y</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="인기-있는-개발-도구-패키지"><a href="#인기-있는-개발-도구-패키지" class="headerlink" title="인기 있는 개발 도구 패키지"></a>인기 있는 개발 도구 패키지</h2><table>
+<thead>
+<tr>
+<th>패키지명</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>git</code></td>
+<td>Git 버전 관리 시스템</td>
+</tr>
+<tr>
+<td><code>nodejs</code></td>
+<td>Node.js 런타임</td>
+</tr>
+<tr>
+<td><code>python</code></td>
+<td>Python 프로그래밍 언어</td>
+</tr>
+<tr>
+<td><code>vscode</code></td>
+<td>Visual Studio Code 에디터</td>
+</tr>
+<tr>
+<td><code>docker-desktop</code></td>
+<td>Docker 컨테이너 플랫폼</td>
+</tr>
+<tr>
+<td><code>postman</code></td>
+<td>API 개발 및 테스트 도구</td>
+</tr>
+<tr>
+<td><code>maven</code></td>
+<td>Java 빌드 도구</td>
+</tr>
+<tr>
+<td><code>gradle</code></td>
+<td>범용 빌드 도구</td>
+</tr>
+<tr>
+<td><code>jdk11</code></td>
+<td>Java Development Kit 11</td>
+</tr>
+<tr>
+<td><code>awscli</code></td>
+<td>AWS 명령줄 인터페이스</td>
+</tr>
+</tbody></table>
+<h2 id="실전-추천-필수-프로그램-패키지-모음"><a href="#실전-추천-필수-프로그램-패키지-모음" class="headerlink" title="실전 추천: 필수 프로그램 패키지 모음"></a>실전 추천: 필수 프로그램 패키지 모음</h2><p>실제 개발 환경에서 유용하게 사용할 수 있는 프로그램들을 카테고리별로 정리했습니다.</p>
+<h3 id="기본-유틸리티"><a href="#기본-유틸리티" class="headerlink" title="기본 유틸리티"></a>기본 유틸리티</h3><table>
+<thead>
+<tr>
+<th>패키지명</th>
+<th>설명</th>
+<th>설치 명령어</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>adobereader</code></td>
+<td>PDF 문서 뷰어</td>
+<td><code>choco install adobereader -y</code></td>
+</tr>
+<tr>
+<td><code>googlechrome</code></td>
+<td>Google 크롬 브라우저</td>
+<td><code>choco install googlechrome -y</code></td>
+</tr>
+<tr>
+<td><code>ditto</code></td>
+<td>고급 클립보드 관리자 (복사 내역 저장)</td>
+<td><code>choco install ditto -y</code></td>
+</tr>
+<tr>
+<td><code>everything</code></td>
+<td>초고속 파일 검색 도구</td>
+<td><code>choco install everything -y</code></td>
+</tr>
+<tr>
+<td><code>bandizip</code></td>
+<td>무료 압축 프로그램</td>
+<td><code>choco install bandizip -y</code></td>
+</tr>
+<tr>
+<td><code>qdir</code></td>
+<td>4개 패널 파일 탐색기</td>
+<td><code>choco install qdir -y</code></td>
+</tr>
+<tr>
+<td><code>treesizefree</code></td>
+<td>디스크 공간 분석 도구</td>
+<td><code>choco install treesizefree -y</code></td>
+</tr>
+</tbody></table>
+<h3 id="개발-도구"><a href="#개발-도구" class="headerlink" title="개발 도구"></a>개발 도구</h3><table>
+<thead>
+<tr>
+<th>패키지명</th>
+<th>설명</th>
+<th>설치 명령어</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>jdk8</code></td>
+<td>Java Development Kit 8</td>
+<td><code>choco install jdk8 -y</code></td>
+</tr>
+<tr>
+<td><code>postman</code></td>
+<td>API 개발 및 테스트 도구</td>
+<td><code>choco install postman -y</code></td>
+</tr>
+<tr>
+<td><code>sublimetext4</code></td>
+<td>빠른 텍스트 에디터</td>
+<td><code>choco install sublimetext4 -y</code></td>
+</tr>
+<tr>
+<td><code>oracle-sql-developer</code></td>
+<td>Oracle SQL 개발 도구</td>
+<td><code>choco install oracle-sql-developer -y</code></td>
+</tr>
+</tbody></table>
+<h3 id="터미널-SSH"><a href="#터미널-SSH" class="headerlink" title="터미널 &amp; SSH"></a>터미널 &amp; SSH</h3><table>
+<thead>
+<tr>
+<th>패키지명</th>
+<th>설명</th>
+<th>설치 명령어</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>mobaxterm</code></td>
+<td>강력한 SSH&#x2F;원격 접속 도구</td>
+<td><code>choco install mobaxterm -y</code></td>
+</tr>
+<tr>
+<td><code>microsoft-windows-terminal</code></td>
+<td>최신 Windows 터미널</td>
+<td><code>choco install microsoft-windows-terminal -y</code></td>
+</tr>
+</tbody></table>
+<h3 id="네트워크-원격-접속"><a href="#네트워크-원격-접속" class="headerlink" title="네트워크 &amp; 원격 접속"></a>네트워크 &amp; 원격 접속</h3><table>
+<thead>
+<tr>
+<th>패키지명</th>
+<th>설명</th>
+<th>설치 명령어</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>filezilla</code></td>
+<td>FTP&#x2F;SFTP 클라이언트</td>
+<td><code>choco install filezilla -y</code></td>
+</tr>
+<tr>
+<td><code>anydesk</code></td>
+<td>원격 데스크톱 프로그램</td>
+<td><code>choco install anydesk -y</code></td>
+</tr>
+<tr>
+<td><code>tightvnc</code></td>
+<td>VNC 원격 접속 도구</td>
+<td><code>choco install tightvnc -y</code></td>
+</tr>
+<tr>
+<td><code>wireshark</code></td>
+<td>네트워크 패킷 분석 도구</td>
+<td><code>choco install wireshark -y</code></td>
+</tr>
+</tbody></table>
+<h3 id="Linux-개발-환경"><a href="#Linux-개발-환경" class="headerlink" title="Linux 개발 환경"></a>Linux 개발 환경</h3><table>
+<thead>
+<tr>
+<th>패키지명</th>
+<th>설명</th>
+<th>설치 명령어</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>wsl2</code></td>
+<td>Windows Subsystem for Linux 2</td>
+<td><code>choco install wsl2 -y</code></td>
+</tr>
+<tr>
+<td><code>wsl-ubuntu-2204</code></td>
+<td>Ubuntu 22.04 for WSL</td>
+<td><code>choco install wsl-ubuntu-2204 -y</code></td>
+</tr>
+</tbody></table>
+<h3 id="생산성-자동화"><a href="#생산성-자동화" class="headerlink" title="생산성 &amp; 자동화"></a>생산성 &amp; 자동화</h3><table>
+<thead>
+<tr>
+<th>패키지명</th>
+<th>설명</th>
+<th>설치 명령어</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>powertoys</code></td>
+<td>Microsoft 공식 생산성 도구 모음</td>
+<td><code>choco install powertoys -y</code></td>
+</tr>
+<tr>
+<td><code>autohotkey.install</code></td>
+<td>키보드&#x2F;마우스 자동화 스크립트</td>
+<td><code>choco install autohotkey.install -y</code></td>
+</tr>
+</tbody></table>
+<h3 id="미디어"><a href="#미디어" class="headerlink" title="미디어"></a>미디어</h3><table>
+<thead>
+<tr>
+<th>패키지명</th>
+<th>설명</th>
+<th>설치 명령어</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>jellyfin</code></td>
+<td>오픈소스 미디어 서버</td>
+<td><code>choco install jellyfin -y</code></td>
+</tr>
+</tbody></table>
+<h3 id="한-번에-설치하기"><a href="#한-번에-설치하기" class="headerlink" title="한 번에 설치하기"></a>한 번에 설치하기</h3><p>위의 모든 프로그램을 한 번에 설치하려면 다음 스크립트를 사용하세요:</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 기본 유틸리티</span></span><br><span class="line">choco install adobereader googlechrome ditto everything bandizip qdir treesizefree <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 개발 도구</span></span><br><span class="line">choco install jdk8 postman sublimetext4 oracle<span class="literal">-sql-developer</span> <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 터미널 &amp; SSH</span></span><br><span class="line">choco install mobaxterm microsoft<span class="literal">-windows-terminal</span> <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 네트워크 &amp; 원격 접속</span></span><br><span class="line">choco install filezilla anydesk tightvnc wireshark <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Linux 개발 환경</span></span><br><span class="line">choco install wsl2 wsl<span class="literal">-ubuntu-2204</span> <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 생산성 &amp; 자동화</span></span><br><span class="line">choco install powertoys autohotkey.install <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 미디어</span></span><br><span class="line">choco install jellyfin <span class="literal">-y</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>특정 버전 설치하기:</strong><br>특정 버전을 설치해야 할 경우 <code>--version</code> 옵션을 사용합니다:</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 예시: 특정 버전의 JDK 설치</span></span><br><span class="line">choco install jdk8 <span class="literal">--version</span> <span class="number">8.0</span>.<span class="number">211</span> <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 예시: 특정 버전의 Chrome 설치</span></span><br><span class="line">choco install googlechrome <span class="literal">--version</span> <span class="number">135.0</span>.<span class="number">7049.41</span> <span class="literal">-y</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="주의사항"><a href="#주의사항" class="headerlink" title="주의사항"></a>주의사항</h2><ol>
+<li><strong>관리자 권한 필요</strong>: Chocolatey 명령어는 대부분 관리자 권한이 필요합니다.</li>
+<li><strong>PATH 환경변수</strong>: 설치 후 일부 프로그램은 터미널을 재시작해야 PATH가 적용됩니다.</li>
+<li><strong>백신 소프트웨어</strong>: 일부 백신 프로그램이 Chocolatey 설치를 차단할 수 있습니다. 신뢰할 수 있는 사이트로 예외 처리가 필요할 수 있습니다.</li>
+<li><strong>공식 저장소 확인</strong>: 패키지 설치 전 <a href="https://community.chocolatey.org/packages">Chocolatey 공식 웹사이트</a>에서 패키지 정보를 확인하는 것이 좋습니다.</li>
+</ol>
+<h2 id="GUI-버전-Chocolatey-GUI"><a href="#GUI-버전-Chocolatey-GUI" class="headerlink" title="GUI 버전: Chocolatey GUI"></a>GUI 버전: Chocolatey GUI</h2><p>터미널이 익숙하지 않다면 GUI 버전도 사용할 수 있습니다:</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">choco install chocolateygui <span class="literal">-y</span></span><br></pre></td></tr></table></figure>
+
+<p>설치 후 시작 메뉴에서 “Chocolatey GUI”를 실행하면 그래픽 인터페이스로 패키지를 관리할 수 있습니다.</p>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>Chocolatey는 Windows 개발자에게 필수적인 도구입니다. 반복적인 소프트웨어 설치 작업을 자동화하고, 개발 환경을 스크립트로 관리할 수 있어 생산성을 크게 향상시킬 수 있습니다.</p>
+<p>특히 새로운 컴퓨터를 세팅하거나, 팀 프로젝트에서 동일한 개발 환경을 유지해야 할 때 그 진가를 발휘합니다. 한 번 익숙해지면 Chocolatey 없이는 Windows 개발 환경을 구축하기 어려워질 정도로 편리합니다.</p>
+<p>지금 바로 Chocolatey를 설치하고 효율적인 Windows 개발 환경을 구축해보세요!</p>
+<h3 id="참고-자료"><a href="#참고-자료" class="headerlink" title="참고 자료"></a>참고 자료</h3><ul>
+<li><a href="https://chocolatey.org/">Chocolatey 공식 웹사이트</a></li>
+<li><a href="https://community.chocolatey.org/packages">Chocolatey 패키지 검색</a></li>
+<li><a href="https://docs.chocolatey.org/en-us/">Chocolatey 공식 문서</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>개발환경</category>
+      </categories>
+      <tags>
+        <tag>Windows</tag>
+        <tag>Chocolatey</tag>
+        <tag>패키지관리자</tag>
+        <tag>개발도구</tag>
+        <tag>설치</tag>
+        <tag>CLI</tag>
       </tags>
   </entry>
 </search>
