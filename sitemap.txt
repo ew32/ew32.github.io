@@ -1,3 +1,4 @@
+http://ew32.github.io/2025/12/17/windows-subsystem-for-linux-guide/
 http://ew32.github.io/2025/12/17/windows-package-manager-chocolatey/
 http://ew32.github.io/2025/12/17/hello-world/
 http://ew32.github.io/2025/10/22/wsl-ubuntu-dev-environment/
@@ -70,6 +71,10 @@ http://ew32.github.io/tags/%ED%8C%A8%ED%82%A4%EC%A7%80%EA%B4%80%EB%A6%AC%EC%9E%9
 http://ew32.github.io/tags/%EA%B0%9C%EB%B0%9C%EB%8F%84%EA%B5%AC/
 http://ew32.github.io/tags/%EC%84%A4%EC%B9%98/
 http://ew32.github.io/tags/CLI/
+http://ew32.github.io/tags/WSL2/
+http://ew32.github.io/tags/Linux/
+http://ew32.github.io/tags/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/
+http://ew32.github.io/tags/%EA%B0%80%EC%83%81%ED%99%94/
 http://ew32.github.io/categories/Network/
 http://ew32.github.io/categories/Cloud/
 http://ew32.github.io/categories/Tutorial/
@@ -90,3 +95,4 @@ http://ew32.github.io/categories/System/Storage/
 http://ew32.github.io/categories/Security/Cryptography/
 http://ew32.github.io/categories/Backend/Java/Database/
 http://ew32.github.io/categories/Backend/Security/Authentication/
+http://ew32.github.io/categories/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/System/

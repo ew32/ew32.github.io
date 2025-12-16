@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://ew32.github.io/2025/12/17/windows-subsystem-for-linux-guide/</loc>
+    <lastmod>2025-12-16</lastmod>
+  </url>
+  <url>
     <loc>http://ew32.github.io/2025/12/17/windows-package-manager-chocolatey/</loc>
     <lastmod>2025-12-16</lastmod>
   </url>

@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://ew32.github.io/2025/12/17/windows-subsystem-for-linux-guide/</loc>
+    
+    <lastmod>2025-12-16</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://ew32.github.io/2025/12/17/windows-package-manager-chocolatey/</loc>
     
     <lastmod>2025-12-16</lastmod>
@@ -537,6 +546,34 @@
     <priority>0.2</priority>
   </url>
   
+  <url>
+    <loc>http://ew32.github.io/tags/WSL2/</loc>
+    <lastmod>2025-12-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://ew32.github.io/tags/Linux/</loc>
+    <lastmod>2025-12-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://ew32.github.io/tags/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/</loc>
+    <lastmod>2025-12-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://ew32.github.io/tags/%EA%B0%80%EC%83%81%ED%99%94/</loc>
+    <lastmod>2025-12-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
 
   
   <url>
@@ -674,6 +711,13 @@
   
   <url>
     <loc>http://ew32.github.io/categories/Backend/Security/Authentication/</loc>
+    <lastmod>2025-12-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://ew32.github.io/categories/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/System/</loc>
     <lastmod>2025-12-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
