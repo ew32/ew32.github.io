@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width">
-<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
-
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -14,13 +13,14 @@
 <link rel="stylesheet" href="/css/main.css">
 
 
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"ew32.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js" defer></script>
-
-    <meta name="description" content="WSL이란?WSL(Windows Subsystem for Linux)은 Windows 10과 Windows 11에서 Linux 바이너리 실행 파일을 네이티브로 실행할 수 있게 해주는 호환성 계층입니다. 가상 머신이나 듀얼 부팅 없이 Windows에서 Linux 환경을 사용할 수 있어, 개발자들에게 매우 유용한 도구입니다. WSL1 vs WSL2WSL1 시스">
+  <meta name="description" content="WSL이란?WSL(Windows Subsystem for Linux)은 Windows 10과 Windows 11에서 Linux 바이너리 실행 파일을 네이티브로 실행할 수 있게 해주는 호환성 계층입니다. 가상 머신이나 듀얼 부팅 없이 Windows에서 Linux 환경을 사용할 수 있어, 개발자들에게 매우 유용한 도구입니다. WSL1 vs WSL2WSL1 시스">
 <meta property="og:type" content="article">
 <meta property="og:title" content="WSL2 완벽 가이드 - Windows에서 Linux 사용하기">
 <meta property="og:url" content="http://ew32.github.io/2025/12/17/windows-subsystem-for-linux-guide/index.html">
@@ -28,78 +28,97 @@
 <meta property="og:description" content="WSL이란?WSL(Windows Subsystem for Linux)은 Windows 10과 Windows 11에서 Linux 바이너리 실행 파일을 네이티브로 실행할 수 있게 해주는 호환성 계층입니다. 가상 머신이나 듀얼 부팅 없이 Windows에서 Linux 환경을 사용할 수 있어, 개발자들에게 매우 유용한 도구입니다. WSL1 vs WSL2WSL1 시스">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-12-17T11:00:00.000Z">
-<meta property="article:modified_time" content="2026-05-07T13:14:45.781Z">
+<meta property="article:modified_time" content="2026-05-07T13:46:58.889Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Ubuntu">
 <meta property="article:tag" content="WSL">
-<meta property="article:tag" content="Windows">
 <meta property="article:tag" content="WSL2">
 <meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Windows">
 <meta property="article:tag" content="개발환경">
 <meta property="article:tag" content="가상화">
 <meta name="twitter:card" content="summary">
 
-
 <link rel="canonical" href="http://ew32.github.io/2025/12/17/windows-subsystem-for-linux-guide/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"http://ew32.github.io/2025/12/17/windows-subsystem-for-linux-guide/","path":"2025/12/17/windows-subsystem-for-linux-guide/","title":"WSL2 완벽 가이드 - Windows에서 Linux 사용하기"}</script>
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
 
-<script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>WSL2 완벽 가이드 - Windows에서 Linux 사용하기 | Hexo</title>
+  <title>WSL2 완벽 가이드 - Windows에서 Linux 사용하기 | Hexo</title>
   
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
 
-
-
-
-
-
-
-
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
-<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
-
-  
-
-
-
-
-
-
-  
 
 
 
 
 
   <noscript>
-    <link rel="stylesheet" href="/css/noscript.css">
-  </noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
 </head>
 
-<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
-  <div class="headband"></div>
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
 
-  <main class="main">
-    <div class="column">
-      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
   <div class="site-nav-toggle">
-    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
     </div>
   </div>
 
   <div class="site-meta">
 
     <a href="/" class="brand" rel="start">
-      <i class="logo-line"></i>
-      <p class="site-title">Hexo</p>
-      <i class="logo-line"></i>
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
     </a>
   </div>
 
   <div class="site-nav-right">
-    <div class="toggle popup-trigger" aria-label="Search" role="button">
+    <div class="toggle popup-trigger">
     </div>
   </div>
 </div>
@@ -107,132 +126,103 @@
 
 
 
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
 
 
 
-</header>
-        
-  
-  <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
-      <ul class="sidebar-nav">
-        <li class="sidebar-nav-toc">
-          Table of Contents
-        </li>
-        <li class="sidebar-nav-overview">
-          Overview
-        </li>
-      </ul>
-
-      <div class="sidebar-panel-container">
-        <!--noindex-->
-        <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL%EC%9D%B4%EB%9E%80"><span class="nav-number">1.</span> <span class="nav-text">WSL이란?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL1-vs-WSL2"><span class="nav-number">2.</span> <span class="nav-text">WSL1 vs WSL2</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL1"><span class="nav-number">2.1.</span> <span class="nav-text">WSL1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL2-%EA%B6%8C%EC%9E%A5"><span class="nav-number">2.2.</span> <span class="nav-text">WSL2 (권장)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL%EC%9D%98-%EC%9E%A5%EC%A0%90"><span class="nav-number">3.</span> <span class="nav-text">WSL의 장점</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%EA%B0%9C%EB%B0%9C-%ED%99%98%EA%B2%BD-%ED%86%B5%ED%95%A9"><span class="nav-number">3.1.</span> <span class="nav-text">1. 개발 환경 통합</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%EB%A6%AC%EC%86%8C%EC%8A%A4-%ED%9A%A8%EC%9C%A8%EC%84%B1"><span class="nav-number">3.2.</span> <span class="nav-text">2. 리소스 효율성</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%ED%8C%8C%EC%9D%BC-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%A0%91%EA%B7%BC"><span class="nav-number">3.3.</span> <span class="nav-text">3. 파일 시스템 접근</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-IDE-%ED%86%B5%ED%95%A9"><span class="nav-number">3.4.</span> <span class="nav-text">4. IDE 통합</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%EC%99%84%EC%A0%84%ED%95%9C-Linux-%EA%B2%BD%ED%97%98"><span class="nav-number">3.5.</span> <span class="nav-text">5. 완전한 Linux 경험</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL2-%EC%84%A4%EC%B9%98-%EB%B0%A9%EB%B2%95"><span class="nav-number">4.</span> <span class="nav-text">WSL2 설치 방법</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%82%AC%EC%A0%84-%EC%9A%94%EA%B5%AC%EC%82%AC%ED%95%AD"><span class="nav-number">4.1.</span> <span class="nav-text">사전 요구사항</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%B0%A9%EB%B2%95-1-%EA%B0%84%EB%8B%A8-%EC%84%A4%EC%B9%98-Windows-11-Windows-10-%EC%B5%9C%EC%8B%A0-%EB%B2%84%EC%A0%84"><span class="nav-number">4.2.</span> <span class="nav-text">방법 1: 간단 설치 (Windows 11 &amp; Windows 10 최신 버전)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%B0%A9%EB%B2%95-2-%EC%88%98%EB%8F%99-%EC%84%A4%EC%B9%98"><span class="nav-number">4.3.</span> <span class="nav-text">방법 2: 수동 설치</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Chocolatey%EB%A1%9C-%EC%84%A4%EC%B9%98"><span class="nav-number">4.4.</span> <span class="nav-text">Chocolatey로 설치</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL-%EA%B8%B0%EB%B3%B8-%EB%AA%85%EB%A0%B9%EC%96%B4"><span class="nav-number">5.</span> <span class="nav-text">WSL 기본 명령어</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%84%A4%EC%B9%98%EB%90%9C-%EB%B0%B0%ED%8F%AC%ED%8C%90-%ED%99%95%EC%9D%B8"><span class="nav-number">5.1.</span> <span class="nav-text">설치된 배포판 확인</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-%EC%8B%A4%ED%96%89"><span class="nav-number">5.2.</span> <span class="nav-text">WSL 실행</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EA%B8%B0%EB%B3%B8-%EB%B0%B0%ED%8F%AC%ED%8C%90-%EC%84%A4%EC%A0%95"><span class="nav-number">5.3.</span> <span class="nav-text">기본 배포판 설정</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-%EC%A2%85%EB%A3%8C"><span class="nav-number">5.4.</span> <span class="nav-text">WSL 종료</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%B0%B0%ED%8F%AC%ED%8C%90-%EC%82%AD%EC%A0%9C"><span class="nav-number">5.5.</span> <span class="nav-text">배포판 삭제</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-%EB%B2%84%EC%A0%84-%EC%97%85%EB%8D%B0%EC%9D%B4%ED%8A%B8"><span class="nav-number">5.6.</span> <span class="nav-text">WSL 버전 업데이트</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-%EB%B2%84%EC%A0%84-%ED%99%95%EC%9D%B8"><span class="nav-number">5.7.</span> <span class="nav-text">WSL 버전 확인</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-%EC%83%81%ED%83%9C-%ED%99%95%EC%9D%B8"><span class="nav-number">5.8.</span> <span class="nav-text">WSL 상태 확인</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-%EB%B2%84%EC%A0%84-%EB%B3%80%EA%B2%BD-WSL1-%E2%86%94-WSL2"><span class="nav-number">5.9.</span> <span class="nav-text">WSL 버전 변경 (WSL1 ↔ WSL2)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%8C%8C%EC%9D%BC-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%A0%91%EA%B7%BC"><span class="nav-number">6.</span> <span class="nav-text">파일 시스템 접근</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Windows%EC%97%90%EC%84%9C-Linux-%ED%8C%8C%EC%9D%BC-%EC%A0%91%EA%B7%BC"><span class="nav-number">6.1.</span> <span class="nav-text">Windows에서 Linux 파일 접근</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux%EC%97%90%EC%84%9C-Windows-%ED%8C%8C%EC%9D%BC-%EC%A0%91%EA%B7%BC"><span class="nav-number">6.2.</span> <span class="nav-text">Linux에서 Windows 파일 접근</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%ED%8C%8C%EC%9D%BC-%EB%B3%B5%EC%82%AC"><span class="nav-number">6.3.</span> <span class="nav-text">파일 복사</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Visual-Studio-Code%EC%99%80-WSL-%ED%86%B5%ED%95%A9"><span class="nav-number">7.</span> <span class="nav-text">Visual Studio Code와 WSL 통합</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-%ED%99%95%EC%9E%A5-%EC%84%A4%EC%B9%98"><span class="nav-number">7.1.</span> <span class="nav-text">WSL 확장 설치</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL%EC%97%90%EC%84%9C-VS-Code-%EC%97%B4%EA%B8%B0"><span class="nav-number">7.2.</span> <span class="nav-text">WSL에서 VS Code 열기</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#VS-Code%EC%97%90%EC%84%9C-WSL-%EC%97%B0%EA%B2%B0"><span class="nav-number">7.3.</span> <span class="nav-text">VS Code에서 WSL 연결</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#VS-Code-WSL-%EC%9E%91%EC%97%85-%ED%9D%90%EB%A6%84"><span class="nav-number">7.4.</span> <span class="nav-text">VS Code WSL 작업 흐름</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Windows-Terminal%EB%A1%9C-WSL-%EC%82%AC%EC%9A%A9%ED%95%98%EA%B8%B0"><span class="nav-number">8.</span> <span class="nav-text">Windows Terminal로 WSL 사용하기</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Windows-Terminal-%EC%84%A4%EC%B9%98"><span class="nav-number">8.1.</span> <span class="nav-text">Windows Terminal 설치</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EA%B8%B0%EB%B3%B8-%ED%94%84%EB%A1%9C%ED%95%84%EC%9D%84-WSL%EB%A1%9C-%EC%84%A4%EC%A0%95"><span class="nav-number">8.2.</span> <span class="nav-text">기본 프로필을 WSL로 설정</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%9C%A0%EC%9A%A9%ED%95%9C-%EB%8B%A8%EC%B6%95%ED%82%A4"><span class="nav-number">8.3.</span> <span class="nav-text">유용한 단축키</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%ED%84%B0%EB%AF%B8%EB%84%90-%ED%94%84%EB%A1%9C%ED%95%84-%EC%BB%A4%EC%8A%A4%ED%84%B0%EB%A7%88%EC%9D%B4%EC%A7%95"><span class="nav-number">8.4.</span> <span class="nav-text">터미널 프로필 커스터마이징</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL-%EC%84%A4%EC%A0%95-%EB%B0%8F-%EC%B5%9C%EC%A0%81%ED%99%94"><span class="nav-number">9.</span> <span class="nav-text">WSL 설정 및 최적화</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%EB%A9%94%EB%AA%A8%EB%A6%AC-%EC%A0%9C%ED%95%9C-%EC%84%A4%EC%A0%95"><span class="nav-number">9.1.</span> <span class="nav-text">1. 메모리 제한 설정</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%EB%B0%B0%ED%8F%AC%ED%8C%90%EB%B3%84-%EC%84%A4%EC%A0%95-etc-wsl-conf"><span class="nav-number">9.2.</span> <span class="nav-text">2. 배포판별 설정 (&#x2F;etc&#x2F;wsl.conf)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%EA%B8%B0%EB%B3%B8-%EC%82%AC%EC%9A%A9%EC%9E%90-%EB%B3%80%EA%B2%BD"><span class="nav-number">9.3.</span> <span class="nav-text">3. 기본 사용자 변경</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-Windows-%EB%AA%85%EB%A0%B9%EC%96%B4-%EC%8B%A4%ED%96%89"><span class="nav-number">9.4.</span> <span class="nav-text">4. Windows 명령어 실행</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL-%EB%B0%B1%EC%97%85-%EB%B0%8F-%EB%B3%B5%EC%9B%90"><span class="nav-number">10.</span> <span class="nav-text">WSL 백업 및 복원</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%B0%B1%EC%97%85-Export"><span class="nav-number">10.1.</span> <span class="nav-text">백업 (Export)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%B3%B5%EC%9B%90-Import"><span class="nav-number">10.2.</span> <span class="nav-text">복원 (Import)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%B0%B1%EC%97%85%EB%90%9C-%EB%B0%B0%ED%8F%AC%ED%8C%90%EC%9D%84-%EB%8B%A4%EB%A5%B8-%EC%BB%B4%ED%93%A8%ED%84%B0%EB%A1%9C-%EC%9D%B4%EB%8F%99"><span class="nav-number">10.3.</span> <span class="nav-text">백업된 배포판을 다른 컴퓨터로 이동</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94"><span class="nav-number">11.</span> <span class="nav-text">성능 최적화</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Linux-%ED%8C%8C%EC%9D%BC-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%82%AC%EC%9A%A9"><span class="nav-number">11.1.</span> <span class="nav-text">1. Linux 파일 시스템 사용</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Windows-Defender-%EC%98%88%EC%99%B8-%EC%B6%94%EA%B0%80"><span class="nav-number">11.2.</span> <span class="nav-text">2. Windows Defender 예외 추가</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%EB%94%94%EC%8A%A4%ED%81%AC-%EA%B3%B5%EA%B0%84-%ED%9A%8C%EC%88%98"><span class="nav-number">11.3.</span> <span class="nav-text">3. 디스크 공간 회수</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EC%84%B1%EB%8A%A5-%ED%96%A5%EC%83%81"><span class="nav-number">11.4.</span> <span class="nav-text">4. 네트워크 성능 향상</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%97%AC%EB%9F%AC-%EB%B0%B0%ED%8F%AC%ED%8C%90-%EA%B4%80%EB%A6%AC"><span class="nav-number">12.</span> <span class="nav-text">여러 배포판 관리</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%8F%99%EC%8B%9C%EC%97%90-%EC%97%AC%EB%9F%AC-%EB%B0%B0%ED%8F%AC%ED%8C%90-%EC%82%AC%EC%9A%A9"><span class="nav-number">12.1.</span> <span class="nav-text">동시에 여러 배포판 사용</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%9A%A9%EB%8F%84%EB%B3%84-%EB%B0%B0%ED%8F%AC%ED%8C%90-%EB%B6%84%EB%A6%AC"><span class="nav-number">12.2.</span> <span class="nav-text">용도별 배포판 분리</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%B0%B0%ED%8F%AC%ED%8C%90-%EB%B3%B5%EC%A0%9C"><span class="nav-number">12.3.</span> <span class="nav-text">배포판 복제</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9D%BC%EB%B0%98%EC%A0%81%EC%9D%B8-%EB%AC%B8%EC%A0%9C-%ED%95%B4%EA%B2%B0"><span class="nav-number">13.</span> <span class="nav-text">일반적인 문제 해결</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E2%80%9CWSL-2-requires-an-update-to-its-kernel-component%E2%80%9D"><span class="nav-number">13.1.</span> <span class="nav-text">1. “WSL 2 requires an update to its kernel component”</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%EA%B0%80%EC%83%81%ED%99%94%EA%B0%80-%ED%99%9C%EC%84%B1%ED%99%94%EB%90%98%EC%A7%80-%EC%95%8A%EC%9D%8C"><span class="nav-number">13.2.</span> <span class="nav-text">2. 가상화가 활성화되지 않음</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EC%97%B0%EA%B2%B0-%EB%AC%B8%EC%A0%9C"><span class="nav-number">13.3.</span> <span class="nav-text">3. 네트워크 연결 문제</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-DNS-%ED%95%B4%EC%84%9D-%EC%8B%A4%ED%8C%A8"><span class="nav-number">13.4.</span> <span class="nav-text">4. DNS 해석 실패</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E2%80%9C%EC%B0%B8%EC%A1%B0%EB%90%9C-%EA%B0%9C%EC%B2%B4-%ED%98%95%EC%8B%9D%EC%9D%B4-%EC%A7%80%EC%9B%90%EB%90%98%EC%A7%80-%EC%95%8A%EC%8A%B5%EB%8B%88%EB%8B%A4%E2%80%9D"><span class="nav-number">13.5.</span> <span class="nav-text">5. “참조된 개체 형식이 지원되지 않습니다”</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-WSL%EC%9D%B4-%EB%8A%90%EB%A6%AC%EA%B2%8C-%EC%8B%9C%EC%9E%91%EB%90%A8"><span class="nav-number">13.6.</span> <span class="nav-text">6. WSL이 느리게 시작됨</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-%ED%8F%AC%ED%8A%B8%EA%B0%80-%EC%9D%B4%EB%AF%B8-%EC%82%AC%EC%9A%A9-%EC%A4%91"><span class="nav-number">13.7.</span> <span class="nav-text">7. 포트가 이미 사용 중</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B3%A0%EA%B8%89-%ED%99%9C%EC%9A%A9"><span class="nav-number">14.</span> <span class="nav-text">고급 활용</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL%EC%97%90%EC%84%9C-SSH-%EC%84%9C%EB%B2%84-%EC%8B%A4%ED%96%89"><span class="nav-number">14.1.</span> <span class="nav-text">WSL에서 SSH 서버 실행</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-IP-%EC%A3%BC%EC%86%8C-%ED%99%95%EC%9D%B8-%EB%B0%8F-%EA%B3%A0%EC%A0%95"><span class="nav-number">14.2.</span> <span class="nav-text">WSL IP 주소 확인 및 고정</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GUI-%EC%95%A0%ED%94%8C%EB%A6%AC%EC%BC%80%EC%9D%B4%EC%85%98-%EC%8B%A4%ED%96%89-WSLg"><span class="nav-number">14.3.</span> <span class="nav-text">GUI 애플리케이션 실행 (WSLg)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">15.</span> <span class="nav-text">마무리</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%B0%B8%EA%B3%A0-%EC%9E%90%EB%A3%8C"><span class="nav-number">15.1.</span> <span class="nav-text">참고 자료</span></a></li></ol></li></ol></div>
-        </div>
-        <!--/noindex-->
-
-        <div class="site-overview-wrap sidebar-panel">
-          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">John Doe</p>
-  <div class="site-description" itemprop="description"></div>
 </div>
-<div class="site-state-wrap animated">
-  <nav class="site-state">
-      <div class="site-state-item site-state-posts">
-        <a href="/archives/">
-          <span class="site-state-item-count">16</span>
-          <span class="site-state-item-name">posts</span>
-        </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-          <a href="/categories/">
-        <span class="site-state-item-count">21</span>
-        <span class="site-state-item-name">categories</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-          <a href="/tags/">
-        <span class="site-state-item-count">60</span>
-        <span class="site-state-item-name">tags</span></a>
-      </div>
-  </nav>
-</div>
-
-        </div>
-      </div>
-    </div>
+    </header>
 
     
-  </aside>
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
 
 
-    </div>
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
 
-    <div class="main-inner post posts-expand">
+          <div class="content post posts-expand">
+            
 
-
+    
   
-
-
-<div class="post-block">
   
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://ew32.github.io/2025/12/17/windows-subsystem-for-linux-guide/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Hexo">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="WSL2 완벽 가이드 - Windows에서 Linux 사용하기 | Hexo">
-      <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
           WSL2 완벽 가이드 - Windows에서 Linux 사용하기
         </h1>
 
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
 
-      <time title="Created: 2025-12-17 11:00:00" itemprop="dateCreated datePublished" datetime="2025-12-17T11:00:00+00:00">2025-12-17</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2026-05-07 13:14:45" itemprop="dateModified" datetime="2026-05-07T13:14:45+00:00">2026-05-07</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/" itemprop="url" rel="index"><span itemprop="name">개발환경</span></a>
-        </span>
-          , 
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/System/" itemprop="url" rel="index"><span itemprop="name">System</span></a>
-        </span>
-    </span>
+              <time title="Created: 2025-12-17 11:00:00" itemprop="dateCreated datePublished" datetime="2025-12-17T11:00:00+00:00">2025-12-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2026-05-07 13:46:58" itemprop="dateModified" datetime="2026-05-07T13:46:58+00:00">2026-05-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/" itemprop="url" rel="index"><span itemprop="name">개발환경</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/System/" itemprop="url" rel="index"><span itemprop="name">System</span></a>
+                </span>
+            </span>
 
-  
-</div>
+          
 
         </div>
       </header>
@@ -240,7 +230,10 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><h2 id="WSL이란"><a href="#WSL이란" class="headerlink" title="WSL이란?"></a>WSL이란?</h2><p>WSL(Windows Subsystem for Linux)은 Windows 10과 Windows 11에서 Linux 바이너리 실행 파일을 네이티브로 실행할 수 있게 해주는 호환성 계층입니다. 가상 머신이나 듀얼 부팅 없이 Windows에서 Linux 환경을 사용할 수 있어, 개발자들에게 매우 유용한 도구입니다.</p>
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="WSL이란"><a href="#WSL이란" class="headerlink" title="WSL이란?"></a>WSL이란?</h2><p>WSL(Windows Subsystem for Linux)은 Windows 10과 Windows 11에서 Linux 바이너리 실행 파일을 네이티브로 실행할 수 있게 해주는 호환성 계층입니다. 가상 머신이나 듀얼 부팅 없이 Windows에서 Linux 환경을 사용할 수 있어, 개발자들에게 매우 유용한 도구입니다.</p>
 <h2 id="WSL1-vs-WSL2"><a href="#WSL1-vs-WSL2" class="headerlink" title="WSL1 vs WSL2"></a>WSL1 vs WSL2</h2><h3 id="WSL1"><a href="#WSL1" class="headerlink" title="WSL1"></a>WSL1</h3><ul>
 <li>시스템 호출을 Windows 커널로 변환하는 방식</li>
 <li>빠른 파일 시스템 성능 (Windows 파일 접근 시)</li>
@@ -535,75 +528,495 @@
     
     
 
-    <footer class="post-footer">
+      <footer class="post-footer">
           <div class="post-tags">
               <a href="/tags/Ubuntu/" rel="tag"># Ubuntu</a>
               <a href="/tags/WSL/" rel="tag"># WSL</a>
-              <a href="/tags/Windows/" rel="tag"># Windows</a>
               <a href="/tags/WSL2/" rel="tag"># WSL2</a>
               <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/Windows/" rel="tag"># Windows</a>
               <a href="/tags/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/" rel="tag"># 개발환경</a>
               <a href="/tags/%EA%B0%80%EC%83%81%ED%99%94/" rel="tag"># 가상화</a>
           </div>
 
         
 
-          <div class="post-nav">
-            <div class="post-nav-item">
-                <a href="/2025/12/17/windows-package-manager-chocolatey/" rel="prev" title="Windows 패키지 관리자 Chocolatey 완벽 가이드">
-                  <i class="fa fa-angle-left"></i> Windows 패키지 관리자 Chocolatey 완벽 가이드
-                </a>
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/12/17/windows-package-manager-chocolatey/" rel="prev" title="Windows 패키지 관리자 Chocolatey 완벽 가이드">
+      <i class="fa fa-chevron-left"></i> Windows 패키지 관리자 Chocolatey 완벽 가이드
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2026/05/07/111/" rel="next" title="111">
+      111 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL%EC%9D%B4%EB%9E%80"><span class="nav-number">1.</span> <span class="nav-text">WSL이란?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL1-vs-WSL2"><span class="nav-number">2.</span> <span class="nav-text">WSL1 vs WSL2</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL1"><span class="nav-number">2.1.</span> <span class="nav-text">WSL1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL2-%EA%B6%8C%EC%9E%A5"><span class="nav-number">2.2.</span> <span class="nav-text">WSL2 (권장)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL%EC%9D%98-%EC%9E%A5%EC%A0%90"><span class="nav-number">3.</span> <span class="nav-text">WSL의 장점</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%EA%B0%9C%EB%B0%9C-%ED%99%98%EA%B2%BD-%ED%86%B5%ED%95%A9"><span class="nav-number">3.1.</span> <span class="nav-text">1. 개발 환경 통합</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%EB%A6%AC%EC%86%8C%EC%8A%A4-%ED%9A%A8%EC%9C%A8%EC%84%B1"><span class="nav-number">3.2.</span> <span class="nav-text">2. 리소스 효율성</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%ED%8C%8C%EC%9D%BC-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%A0%91%EA%B7%BC"><span class="nav-number">3.3.</span> <span class="nav-text">3. 파일 시스템 접근</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-IDE-%ED%86%B5%ED%95%A9"><span class="nav-number">3.4.</span> <span class="nav-text">4. IDE 통합</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%EC%99%84%EC%A0%84%ED%95%9C-Linux-%EA%B2%BD%ED%97%98"><span class="nav-number">3.5.</span> <span class="nav-text">5. 완전한 Linux 경험</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL2-%EC%84%A4%EC%B9%98-%EB%B0%A9%EB%B2%95"><span class="nav-number">4.</span> <span class="nav-text">WSL2 설치 방법</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%82%AC%EC%A0%84-%EC%9A%94%EA%B5%AC%EC%82%AC%ED%95%AD"><span class="nav-number">4.1.</span> <span class="nav-text">사전 요구사항</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%B0%A9%EB%B2%95-1-%EA%B0%84%EB%8B%A8-%EC%84%A4%EC%B9%98-Windows-11-Windows-10-%EC%B5%9C%EC%8B%A0-%EB%B2%84%EC%A0%84"><span class="nav-number">4.2.</span> <span class="nav-text">방법 1: 간단 설치 (Windows 11 &amp; Windows 10 최신 버전)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%B0%A9%EB%B2%95-2-%EC%88%98%EB%8F%99-%EC%84%A4%EC%B9%98"><span class="nav-number">4.3.</span> <span class="nav-text">방법 2: 수동 설치</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Chocolatey%EB%A1%9C-%EC%84%A4%EC%B9%98"><span class="nav-number">4.4.</span> <span class="nav-text">Chocolatey로 설치</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL-%EA%B8%B0%EB%B3%B8-%EB%AA%85%EB%A0%B9%EC%96%B4"><span class="nav-number">5.</span> <span class="nav-text">WSL 기본 명령어</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%84%A4%EC%B9%98%EB%90%9C-%EB%B0%B0%ED%8F%AC%ED%8C%90-%ED%99%95%EC%9D%B8"><span class="nav-number">5.1.</span> <span class="nav-text">설치된 배포판 확인</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-%EC%8B%A4%ED%96%89"><span class="nav-number">5.2.</span> <span class="nav-text">WSL 실행</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EA%B8%B0%EB%B3%B8-%EB%B0%B0%ED%8F%AC%ED%8C%90-%EC%84%A4%EC%A0%95"><span class="nav-number">5.3.</span> <span class="nav-text">기본 배포판 설정</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-%EC%A2%85%EB%A3%8C"><span class="nav-number">5.4.</span> <span class="nav-text">WSL 종료</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%B0%B0%ED%8F%AC%ED%8C%90-%EC%82%AD%EC%A0%9C"><span class="nav-number">5.5.</span> <span class="nav-text">배포판 삭제</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-%EB%B2%84%EC%A0%84-%EC%97%85%EB%8D%B0%EC%9D%B4%ED%8A%B8"><span class="nav-number">5.6.</span> <span class="nav-text">WSL 버전 업데이트</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-%EB%B2%84%EC%A0%84-%ED%99%95%EC%9D%B8"><span class="nav-number">5.7.</span> <span class="nav-text">WSL 버전 확인</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-%EC%83%81%ED%83%9C-%ED%99%95%EC%9D%B8"><span class="nav-number">5.8.</span> <span class="nav-text">WSL 상태 확인</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-%EB%B2%84%EC%A0%84-%EB%B3%80%EA%B2%BD-WSL1-%E2%86%94-WSL2"><span class="nav-number">5.9.</span> <span class="nav-text">WSL 버전 변경 (WSL1 ↔ WSL2)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%8C%8C%EC%9D%BC-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%A0%91%EA%B7%BC"><span class="nav-number">6.</span> <span class="nav-text">파일 시스템 접근</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Windows%EC%97%90%EC%84%9C-Linux-%ED%8C%8C%EC%9D%BC-%EC%A0%91%EA%B7%BC"><span class="nav-number">6.1.</span> <span class="nav-text">Windows에서 Linux 파일 접근</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux%EC%97%90%EC%84%9C-Windows-%ED%8C%8C%EC%9D%BC-%EC%A0%91%EA%B7%BC"><span class="nav-number">6.2.</span> <span class="nav-text">Linux에서 Windows 파일 접근</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%ED%8C%8C%EC%9D%BC-%EB%B3%B5%EC%82%AC"><span class="nav-number">6.3.</span> <span class="nav-text">파일 복사</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Visual-Studio-Code%EC%99%80-WSL-%ED%86%B5%ED%95%A9"><span class="nav-number">7.</span> <span class="nav-text">Visual Studio Code와 WSL 통합</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-%ED%99%95%EC%9E%A5-%EC%84%A4%EC%B9%98"><span class="nav-number">7.1.</span> <span class="nav-text">WSL 확장 설치</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL%EC%97%90%EC%84%9C-VS-Code-%EC%97%B4%EA%B8%B0"><span class="nav-number">7.2.</span> <span class="nav-text">WSL에서 VS Code 열기</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#VS-Code%EC%97%90%EC%84%9C-WSL-%EC%97%B0%EA%B2%B0"><span class="nav-number">7.3.</span> <span class="nav-text">VS Code에서 WSL 연결</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#VS-Code-WSL-%EC%9E%91%EC%97%85-%ED%9D%90%EB%A6%84"><span class="nav-number">7.4.</span> <span class="nav-text">VS Code WSL 작업 흐름</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Windows-Terminal%EB%A1%9C-WSL-%EC%82%AC%EC%9A%A9%ED%95%98%EA%B8%B0"><span class="nav-number">8.</span> <span class="nav-text">Windows Terminal로 WSL 사용하기</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Windows-Terminal-%EC%84%A4%EC%B9%98"><span class="nav-number">8.1.</span> <span class="nav-text">Windows Terminal 설치</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EA%B8%B0%EB%B3%B8-%ED%94%84%EB%A1%9C%ED%95%84%EC%9D%84-WSL%EB%A1%9C-%EC%84%A4%EC%A0%95"><span class="nav-number">8.2.</span> <span class="nav-text">기본 프로필을 WSL로 설정</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%9C%A0%EC%9A%A9%ED%95%9C-%EB%8B%A8%EC%B6%95%ED%82%A4"><span class="nav-number">8.3.</span> <span class="nav-text">유용한 단축키</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%ED%84%B0%EB%AF%B8%EB%84%90-%ED%94%84%EB%A1%9C%ED%95%84-%EC%BB%A4%EC%8A%A4%ED%84%B0%EB%A7%88%EC%9D%B4%EC%A7%95"><span class="nav-number">8.4.</span> <span class="nav-text">터미널 프로필 커스터마이징</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL-%EC%84%A4%EC%A0%95-%EB%B0%8F-%EC%B5%9C%EC%A0%81%ED%99%94"><span class="nav-number">9.</span> <span class="nav-text">WSL 설정 및 최적화</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%EB%A9%94%EB%AA%A8%EB%A6%AC-%EC%A0%9C%ED%95%9C-%EC%84%A4%EC%A0%95"><span class="nav-number">9.1.</span> <span class="nav-text">1. 메모리 제한 설정</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%EB%B0%B0%ED%8F%AC%ED%8C%90%EB%B3%84-%EC%84%A4%EC%A0%95-etc-wsl-conf"><span class="nav-number">9.2.</span> <span class="nav-text">2. 배포판별 설정 (&#x2F;etc&#x2F;wsl.conf)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%EA%B8%B0%EB%B3%B8-%EC%82%AC%EC%9A%A9%EC%9E%90-%EB%B3%80%EA%B2%BD"><span class="nav-number">9.3.</span> <span class="nav-text">3. 기본 사용자 변경</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-Windows-%EB%AA%85%EB%A0%B9%EC%96%B4-%EC%8B%A4%ED%96%89"><span class="nav-number">9.4.</span> <span class="nav-text">4. Windows 명령어 실행</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL-%EB%B0%B1%EC%97%85-%EB%B0%8F-%EB%B3%B5%EC%9B%90"><span class="nav-number">10.</span> <span class="nav-text">WSL 백업 및 복원</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%B0%B1%EC%97%85-Export"><span class="nav-number">10.1.</span> <span class="nav-text">백업 (Export)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%B3%B5%EC%9B%90-Import"><span class="nav-number">10.2.</span> <span class="nav-text">복원 (Import)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%B0%B1%EC%97%85%EB%90%9C-%EB%B0%B0%ED%8F%AC%ED%8C%90%EC%9D%84-%EB%8B%A4%EB%A5%B8-%EC%BB%B4%ED%93%A8%ED%84%B0%EB%A1%9C-%EC%9D%B4%EB%8F%99"><span class="nav-number">10.3.</span> <span class="nav-text">백업된 배포판을 다른 컴퓨터로 이동</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94"><span class="nav-number">11.</span> <span class="nav-text">성능 최적화</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Linux-%ED%8C%8C%EC%9D%BC-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%82%AC%EC%9A%A9"><span class="nav-number">11.1.</span> <span class="nav-text">1. Linux 파일 시스템 사용</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Windows-Defender-%EC%98%88%EC%99%B8-%EC%B6%94%EA%B0%80"><span class="nav-number">11.2.</span> <span class="nav-text">2. Windows Defender 예외 추가</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%EB%94%94%EC%8A%A4%ED%81%AC-%EA%B3%B5%EA%B0%84-%ED%9A%8C%EC%88%98"><span class="nav-number">11.3.</span> <span class="nav-text">3. 디스크 공간 회수</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EC%84%B1%EB%8A%A5-%ED%96%A5%EC%83%81"><span class="nav-number">11.4.</span> <span class="nav-text">4. 네트워크 성능 향상</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%97%AC%EB%9F%AC-%EB%B0%B0%ED%8F%AC%ED%8C%90-%EA%B4%80%EB%A6%AC"><span class="nav-number">12.</span> <span class="nav-text">여러 배포판 관리</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%8F%99%EC%8B%9C%EC%97%90-%EC%97%AC%EB%9F%AC-%EB%B0%B0%ED%8F%AC%ED%8C%90-%EC%82%AC%EC%9A%A9"><span class="nav-number">12.1.</span> <span class="nav-text">동시에 여러 배포판 사용</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%9A%A9%EB%8F%84%EB%B3%84-%EB%B0%B0%ED%8F%AC%ED%8C%90-%EB%B6%84%EB%A6%AC"><span class="nav-number">12.2.</span> <span class="nav-text">용도별 배포판 분리</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%B0%B0%ED%8F%AC%ED%8C%90-%EB%B3%B5%EC%A0%9C"><span class="nav-number">12.3.</span> <span class="nav-text">배포판 복제</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9D%BC%EB%B0%98%EC%A0%81%EC%9D%B8-%EB%AC%B8%EC%A0%9C-%ED%95%B4%EA%B2%B0"><span class="nav-number">13.</span> <span class="nav-text">일반적인 문제 해결</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E2%80%9CWSL-2-requires-an-update-to-its-kernel-component%E2%80%9D"><span class="nav-number">13.1.</span> <span class="nav-text">1. “WSL 2 requires an update to its kernel component”</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%EA%B0%80%EC%83%81%ED%99%94%EA%B0%80-%ED%99%9C%EC%84%B1%ED%99%94%EB%90%98%EC%A7%80-%EC%95%8A%EC%9D%8C"><span class="nav-number">13.2.</span> <span class="nav-text">2. 가상화가 활성화되지 않음</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EC%97%B0%EA%B2%B0-%EB%AC%B8%EC%A0%9C"><span class="nav-number">13.3.</span> <span class="nav-text">3. 네트워크 연결 문제</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-DNS-%ED%95%B4%EC%84%9D-%EC%8B%A4%ED%8C%A8"><span class="nav-number">13.4.</span> <span class="nav-text">4. DNS 해석 실패</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E2%80%9C%EC%B0%B8%EC%A1%B0%EB%90%9C-%EA%B0%9C%EC%B2%B4-%ED%98%95%EC%8B%9D%EC%9D%B4-%EC%A7%80%EC%9B%90%EB%90%98%EC%A7%80-%EC%95%8A%EC%8A%B5%EB%8B%88%EB%8B%A4%E2%80%9D"><span class="nav-number">13.5.</span> <span class="nav-text">5. “참조된 개체 형식이 지원되지 않습니다”</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-WSL%EC%9D%B4-%EB%8A%90%EB%A6%AC%EA%B2%8C-%EC%8B%9C%EC%9E%91%EB%90%A8"><span class="nav-number">13.6.</span> <span class="nav-text">6. WSL이 느리게 시작됨</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-%ED%8F%AC%ED%8A%B8%EA%B0%80-%EC%9D%B4%EB%AF%B8-%EC%82%AC%EC%9A%A9-%EC%A4%91"><span class="nav-number">13.7.</span> <span class="nav-text">7. 포트가 이미 사용 중</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B3%A0%EA%B8%89-%ED%99%9C%EC%9A%A9"><span class="nav-number">14.</span> <span class="nav-text">고급 활용</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL%EC%97%90%EC%84%9C-SSH-%EC%84%9C%EB%B2%84-%EC%8B%A4%ED%96%89"><span class="nav-number">14.1.</span> <span class="nav-text">WSL에서 SSH 서버 실행</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL-IP-%EC%A3%BC%EC%86%8C-%ED%99%95%EC%9D%B8-%EB%B0%8F-%EA%B3%A0%EC%A0%95"><span class="nav-number">14.2.</span> <span class="nav-text">WSL IP 주소 확인 및 고정</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GUI-%EC%95%A0%ED%94%8C%EB%A6%AC%EC%BC%80%EC%9D%B4%EC%85%98-%EC%8B%A4%ED%96%89-WSLg"><span class="nav-number">14.3.</span> <span class="nav-text">GUI 애플리케이션 실행 (WSLg)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">15.</span> <span class="nav-text">마무리</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%B0%B8%EA%B3%A0-%EC%9E%90%EB%A3%8C"><span class="nav-number">15.1.</span> <span class="nav-text">참고 자료</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">John Doe</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">16</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">60</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://plus.google.com/yourname" title="Google → https:&#x2F;&#x2F;plus.google.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>Google</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
             </div>
-            <div class="post-nav-item">
-                <a href="/2026/05/07/111/" rel="next" title="111">
-                  111 <i class="fa fa-angle-right"></i>
-                </a>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
             </div>
           </div>
-    </footer>
-  </article>
-</div>
-
-
-
-
-
-
-</div>
-  </main>
-
-  <footer class="footer">
-    <div class="footer-inner">
-
-  <div class="copyright">
-    &copy; 
-    <span itemprop="copyrightYear">2026</span>
-    <span class="with-love">
-      <i class="fa fa-heart"></i>
-    </span>
-    <span class="author" itemprop="copyrightHolder">John Doe</span>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
   </div>
-  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a>
-  </div>
+</div>
+      </div>
 
     </div>
-  </footer>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
 
   
-  <div class="toggle sidebar-toggle" role="button">
-    <span class="toggle-line"></span>
-    <span class="toggle-line"></span>
-    <span class="toggle-line"></span>
-  </div>
-  <div class="sidebar-dimmer"></div>
-  <div class="back-to-top" role="button" aria-label="Back to top">
-    <i class="fa fa-arrow-up fa-lg"></i>
-    <span>0%</span>
-  </div>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
 
-<noscript>
-  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
-</noscript>
+<script src="/js/utils.js"></script>
 
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
 </body>
 </html>
