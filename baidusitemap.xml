@@ -1,6 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://ew32.github.io/2026/05/07/111/</loc>
+    <lastmod>2026-05-07</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/2024/07/20/cloud-computing-overview-md/</loc>
+    <lastmod>2026-05-07</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/2024/07/16/difference-between-get-and-post-md/</loc>
+    <lastmod>2026-05-07</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/2026/05/07/hello-world/</loc>
+    <lastmod>2026-05-07</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/2024/07/07/jpa-repository-vs-mapper-comparison/</loc>
+    <lastmod>2026-05-07</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/2025/10/22/moneyprinter-installation/</loc>
+    <lastmod>2026-05-07</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/2024/07/08/network-and-disk-based-file-systems-md/</loc>
+    <lastmod>2026-05-07</lastmod>
+  </url>
+  <url>
     <loc>http://ew32.github.io/2024/07/11/os-scheduling-algorithms-md/</loc>
     <lastmod>2026-05-07</lastmod>
   </url>
@@ -34,34 +62,6 @@
   </url>
   <url>
     <loc>http://ew32.github.io/2025/10/22/wsl-ubuntu-dev-environment/</loc>
-    <lastmod>2026-05-07</lastmod>
-  </url>
-  <url>
-    <loc>http://ew32.github.io/2026/05/07/111/</loc>
-    <lastmod>2026-05-07</lastmod>
-  </url>
-  <url>
-    <loc>http://ew32.github.io/2024/07/20/cloud-computing-overview-md/</loc>
-    <lastmod>2026-05-07</lastmod>
-  </url>
-  <url>
-    <loc>http://ew32.github.io/2024/07/16/difference-between-get-and-post-md/</loc>
-    <lastmod>2026-05-07</lastmod>
-  </url>
-  <url>
-    <loc>http://ew32.github.io/2026/05/07/hello-world/</loc>
-    <lastmod>2026-05-07</lastmod>
-  </url>
-  <url>
-    <loc>http://ew32.github.io/2024/07/07/jpa-repository-vs-mapper-comparison/</loc>
-    <lastmod>2026-05-07</lastmod>
-  </url>
-  <url>
-    <loc>http://ew32.github.io/2024/07/08/network-and-disk-based-file-systems-md/</loc>
-    <lastmod>2026-05-07</lastmod>
-  </url>
-  <url>
-    <loc>http://ew32.github.io/2025/10/22/moneyprinter-installation/</loc>
     <lastmod>2026-05-07</lastmod>
   </url>
 </urlset> 

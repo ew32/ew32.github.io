@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>운영체제 스케줄링 알고리즘 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="OS 스케줄링운영 체제(OS, Operating System) 스케줄링은 시스템의 자원을 효율적으로 사용하고, 사용자에게 공정한 서비스 제공을 목적으로 프로세스나 스레드의 실행 순서를 결정하는 방법이다. 스케줄링 알고리즘은 CPU, 메모리, 디스크 I&#x2F;O 등의 자원을 어떤 순서로 할당할지를 결정한다. 스케줄링의 목표 효율성: 자원의 최대한 활용 공">
+<meta property="og:type" content="article">
+<meta property="og:title" content="운영체제 스케줄링 알고리즘">
+<meta property="og:url" content="http://ew32.github.io/2024/07/11/os-scheduling-algorithms-md/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="OS 스케줄링운영 체제(OS, Operating System) 스케줄링은 시스템의 자원을 효율적으로 사용하고, 사용자에게 공정한 서비스 제공을 목적으로 프로세스나 스레드의 실행 순서를 결정하는 방법이다. 스케줄링 알고리즘은 CPU, 메모리, 디스크 I&#x2F;O 등의 자원을 어떤 순서로 할당할지를 결정한다. 스케줄링의 목표 효율성: 자원의 최대한 활용 공">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-07-11T00:59:17.000Z">
+<meta property="article:modified_time" content="2026-05-07T08:07:04.387Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="운영체제">
+<meta property="article:tag" content="스케줄링">
+<meta property="article:tag" content="알고리즘">
+<meta property="article:tag" content="CPU">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fork-awesome@1.2.0/css/fork-awesome.min.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://ew32.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-os-scheduling-algorithms-md" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/07/11/os-scheduling-algorithms-md/" class="article-date">
+  <time class="dt-published" datetime="2024-07-11T00:59:17.000Z" itemprop="datePublished">2024-07-11</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/System/">System</a>►<a class="article-category-link" href="/categories/System/OS/">OS</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      운영체제 스케줄링 알고리즘
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="OS-스케줄링"><a href="#OS-스케줄링" class="headerlink" title="OS 스케줄링"></a>OS 스케줄링</h1><p>운영 체제(OS, Operating System) 스케줄링은 시스템의 자원을 효율적으로 사용하고, 사용자에게 공정한 서비스 제공을 목적으로 프로세스나 스레드의 실행 순서를 결정하는 방법이다. 스케줄링 알고리즘은 CPU, 메모리, 디스크 I&#x2F;O 등의 자원을 어떤 순서로 할당할지를 결정한다.</p>
+<h2 id="스케줄링의-목표"><a href="#스케줄링의-목표" class="headerlink" title="스케줄링의 목표"></a>스케줄링의 목표</h2><ul>
+<li><strong>효율성</strong>: 자원의 최대한 활용</li>
+<li><strong>공정성</strong>: 모든 프로세스가 공정하게 자원을 사용할 수 있도록 보장</li>
+<li><strong>응답 시간 최소화</strong>: 사용자에게 빠른 응답 시간 제공</li>
+<li><strong>처리량 최대화</strong>: 주어진 시간 내에 최대한 많은 작업 처리</li>
+<li><strong>대기 시간 최소화</strong>: 프로세스가 대기하는 시간을 최소화</li>
+<li><strong>우선순위 보장</strong>: 중요하거나 우선순위가 높은 작업을 먼저 처리</li>
+</ul>
+<h2 id="스케줄링의-종류"><a href="#스케줄링의-종류" class="headerlink" title="스케줄링의 종류"></a>스케줄링의 종류</h2><h3 id="1-선점형-스케줄링-Preemptive-Scheduling"><a href="#1-선점형-스케줄링-Preemptive-Scheduling" class="headerlink" title="1. 선점형 스케줄링 (Preemptive Scheduling)"></a>1. 선점형 스케줄링 (Preemptive Scheduling)</h3><p>운영 체제가 프로세스를 강제로 중단시키고 다른 프로세스로 교체할 수 있는 스케줄링 방법.</p>
+<ul>
+<li><strong>라운드 로빈 (Round Robin)</strong>: 각 프로세스는 동일한 시간 할당을 받아 실행되고, 할당 시간이 끝나면 다음 프로세스로 교체된다.</li>
+<li><strong>SRT (Shortest Remaining Time)</strong>: 남은 실행 시간이 가장 짧은 프로세스를 우선 실행한다.</li>
+<li><strong>다단계 큐 (Multilevel Queue)</strong>: 프로세스를 여러 우선순위 큐로 나누어 각각의 큐에서 독립적으로 스케줄링한다.</li>
+<li><strong>다단계 피드백 큐 (Multilevel Feedback Queue)</strong>: 프로세스가 CPU를 많이 사용하면 낮은 우선순위 큐로 이동시키고, 적게 사용하면 높은 우선순위 큐로 이동시킨다.</li>
+</ul>
+<h3 id="2-비선점형-스케줄링-Non-preemptive-Scheduling"><a href="#2-비선점형-스케줄링-Non-preemptive-Scheduling" class="headerlink" title="2. 비선점형 스케줄링 (Non-preemptive Scheduling)"></a>2. 비선점형 스케줄링 (Non-preemptive Scheduling)</h3><p>프로세스가 자발적으로 CPU를 반환할 때까지 실행을 계속하는 스케줄링 방법.</p>
+<ul>
+<li><strong>FCFS (First-Come, First-Served)</strong>: 먼저 도착한 프로세스를 먼저 실행한다.</li>
+<li><strong>SJF (Shortest Job First)</strong>: 실행 시간이 가장 짧은 프로세스를 먼저 실행한다.</li>
+<li><strong>우선순위 스케줄링 (Priority Scheduling)</strong>: 우선순위가 높은 프로세스를 먼저 실행한다.</li>
+<li><strong>HRRN (Highest Response Ratio Next)</strong>: 응답률이 가장 높은 프로세스를 먼저 실행한다.</li>
+</ul>
+<h2 id="컨텍스트-스위칭-오버헤드"><a href="#컨텍스트-스위칭-오버헤드" class="headerlink" title="컨텍스트 스위칭 오버헤드"></a>컨텍스트 스위칭 오버헤드</h2><p>컨텍스트 스위칭은 CPU가 현재 실행 중인 프로세스의 상태(컨텍스트)를 저장하고, 다른 프로세스의 상태를 불러오는 작업이다. 이 과정은 다음과 같은 단계를 포함한다:</p>
+<ol>
+<li>현재 실행 중인 프로세스의 레지스터와 프로그램 카운터 값을 저장</li>
+<li>다른 프로세스의 저장된 레지스터와 프로그램 카운터 값을 복원</li>
+<li>메모리 매핑 테이블 등의 시스템 자원을 새 프로세스에 맞게 조정</li>
+</ol>
+<p>컨텍스트 스위칭 오버헤드는 이 과정에서 발생하는 시간 및 자원 소모를 의미한다. 잦은 컨텍스트 스위칭은 시스템 성능을 저하시킬 수 있다. 특히, 다음과 같은 이유로 오버헤드가 발생한다:</p>
+<ul>
+<li><strong>CPU 레지스터 저장 및 복원</strong>: 레지스터를 저장하고 복원하는 작업이 빈번하게 발생</li>
+<li><strong>캐시 미스 증가</strong>: 프로세스 전환 시 캐시 메모리에 저장된 데이터가 무효화되어 캐시 미스가 증가</li>
+<li><strong>메모리 매핑 테이블 업데이트</strong>: 메모리 관리 유닛(MMU)의 테이블을 새 프로세스에 맞게 업데이트</li>
+</ul>
+<h2 id="스케줄링-알고리즘-비교"><a href="#스케줄링-알고리즘-비교" class="headerlink" title="스케줄링 알고리즘 비교"></a>스케줄링 알고리즘 비교</h2><table>
+<thead>
+<tr>
+<th>알고리즘</th>
+<th>선점형&#x2F;비선점형</th>
+<th>장점</th>
+<th>단점</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FCFS</td>
+<td>비선점형</td>
+<td>구현이 간단하고 공정함</td>
+<td>대기 시간이 길어질 수 있음</td>
+</tr>
+<tr>
+<td>SJF</td>
+<td>비선점형</td>
+<td>평균 대기 시간이 최소화됨</td>
+<td>실행 시간을 미리 알기 어려움</td>
+</tr>
+<tr>
+<td>Priority Scheduling</td>
+<td>비선점형</td>
+<td>중요한 작업을 우선 처리</td>
+<td>기아 현상이 발생할 수 있음</td>
+</tr>
+<tr>
+<td>Round Robin</td>
+<td>선점형</td>
+<td>응답 시간이 일정하고 공정함</td>
+<td>컨텍스트 스위칭 오버헤드가 있음</td>
+</tr>
+<tr>
+<td>SRT</td>
+<td>선점형</td>
+<td>짧은 작업이 빨리 끝남</td>
+<td>컨텍스트 스위칭 오버헤드가 있음</td>
+</tr>
+<tr>
+<td>Multilevel Queue</td>
+<td>선점형</td>
+<td>우선순위에 따라 작업을 분리하여 처리</td>
+<td>특정 큐에 작업이 몰릴 수 있음</td>
+</tr>
+<tr>
+<td>Multilevel Feedback Queue</td>
+<td>선점형</td>
+<td>다양한 작업 특성에 대응 가능</td>
+<td>구현이 복잡하고 컨텍스트 스위칭 오버헤드가 있음</td>
+</tr>
+</tbody></table>
+<p>각 스케줄링 알고리즘은 시스템의 목표와 상황에 따라 적절하게 선택되어야 한다.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://ew32.github.io/2024/07/11/os-scheduling-algorithms-md/" data-id="cmov7drpk000dv33fhhqs1bly" data-title="운영체제 스케줄링 알고리즘" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CPU/" rel="tag">CPU</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%EC%8A%A4%EC%BC%80%EC%A4%84%EB%A7%81/" rel="tag">스케줄링</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98/" rel="tag">알고리즘</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%EC%9A%B4%EC%98%81%EC%B2%B4%EC%A0%9C/" rel="tag">운영체제</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2024/07/16/difference-between-get-and-post-md/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          HTTP GET과 POST의 차이점
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2024/07/10/osi-7-layer-model-md/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">OSI 7 계층 모델</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AI%EB%8F%84%EA%B5%AC/">AI도구</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Backend/">Backend</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Backend/Java/">Java</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Backend/Java/Database/">Database</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Backend/Security/">Security</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Backend/Security/Authentication/">Authentication</a></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Cloud/">Cloud</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Cloud/Infrastructure/">Infrastructure</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Frontend/">Frontend</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Frontend/HTML/">HTML</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Network/">Network</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Network/HTTP/">HTTP</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Network/Theory/">Theory</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Security/">Security</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Security/Cryptography/">Cryptography</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/System/">System</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/System/OS/">OS</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/System/Storage/">Storage</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tutorial/">Tutorial</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/">개발환경</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/System/">System</a></li></ul></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AI/" rel="tag">AI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AWS/" rel="tag">AWS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/" rel="tag">Azure</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/CLI/" rel="tag">CLI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/CPU/" rel="tag">CPU</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Chocolatey/" rel="tag">Chocolatey</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GCP/" rel="tag">GCP</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GET/" rel="tag">GET</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTML/" rel="tag">HTML</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/" rel="tag">HTTP</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/" rel="tag">Hexo</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IaaS/" rel="tag">IaaS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JPA/" rel="tag">JPA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JWT/" rel="tag">JWT</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux/" rel="tag">Linux</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MoneyPrinter/" rel="tag">MoneyPrinter</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MyBatis/" rel="tag">MyBatis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/NFS/" rel="tag">NFS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/NTFS/" rel="tag">NTFS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ORM/" rel="tag">ORM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSI/" rel="tag">OSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PKI/" rel="tag">PKI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/POST/" rel="tag">POST</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PaaS/" rel="tag">PaaS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Pyenv/" rel="tag">Pyenv</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SEO/" rel="tag">SEO</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SaaS/" rel="tag">SaaS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/" rel="tag">Spring</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/TCP-IP/" rel="tag">TCP&#x2F;IP</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Ubuntu/" rel="tag">Ubuntu</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/WSL/" rel="tag">WSL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/WSL2/" rel="tag">WSL2</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Windows/" rel="tag">Windows</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zsh/" rel="tag">Zsh</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EA%B0%80%EC%83%81%ED%99%94/" rel="tag">가상화</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EA%B0%9C%EB%B0%9C%EB%8F%84%EA%B5%AC/" rel="tag">개발도구</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/" rel="tag">개발환경</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EA%B3%B5%EA%B0%9C%ED%82%A4/" rel="tag">공개키</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC/" rel="tag">네트워크</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4/" rel="tag">데이터베이스</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EB%B3%B4%EC%95%88/" rel="tag">보안</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EC%84%A4%EC%B9%98/" rel="tag">설치</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EC%84%B8%EC%85%98/" rel="tag">세션</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EC%8A%A4%EC%BC%80%EC%A4%84%EB%A7%81/" rel="tag">스케줄링</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EC%8A%A4%ED%86%A0%EB%A6%AC%EC%A7%80/" rel="tag">스토리지</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EC%8B%9C%EB%A7%A8%ED%8B%B1/" rel="tag">시맨틱</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EC%8B%9C%EC%9E%91%ED%95%98%EA%B8%B0/" rel="tag">시작하기</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98/" rel="tag">알고리즘</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EC%95%94%ED%98%B8%ED%99%94/" rel="tag">암호화</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EC%9A%B4%EC%98%81%EC%B2%B4%EC%A0%9C/" rel="tag">운영체제</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EC%9B%B9-%EA%B0%9C%EB%B0%9C/" rel="tag">웹 개발</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EC%9B%B9-%ED%91%9C%EC%A4%80/" rel="tag">웹 표준</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EC%9D%B8%EC%A6%9D/" rel="tag">인증</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%EC%BF%A0%ED%82%A4/" rel="tag">쿠키</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%ED%81%B4%EB%9D%BC%EC%9A%B0%EB%93%9C/" rel="tag">클라우드</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%ED%8A%9C%ED%86%A0%EB%A6%AC%EC%96%BC/" rel="tag">튜토리얼</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%ED%8C%8C%EC%9D%BC%EC%8B%9C%EC%8A%A4%ED%85%9C/" rel="tag">파일시스템</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%ED%8C%A8%ED%82%A4%EC%A7%80%EA%B4%80%EB%A6%AC%EC%9E%90/" rel="tag">패키지관리자</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%ED%94%84%EB%A1%9C%ED%86%A0%EC%BD%9C/" rel="tag">프로토콜</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Azure/" style="font-size: 10px;">Azure</a> <a href="/tags/CLI/" style="font-size: 10px;">CLI</a> <a href="/tags/CPU/" style="font-size: 10px;">CPU</a> <a href="/tags/Chocolatey/" style="font-size: 10px;">Chocolatey</a> <a href="/tags/GCP/" style="font-size: 10px;">GCP</a> <a href="/tags/GET/" style="font-size: 10px;">GET</a> <a href="/tags/HTML/" style="font-size: 10px;">HTML</a> <a href="/tags/HTTP/" style="font-size: 10px;">HTTP</a> <a href="/tags/Hexo/" style="font-size: 10px;">Hexo</a> <a href="/tags/IaaS/" style="font-size: 10px;">IaaS</a> <a href="/tags/JPA/" style="font-size: 10px;">JPA</a> <a href="/tags/JWT/" style="font-size: 10px;">JWT</a> <a href="/tags/Linux/" style="font-size: 10px;">Linux</a> <a href="/tags/MoneyPrinter/" style="font-size: 10px;">MoneyPrinter</a> <a href="/tags/MyBatis/" style="font-size: 10px;">MyBatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NTFS/" style="font-size: 10px;">NTFS</a> <a href="/tags/ORM/" style="font-size: 10px;">ORM</a> <a href="/tags/OSI/" style="font-size: 10px;">OSI</a> <a href="/tags/PKI/" style="font-size: 10px;">PKI</a> <a href="/tags/POST/" style="font-size: 10px;">POST</a> <a href="/tags/PaaS/" style="font-size: 10px;">PaaS</a> <a href="/tags/Pyenv/" style="font-size: 10px;">Pyenv</a> <a href="/tags/Python/" style="font-size: 15px;">Python</a> <a href="/tags/SEO/" style="font-size: 10px;">SEO</a> <a href="/tags/SaaS/" style="font-size: 10px;">SaaS</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 10px;">TCP/IP</a> <a href="/tags/Ubuntu/" style="font-size: 20px;">Ubuntu</a> <a href="/tags/WSL/" style="font-size: 20px;">WSL</a> <a href="/tags/WSL2/" style="font-size: 10px;">WSL2</a> <a href="/tags/Windows/" style="font-size: 15px;">Windows</a> <a href="/tags/Zsh/" style="font-size: 10px;">Zsh</a> <a href="/tags/%EA%B0%80%EC%83%81%ED%99%94/" style="font-size: 10px;">가상화</a> <a href="/tags/%EA%B0%9C%EB%B0%9C%EB%8F%84%EA%B5%AC/" style="font-size: 10px;">개발도구</a> <a href="/tags/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/" style="font-size: 10px;">개발환경</a> <a href="/tags/%EA%B3%B5%EA%B0%9C%ED%82%A4/" style="font-size: 10px;">공개키</a> <a href="/tags/%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC/" style="font-size: 10px;">네트워크</a> <a href="/tags/%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4/" style="font-size: 10px;">데이터베이스</a> <a href="/tags/%EB%B3%B4%EC%95%88/" style="font-size: 15px;">보안</a> <a href="/tags/%EC%84%A4%EC%B9%98/" style="font-size: 10px;">설치</a> <a href="/tags/%EC%84%B8%EC%85%98/" style="font-size: 10px;">세션</a> <a href="/tags/%EC%8A%A4%EC%BC%80%EC%A4%84%EB%A7%81/" style="font-size: 10px;">스케줄링</a> <a href="/tags/%EC%8A%A4%ED%86%A0%EB%A6%AC%EC%A7%80/" style="font-size: 10px;">스토리지</a> <a href="/tags/%EC%8B%9C%EB%A7%A8%ED%8B%B1/" style="font-size: 10px;">시맨틱</a> <a href="/tags/%EC%8B%9C%EC%9E%91%ED%95%98%EA%B8%B0/" style="font-size: 10px;">시작하기</a> <a href="/tags/%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98/" style="font-size: 10px;">알고리즘</a> <a href="/tags/%EC%95%94%ED%98%B8%ED%99%94/" style="font-size: 10px;">암호화</a> <a href="/tags/%EC%9A%B4%EC%98%81%EC%B2%B4%EC%A0%9C/" style="font-size: 10px;">운영체제</a> <a href="/tags/%EC%9B%B9-%EA%B0%9C%EB%B0%9C/" style="font-size: 10px;">웹 개발</a> <a href="/tags/%EC%9B%B9-%ED%91%9C%EC%A4%80/" style="font-size: 10px;">웹 표준</a> <a href="/tags/%EC%9D%B8%EC%A6%9D/" style="font-size: 10px;">인증</a> <a href="/tags/%EC%BF%A0%ED%82%A4/" style="font-size: 10px;">쿠키</a> <a href="/tags/%ED%81%B4%EB%9D%BC%EC%9A%B0%EB%93%9C/" style="font-size: 10px;">클라우드</a> <a href="/tags/%ED%8A%9C%ED%86%A0%EB%A6%AC%EC%96%BC/" style="font-size: 10px;">튜토리얼</a> <a href="/tags/%ED%8C%8C%EC%9D%BC%EC%8B%9C%EC%8A%A4%ED%85%9C/" style="font-size: 10px;">파일시스템</a> <a href="/tags/%ED%8C%A8%ED%82%A4%EC%A7%80%EA%B4%80%EB%A6%AC%EC%9E%90/" style="font-size: 10px;">패키지관리자</a> <a href="/tags/%ED%94%84%EB%A1%9C%ED%86%A0%EC%BD%9C/" style="font-size: 10px;">프로토콜</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/05/">May 2026</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/12/">December 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/10/">October 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/07/">July 2024</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/05/07/hello-world/">헬로 월드</a>
+          </li>
+        
+          <li>
+            <a href="/2026/05/07/test111/">test111</a>
+          </li>
+        
+          <li>
+            <a href="/2026/05/07/111/">111</a>
+          </li>
+        
+          <li>
+            <a href="/2025/12/17/windows-subsystem-for-linux-guide/">WSL2 완벽 가이드 - Windows에서 Linux 사용하기</a>
+          </li>
+        
+          <li>
+            <a href="/2025/12/17/windows-package-manager-chocolatey/">Windows 패키지 관리자 Chocolatey 완벽 가이드</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2026 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
