@@ -556,15 +556,6 @@
       </tags>
   </entry>
   <entry>
-    <title>test111</title>
-    <url>/2026/05/07/test111/</url>
-    <content><![CDATA[<p><img src="/past.png" alt="Manage Sessions"></p>
-<p><strong>Access your chat history and start new conversations anytime.</strong></p>
-<p>Your conversations are saved automatically. Click the <strong>Past Conversations</strong> button at the top or type <strong>&#x2F;resume</strong> to browse past sessions and pick up where you left off.</p>
-<p>To start a fresh conversation, click the <strong>New Chat</strong> button. You can also enable the <strong>Ctrl+N</strong> &#x2F; <strong>Cmd+N</strong> shortcut in settings (<code>claudeCode.enableNewConversationShortcut</code>).</p>
-]]></content>
-  </entry>
-  <entry>
     <title>세션, 쿠키, JWT 비교</title>
     <url>/2024/07/18/session-cookie-jwt-comparison-md/</url>
     <content><![CDATA[<h1 id="세션-쿠키-JWT-JSON-Web-Token-의-설명-및-비교"><a href="#세션-쿠키-JWT-JSON-Web-Token-의-설명-및-비교" class="headerlink" title="세션, 쿠키, JWT(JSON Web Token)의 설명 및 비교"></a>세션, 쿠키, JWT(JSON Web Token)의 설명 및 비교</h1><h2 id="세션-Session-과-쿠키-Cookie-설명"><a href="#세션-Session-과-쿠키-Cookie-설명" class="headerlink" title="세션(Session)과 쿠키(Cookie) 설명"></a>세션(Session)과 쿠키(Cookie) 설명</h2><h3 id="세션-Session"><a href="#세션-Session" class="headerlink" title="세션(Session)"></a>세션(Session)</h3><ul>
@@ -827,6 +818,15 @@
         <tag>인증</tag>
         <tag>보안</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>test111</title>
+    <url>/2026/05/07/test111/</url>
+    <content><![CDATA[<p><img src="/past.png" alt="Manage Sessions"></p>
+<p><strong>Access your chat history and start new conversations anytime.</strong></p>
+<p>Your conversations are saved automatically. Click the <strong>Past Conversations</strong> button at the top or type <strong>&#x2F;resume</strong> to browse past sessions and pick up where you left off.</p>
+<p>To start a fresh conversation, click the <strong>New Chat</strong> button. You can also enable the <strong>Ctrl+N</strong> &#x2F; <strong>Cmd+N</strong> shortcut in settings (<code>claudeCode.enableNewConversationShortcut</code>).</p>
+]]></content>
   </entry>
   <entry>
     <title>공개 키와 비밀 키 암호화 이해</title>
