@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>http://ew32.github.io/posts/difference-between-get-and-post-md/</loc>
-    <lastmod>2026-05-11</lastmod>
-  </url>
-  <url>
     <loc>http://ew32.github.io/posts/cloud-computing-overview-md/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/jpa-repository-vs-mapper-comparison/</loc>
+    <loc>http://ew32.github.io/posts/difference-between-get-and-post-md/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
@@ -17,15 +13,19 @@
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
+    <loc>http://ew32.github.io/posts/jpa-repository-vs-mapper-comparison/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
     <loc>http://ew32.github.io/posts/moneyprinter-installation/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/os-scheduling-algorithms-md/</loc>
+    <loc>http://ew32.github.io/posts/network-and-disk-based-file-systems-md/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/network-and-disk-based-file-systems-md/</loc>
+    <loc>http://ew32.github.io/posts/os-scheduling-algorithms-md/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
@@ -45,11 +45,11 @@
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/windows-subsystem-for-linux-guide/</loc>
+    <loc>http://ew32.github.io/posts/windows-package-manager-chocolatey/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/windows-package-manager-chocolatey/</loc>
+    <loc>http://ew32.github.io/posts/windows-subsystem-for-linux-guide/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
