@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>http://ew32.github.io/2025/12/17/windows-subsystem-for-linux-guide/</loc>
-    <lastmod>2026-05-11</lastmod>
-  </url>
-  <url>
-    <loc>http://ew32.github.io/2025/10/22/wsl-ubuntu-dev-environment/</loc>
-    <lastmod>2026-05-11</lastmod>
-  </url>
-  <url>
     <loc>http://ew32.github.io/2026/05/07/111/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/2026/05/11/3333/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
@@ -25,15 +21,15 @@
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/2024/07/07/jpa-repository-vs-mapper-comparison/</loc>
-    <lastmod>2026-05-11</lastmod>
-  </url>
-  <url>
     <loc>http://ew32.github.io/2025/10/22/moneyprinter-installation/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
     <loc>http://ew32.github.io/2024/07/08/network-and-disk-based-file-systems-md/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/2024/07/07/jpa-repository-vs-mapper-comparison/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
@@ -49,11 +45,11 @@
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/2024/07/18/session-cookie-jwt-comparison-md/</loc>
+    <loc>http://ew32.github.io/2026/05/07/test111/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/2026/05/07/test111/</loc>
+    <loc>http://ew32.github.io/2024/07/18/session-cookie-jwt-comparison-md/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
@@ -62,6 +58,14 @@
   </url>
   <url>
     <loc>http://ew32.github.io/2025/12/17/windows-package-manager-chocolatey/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/2025/12/17/windows-subsystem-for-linux-guide/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/2025/10/22/wsl-ubuntu-dev-environment/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
 </urlset> 
