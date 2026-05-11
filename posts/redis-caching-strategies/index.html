@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Cache Aside, Write Through 등 대표적인 캐싱 패턴과 Redis 활용 시 주의점을 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis 캐싱 전략">
+<meta property="og:url" content="http://ew32.github.io/posts/redis-caching-strategies/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="Cache Aside, Write Through 등 대표적인 캐싱 패턴과 Redis 활용 시 주의점을 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-04T06:30:00.000Z">
+<meta property="article:modified_time" content="2026-05-11T06:23:19.900Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="데이터베이스">
+<meta property="article:tag" content="Redis">
+<meta property="article:tag" content="캐시">
+<meta property="article:tag" content="성능최적화">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://ew32.github.io/posts/redis-caching-strategies/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>Redis 캐싱 전략 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="http://ew32.github.io/posts/redis-caching-strategies/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis 캐싱 전략
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-04 15:30:00" itemprop="dateCreated datePublished" datetime="2026-05-04T15:30:00+09:00">2026-05-04</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-11 15:23:19" itemprop="dateModified" datetime="2026-05-11T15:23:19+09:00">2026-05-11</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">Cache Aside, Write Through 등 대표적인 캐싱 패턴과 Redis 활용 시 주의점을 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Redis란"><a href="#Redis란" class="headerlink" title="Redis란?"></a>Redis란?</h2><p>Redis(Remote Dictionary Server)는 <strong>메모리 기반의 Key-Value 데이터 저장소</strong>입니다. 디스크 기반 DB보다 훨씬 빠른 읽기&#x2F;쓰기 성능을 제공하며, 캐시, 세션 저장소, 메시지 브로커 등 다양한 용도로 활용됩니다.</p>
+<h3 id="Redis의-강점"><a href="#Redis의-강점" class="headerlink" title="Redis의 강점"></a>Redis의 강점</h3><ul>
+<li>인메모리 기반: 마이크로초 단위 응답</li>
+<li>다양한 자료구조 지원: String, List, Set, Hash, Sorted Set, Stream</li>
+<li>영속성 옵션 (RDB, AOF)</li>
+<li>Pub&#x2F;Sub, 트랜잭션, Lua 스크립트 지원</li>
+<li>클러스터링 및 복제</li>
+</ul>
+<h2 id="왜-캐시를-사용할까"><a href="#왜-캐시를-사용할까" class="headerlink" title="왜 캐시를 사용할까?"></a>왜 캐시를 사용할까?</h2><p>데이터베이스 부하 감소, 응답 속도 향상, 외부 API 호출 비용 절감 등이 주된 목적입니다. 하지만 캐시 도입은 <strong>일관성</strong>과 <strong>복잡도</strong>라는 비용을 수반합니다.</p>
+<h2 id="대표적인-캐싱-패턴"><a href="#대표적인-캐싱-패턴" class="headerlink" title="대표적인 캐싱 패턴"></a>대표적인 캐싱 패턴</h2><h3 id="1-Cache-Aside-Lazy-Loading"><a href="#1-Cache-Aside-Lazy-Loading" class="headerlink" title="1. Cache Aside (Lazy Loading)"></a>1. Cache Aside (Lazy Loading)</h3><p>가장 널리 쓰이는 패턴으로, 애플리케이션이 캐시와 DB를 직접 관리합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">get_user</span>(<span class="params">user_id</span>):</span><br><span class="line">    <span class="comment"># 1. 캐시 조회</span></span><br><span class="line">    user = redis.get(<span class="string">f&quot;user:<span class="subst">&#123;user_id&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> user:</span><br><span class="line">        <span class="keyword">return</span> json.loads(user)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 캐시 미스 시 DB 조회</span></span><br><span class="line">    user = db.query(<span class="string">&quot;SELECT * FROM users WHERE id = ?&quot;</span>, user_id)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 캐시에 저장</span></span><br><span class="line">    redis.setex(<span class="string">f&quot;user:<span class="subst">&#123;user_id&#125;</span>&quot;</span>, <span class="number">3600</span>, json.dumps(user))</span><br><span class="line">    <span class="keyword">return</span> user</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>장점</strong>: 구현 간단, 필요한 데이터만 캐시</li>
+<li><strong>단점</strong>: 첫 요청은 느림(캐시 미스), 캐시-DB 불일치 가능</li>
+</ul>
+<h3 id="2-Write-Through"><a href="#2-Write-Through" class="headerlink" title="2. Write Through"></a>2. Write Through</h3><p>쓰기 시 캐시와 DB를 동시에 업데이트합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">update_user</span>(<span class="params">user_id, data</span>):</span><br><span class="line">    db.update(<span class="string">&quot;users&quot;</span>, user_id, data)</span><br><span class="line">    redis.setex(<span class="string">f&quot;user:<span class="subst">&#123;user_id&#125;</span>&quot;</span>, <span class="number">3600</span>, json.dumps(data))</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>장점</strong>: 캐시가 항상 최신 상태</li>
+<li><strong>단점</strong>: 쓰기 지연 증가, 사용하지 않는 데이터도 캐시</li>
+</ul>
+<h3 id="3-Write-Behind-Write-Back"><a href="#3-Write-Behind-Write-Back" class="headerlink" title="3. Write Behind (Write Back)"></a>3. Write Behind (Write Back)</h3><p>쓰기는 캐시에만 하고, 일정 주기로 DB에 비동기 반영합니다.</p>
+<ul>
+<li><strong>장점</strong>: 쓰기 성능 매우 우수</li>
+<li><strong>단점</strong>: 캐시 장애 시 데이터 유실 위험</li>
+</ul>
+<h3 id="4-Read-Through"><a href="#4-Read-Through" class="headerlink" title="4. Read Through"></a>4. Read Through</h3><p>캐시 미스 시 캐시 라이브러리가 직접 DB에서 로드합니다. 애플리케이션 코드는 캐시만 알면 됩니다.</p>
+<h2 id="캐시-무효화-전략"><a href="#캐시-무효화-전략" class="headerlink" title="캐시 무효화 전략"></a>캐시 무효화 전략</h2><p>캐시된 데이터를 어떻게 제거할지 결정하는 것은 매우 중요합니다.</p>
+<h3 id="1-TTL-Time-To-Live-기반"><a href="#1-TTL-Time-To-Live-기반" class="headerlink" title="1. TTL(Time To Live) 기반"></a>1. TTL(Time To Live) 기반</h3><p>일정 시간이 지나면 자동 만료됩니다.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SET user:123 <span class="string">&quot;...&quot;</span> EX 3600   <span class="comment"># 1시간 후 만료</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-명시적-삭제"><a href="#2-명시적-삭제" class="headerlink" title="2. 명시적 삭제"></a>2. 명시적 삭제</h3><p>데이터 변경 시 관련 캐시를 직접 삭제합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">update_user</span>(<span class="params">user_id, data</span>):</span><br><span class="line">    db.update(<span class="string">&quot;users&quot;</span>, user_id, data)</span><br><span class="line">    redis.delete(<span class="string">f&quot;user:<span class="subst">&#123;user_id&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-이벤트-기반"><a href="#3-이벤트-기반" class="headerlink" title="3. 이벤트 기반"></a>3. 이벤트 기반</h3><p>DB 변경 이벤트(CDC, 트리거 등)를 구독하여 캐시를 무효화합니다.</p>
+<h2 id="자주-발생하는-문제와-해결"><a href="#자주-발생하는-문제와-해결" class="headerlink" title="자주 발생하는 문제와 해결"></a>자주 발생하는 문제와 해결</h2><h3 id="1-캐시-스탬피드-Cache-Stampede"><a href="#1-캐시-스탬피드-Cache-Stampede" class="headerlink" title="1. 캐시 스탬피드(Cache Stampede)"></a>1. 캐시 스탬피드(Cache Stampede)</h3><p>캐시 만료 시점에 동시 요청이 몰려 DB에 한꺼번에 부하가 가는 현상입니다.</p>
+<p><strong>해결책</strong>:</p>
+<ul>
+<li><strong>분산 락</strong>: 첫 번째 요청만 DB 조회, 나머지는 대기</li>
+<li><strong>PER(Probabilistic Early Recomputation)</strong>: 만료 전에 일부 요청이 미리 갱신</li>
+<li><strong>백그라운드 갱신</strong>: 별도 워커가 주기적으로 갱신</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">get_with_lock</span>(<span class="params">key</span>):</span><br><span class="line">    value = redis.get(key)</span><br><span class="line">    <span class="keyword">if</span> value:</span><br><span class="line">        <span class="keyword">return</span> value</span><br><span class="line"></span><br><span class="line">    lock = redis.<span class="built_in">set</span>(<span class="string">f&quot;lock:<span class="subst">&#123;key&#125;</span>&quot;</span>, <span class="string">&quot;1&quot;</span>, nx=<span class="literal">True</span>, ex=<span class="number">10</span>)</span><br><span class="line">    <span class="keyword">if</span> lock:</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            value = db.query(...)</span><br><span class="line">            redis.setex(key, <span class="number">3600</span>, value)</span><br><span class="line">            <span class="keyword">return</span> value</span><br><span class="line">        <span class="keyword">finally</span>:</span><br><span class="line">            redis.delete(<span class="string">f&quot;lock:<span class="subst">&#123;key&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        time.sleep(<span class="number">0.1</span>)</span><br><span class="line">        <span class="keyword">return</span> get_with_lock(key)</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-캐시-펜트레이션-Cache-Penetration"><a href="#2-캐시-펜트레이션-Cache-Penetration" class="headerlink" title="2. 캐시 펜트레이션(Cache Penetration)"></a>2. 캐시 펜트레이션(Cache Penetration)</h3><p>존재하지 않는 데이터를 반복 조회하여 DB에 부담을 주는 공격입니다.</p>
+<p><strong>해결책</strong>:</p>
+<ul>
+<li>빈 결과도 짧은 TTL로 캐시</li>
+<li>Bloom Filter로 사전 필터링</li>
+</ul>
+<h3 id="3-핫-키-Hot-Key"><a href="#3-핫-키-Hot-Key" class="headerlink" title="3. 핫 키(Hot Key)"></a>3. 핫 키(Hot Key)</h3><p>특정 키에 트래픽이 집중되어 클러스터의 한 노드에 부하가 쏠리는 현상입니다.</p>
+<p><strong>해결책</strong>:</p>
+<ul>
+<li>키를 여러 개로 분산 (<code>hot_key:1</code>, <code>hot_key:2</code>, …)</li>
+<li>로컬 캐시 추가</li>
+</ul>
+<h2 id="자료구조-활용-예시"><a href="#자료구조-활용-예시" class="headerlink" title="자료구조 활용 예시"></a>자료구조 활용 예시</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># String - 단순 캐싱</span></span><br><span class="line">SET session:abc <span class="string">&quot;user_id=123&quot;</span> EX 1800</span><br><span class="line"></span><br><span class="line"><span class="comment"># Hash - 객체 저장</span></span><br><span class="line">HSET user:123 name <span class="string">&quot;홍길동&quot;</span> age 30</span><br><span class="line"></span><br><span class="line"><span class="comment"># List - 큐, 최근 항목</span></span><br><span class="line">LPUSH recent:user:123 <span class="string">&quot;post_456&quot;</span></span><br><span class="line">LTRIM recent:user:123 0 9   <span class="comment"># 최근 10개만 유지</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Set - 중복 제거, 집합 연산</span></span><br><span class="line">SADD tags:post:456 <span class="string">&quot;redis&quot;</span> <span class="string">&quot;cache&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Sorted Set - 랭킹, 시계열</span></span><br><span class="line">ZADD ranking 1500 <span class="string">&quot;player1&quot;</span> 1200 <span class="string">&quot;player2&quot;</span></span><br><span class="line">ZREVRANGE ranking 0 9   <span class="comment"># 상위 10명</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="영속성-옵션"><a href="#영속성-옵션" class="headerlink" title="영속성 옵션"></a>영속성 옵션</h2><ul>
+<li><strong>RDB</strong>: 특정 시점의 스냅샷, 빠른 재시작</li>
+<li><strong>AOF</strong>: 모든 쓰기 명령 로그, 데이터 손실 최소화</li>
+<li><strong>두 가지 병행</strong>: 일반적으로 권장</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>캐시는 강력한 도구이지만 “캐시 무효화는 컴퓨터 과학의 두 가지 어려운 문제 중 하나”라는 말처럼 신중하게 설계해야 합니다. 데이터의 특성과 일관성 요구 수준에 따라 적절한 패턴을 선택하세요.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4/" rel="tag"># 데이터베이스</a>
+              <a href="/tags/Redis/" rel="tag"># Redis</a>
+              <a href="/tags/%EC%BA%90%EC%8B%9C/" rel="tag"># 캐시</a>
+              <a href="/tags/%EC%84%B1%EB%8A%A5%EC%B5%9C%EC%A0%81%ED%99%94/" rel="tag"># 성능최적화</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/aws-lambda-serverless-intro/" rel="prev" title="AWS Lambda 서버리스 입문">
+      <i class="fa fa-chevron-left"></i> AWS Lambda 서버리스 입문
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/css-flexbox-and-grid/" rel="next" title="CSS Flexbox와 Grid 완벽 비교">
+      CSS Flexbox와 Grid 완벽 비교 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis%EB%9E%80"><span class="nav-number">1.</span> <span class="nav-text">Redis란?</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis%EC%9D%98-%EA%B0%95%EC%A0%90"><span class="nav-number">1.1.</span> <span class="nav-text">Redis의 강점</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%99%9C-%EC%BA%90%EC%8B%9C%EB%A5%BC-%EC%82%AC%EC%9A%A9%ED%95%A0%EA%B9%8C"><span class="nav-number">2.</span> <span class="nav-text">왜 캐시를 사용할까?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%8C%80%ED%91%9C%EC%A0%81%EC%9D%B8-%EC%BA%90%EC%8B%B1-%ED%8C%A8%ED%84%B4"><span class="nav-number">3.</span> <span class="nav-text">대표적인 캐싱 패턴</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Cache-Aside-Lazy-Loading"><span class="nav-number">3.1.</span> <span class="nav-text">1. Cache Aside (Lazy Loading)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Write-Through"><span class="nav-number">3.2.</span> <span class="nav-text">2. Write Through</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Write-Behind-Write-Back"><span class="nav-number">3.3.</span> <span class="nav-text">3. Write Behind (Write Back)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-Read-Through"><span class="nav-number">3.4.</span> <span class="nav-text">4. Read Through</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%BA%90%EC%8B%9C-%EB%AC%B4%ED%9A%A8%ED%99%94-%EC%A0%84%EB%9E%B5"><span class="nav-number">4.</span> <span class="nav-text">캐시 무효화 전략</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-TTL-Time-To-Live-%EA%B8%B0%EB%B0%98"><span class="nav-number">4.1.</span> <span class="nav-text">1. TTL(Time To Live) 기반</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%EB%AA%85%EC%8B%9C%EC%A0%81-%EC%82%AD%EC%A0%9C"><span class="nav-number">4.2.</span> <span class="nav-text">2. 명시적 삭제</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%EC%9D%B4%EB%B2%A4%ED%8A%B8-%EA%B8%B0%EB%B0%98"><span class="nav-number">4.3.</span> <span class="nav-text">3. 이벤트 기반</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9E%90%EC%A3%BC-%EB%B0%9C%EC%83%9D%ED%95%98%EB%8A%94-%EB%AC%B8%EC%A0%9C%EC%99%80-%ED%95%B4%EA%B2%B0"><span class="nav-number">5.</span> <span class="nav-text">자주 발생하는 문제와 해결</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%EC%BA%90%EC%8B%9C-%EC%8A%A4%ED%83%AC%ED%94%BC%EB%93%9C-Cache-Stampede"><span class="nav-number">5.1.</span> <span class="nav-text">1. 캐시 스탬피드(Cache Stampede)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%EC%BA%90%EC%8B%9C-%ED%8E%9C%ED%8A%B8%EB%A0%88%EC%9D%B4%EC%85%98-Cache-Penetration"><span class="nav-number">5.2.</span> <span class="nav-text">2. 캐시 펜트레이션(Cache Penetration)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%ED%95%AB-%ED%82%A4-Hot-Key"><span class="nav-number">5.3.</span> <span class="nav-text">3. 핫 키(Hot Key)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9E%90%EB%A3%8C%EA%B5%AC%EC%A1%B0-%ED%99%9C%EC%9A%A9-%EC%98%88%EC%8B%9C"><span class="nav-number">6.</span> <span class="nav-text">자료구조 활용 예시</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%98%81%EC%86%8D%EC%84%B1-%EC%98%B5%EC%85%98"><span class="nav-number">7.</span> <span class="nav-text">영속성 옵션</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">8.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">24</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">89</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://plus.google.com/yourname" title="Google → https:&#x2F;&#x2F;plus.google.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>Google</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

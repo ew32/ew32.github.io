@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="인덱스의 동작 원리부터 복합 인덱스 설계, 실행 계획 분석까지 실무에서 바로 쓰는 최적화 노하우를 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SQL 인덱스 최적화 가이드">
+<meta property="og:url" content="http://ew32.github.io/posts/sql-index-optimization/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="인덱스의 동작 원리부터 복합 인덱스 설계, 실행 계획 분석까지 실무에서 바로 쓰는 최적화 노하우를 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-05T05:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-11T06:23:19.900Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="데이터베이스">
+<meta property="article:tag" content="성능최적화">
+<meta property="article:tag" content="SQL">
+<meta property="article:tag" content="인덱스">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://ew32.github.io/posts/sql-index-optimization/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>SQL 인덱스 최적화 가이드 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="http://ew32.github.io/posts/sql-index-optimization/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SQL 인덱스 최적화 가이드
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-05 14:00:00" itemprop="dateCreated datePublished" datetime="2026-05-05T14:00:00+09:00">2026-05-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-11 15:23:19" itemprop="dateModified" datetime="2026-05-11T15:23:19+09:00">2026-05-11</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">인덱스의 동작 원리부터 복합 인덱스 설계, 실행 계획 분석까지 실무에서 바로 쓰는 최적화 노하우를 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="인덱스란"><a href="#인덱스란" class="headerlink" title="인덱스란?"></a>인덱스란?</h2><p>인덱스(Index)는 책의 색인과 같습니다. 책에서 특정 단어를 찾을 때 전체를 읽지 않고 색인을 보듯이, DB도 인덱스를 통해 원하는 데이터를 빠르게 찾을 수 있습니다.</p>
+<p>인덱스의 본질은 <strong>추가 저장 공간을 사용해 검색 속도를 끌어올리는 트레이드오프</strong>입니다. 무조건 많이 만든다고 좋은 것이 아닙니다.</p>
+<h2 id="인덱스의-동작-원리"><a href="#인덱스의-동작-원리" class="headerlink" title="인덱스의 동작 원리"></a>인덱스의 동작 원리</h2><p>대부분의 RDBMS는 <strong>B-Tree (정확히는 B+Tree)</strong> 구조를 사용합니다.</p>
+<h3 id="B-Tree의-특징"><a href="#B-Tree의-특징" class="headerlink" title="B-Tree의 특징"></a>B-Tree의 특징</h3><ul>
+<li>정렬된 상태로 데이터 유지</li>
+<li>균형 트리 → 어떤 데이터를 찾아도 거의 동일한 시간 (O(log N))</li>
+<li>범위 검색에 유리</li>
+<li>리프 노드끼리 연결 리스트로 이어져 있음</li>
+</ul>
+<h3 id="인덱스가-빠른-이유"><a href="#인덱스가-빠른-이유" class="headerlink" title="인덱스가 빠른 이유"></a>인덱스가 빠른 이유</h3><p>1만 건 테이블에서 특정 값을 찾는다고 가정하면:</p>
+<ul>
+<li>풀 스캔: 평균 5,000번 비교</li>
+<li>B-Tree 인덱스(차수 100 가정): 약 3번의 노드 탐색</li>
+</ul>
+<h2 id="인덱스가-효과적인-경우"><a href="#인덱스가-효과적인-경우" class="headerlink" title="인덱스가 효과적인 경우"></a>인덱스가 효과적인 경우</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- WHERE 절의 등호/범위 조건</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> orders <span class="keyword">WHERE</span> user_id <span class="operator">=</span> <span class="number">123</span>;</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> orders <span class="keyword">WHERE</span> created_at <span class="operator">&gt;=</span> <span class="string">&#x27;2026-01-01&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- ORDER BY</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> orders <span class="keyword">ORDER</span> <span class="keyword">BY</span> created_at <span class="keyword">DESC</span> LIMIT <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- JOIN의 연결 컬럼</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> orders o <span class="keyword">JOIN</span> users u <span class="keyword">ON</span> o.user_id <span class="operator">=</span> u.id;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- GROUP BY</span></span><br><span class="line"><span class="keyword">SELECT</span> user_id, <span class="built_in">COUNT</span>(<span class="operator">*</span>) <span class="keyword">FROM</span> orders <span class="keyword">GROUP</span> <span class="keyword">BY</span> user_id;</span><br></pre></td></tr></table></figure>
+
+<h2 id="인덱스가-무력화되는-경우"><a href="#인덱스가-무력화되는-경우" class="headerlink" title="인덱스가 무력화되는 경우"></a>인덱스가 무력화되는 경우</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 1. 컬럼에 함수/연산 적용</span></span><br><span class="line"><span class="keyword">WHERE</span> <span class="keyword">YEAR</span>(created_at) <span class="operator">=</span> <span class="number">2026</span>          <span class="comment">-- Bad</span></span><br><span class="line"><span class="keyword">WHERE</span> created_at <span class="operator">&gt;=</span> <span class="string">&#x27;2026-01-01&#x27;</span>        <span class="comment">-- Good</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 2. 좌측 와일드카드</span></span><br><span class="line"><span class="keyword">WHERE</span> name <span class="keyword">LIKE</span> <span class="string">&#x27;%길동&#x27;</span>                 <span class="comment">-- Bad</span></span><br><span class="line"><span class="keyword">WHERE</span> name <span class="keyword">LIKE</span> <span class="string">&#x27;홍%&#x27;</span>                   <span class="comment">-- Good</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 3. 묵시적 타입 변환</span></span><br><span class="line"><span class="keyword">WHERE</span> phone <span class="operator">=</span> <span class="number">01012345678</span>               <span class="comment">-- Bad (phone이 VARCHAR이면)</span></span><br><span class="line"><span class="keyword">WHERE</span> phone <span class="operator">=</span> <span class="string">&#x27;01012345678&#x27;</span>             <span class="comment">-- Good</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 4. OR 조건 (양쪽 모두 인덱스 필요)</span></span><br><span class="line"><span class="keyword">WHERE</span> name <span class="operator">=</span> <span class="string">&#x27;홍길동&#x27;</span> <span class="keyword">OR</span> email <span class="operator">=</span> <span class="string">&#x27;a@b.c&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 5. NULL 비교 (DBMS마다 다름)</span></span><br><span class="line"><span class="keyword">WHERE</span> deleted_at <span class="keyword">IS</span> <span class="keyword">NULL</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="복합-인덱스-Composite-Index"><a href="#복합-인덱스-Composite-Index" class="headerlink" title="복합 인덱스(Composite Index)"></a>복합 인덱스(Composite Index)</h2><p>여러 컬럼을 묶은 인덱스로, 컬럼 순서가 매우 중요합니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> INDEX idx_orders_user_status <span class="keyword">ON</span> orders(user_id, status);</span><br></pre></td></tr></table></figure>
+
+<p>이 인덱스는 다음 조건에서만 효과적입니다:</p>
+<ul>
+<li><code>WHERE user_id = ?</code></li>
+<li><code>WHERE user_id = ? AND status = ?</code></li>
+</ul>
+<p>다음에는 사용되지 않습니다:</p>
+<ul>
+<li><code>WHERE status = ?</code> (선두 컬럼 누락)</li>
+</ul>
+<h3 id="컬럼-순서-결정-원칙"><a href="#컬럼-순서-결정-원칙" class="headerlink" title="컬럼 순서 결정 원칙"></a>컬럼 순서 결정 원칙</h3><ol>
+<li><strong>선택도(Selectivity)가 높은 컬럼</strong>을 앞에 (고유값이 많을수록 좋음)</li>
+<li><strong>등호 조건</strong>을 <strong>범위 조건</strong>보다 앞에</li>
+<li><strong>자주 사용되는 조건</strong>을 앞에</li>
+</ol>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- Bad: 범위 조건이 앞</span></span><br><span class="line"><span class="keyword">CREATE</span> INDEX idx_bad <span class="keyword">ON</span> orders(created_at, user_id);</span><br><span class="line"><span class="comment">-- Good: 등호 조건이 앞</span></span><br><span class="line"><span class="keyword">CREATE</span> INDEX idx_good <span class="keyword">ON</span> orders(user_id, created_at);</span><br></pre></td></tr></table></figure>
+
+<h2 id="커버링-인덱스-Covering-Index"><a href="#커버링-인덱스-Covering-Index" class="headerlink" title="커버링 인덱스(Covering Index)"></a>커버링 인덱스(Covering Index)</h2><p>쿼리에 필요한 모든 컬럼이 인덱스에 포함되어 있어, <strong>테이블 접근 없이 인덱스만으로 결과를 만들 수 있는</strong> 인덱스입니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> INDEX idx_covering <span class="keyword">ON</span> orders(user_id, status, amount);</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 이 쿼리는 테이블을 읽지 않고도 처리됨</span></span><br><span class="line"><span class="keyword">SELECT</span> status, amount <span class="keyword">FROM</span> orders <span class="keyword">WHERE</span> user_id <span class="operator">=</span> <span class="number">123</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="실행-계획-분석"><a href="#실행-계획-분석" class="headerlink" title="실행 계획 분석"></a>실행 계획 분석</h2><p>MySQL&#x2F;PostgreSQL에서는 <code>EXPLAIN</code>으로 쿼리의 실행 계획을 확인할 수 있습니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EXPLAIN <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> orders <span class="keyword">WHERE</span> user_id <span class="operator">=</span> <span class="number">123</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="주요-확인-사항"><a href="#주요-확인-사항" class="headerlink" title="주요 확인 사항"></a>주요 확인 사항</h3><ul>
+<li><strong>type</strong>: <code>ALL</code>(풀 스캔)은 위험, <code>ref</code>&#x2F;<code>range</code>&#x2F;<code>const</code> 등이 좋음</li>
+<li><strong>key</strong>: 실제 사용된 인덱스</li>
+<li><strong>rows</strong>: 예상 검색 행 수 (적을수록 좋음)</li>
+<li><strong>Extra</strong>: <code>Using index</code>(커버링)는 좋음, <code>Using filesort</code>&#x2F;<code>Using temporary</code>는 주의</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- PostgreSQL은 더 상세한 정보 제공</span></span><br><span class="line">EXPLAIN ANALYZE <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> orders <span class="keyword">WHERE</span> user_id <span class="operator">=</span> <span class="number">123</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="인덱스의-비용"><a href="#인덱스의-비용" class="headerlink" title="인덱스의 비용"></a>인덱스의 비용</h2><h3 id="1-쓰기-성능-저하"><a href="#1-쓰기-성능-저하" class="headerlink" title="1. 쓰기 성능 저하"></a>1. 쓰기 성능 저하</h3><p>INSERT&#x2F;UPDATE&#x2F;DELETE 시 인덱스도 함께 갱신되어야 합니다. 인덱스가 많을수록 쓰기 성능이 떨어집니다.</p>
+<h3 id="2-저장-공간"><a href="#2-저장-공간" class="headerlink" title="2. 저장 공간"></a>2. 저장 공간</h3><p>인덱스 자체가 디스크 공간을 차지합니다. 큰 테이블에 인덱스를 여러 개 만들면 데이터보다 인덱스가 더 클 수도 있습니다.</p>
+<h3 id="3-옵티마이저-혼란"><a href="#3-옵티마이저-혼란" class="headerlink" title="3. 옵티마이저 혼란"></a>3. 옵티마이저 혼란</h3><p>유사한 인덱스가 많으면 옵티마이저가 잘못된 인덱스를 선택할 수 있습니다.</p>
+<h2 id="인덱스-설계-체크리스트"><a href="#인덱스-설계-체크리스트" class="headerlink" title="인덱스 설계 체크리스트"></a>인덱스 설계 체크리스트</h2><ul>
+<li><input disabled="" type="checkbox"> 자주 사용되는 WHERE&#x2F;JOIN&#x2F;ORDER BY 컬럼 식별</li>
+<li><input disabled="" type="checkbox"> 선택도가 충분히 높은가? (10% 미만 권장)</li>
+<li><input disabled="" type="checkbox"> 복합 인덱스의 컬럼 순서가 적절한가?</li>
+<li><input disabled="" type="checkbox"> 중복되거나 사용되지 않는 인덱스는 없는가?</li>
+<li><input disabled="" type="checkbox"> 쓰기 빈도가 높은 테이블이라면 인덱스 수를 최소화했는가?</li>
+<li><input disabled="" type="checkbox"> 실행 계획으로 실제 사용 여부를 확인했는가?</li>
+</ul>
+<h2 id="통계-정보-갱신"><a href="#통계-정보-갱신" class="headerlink" title="통계 정보 갱신"></a>통계 정보 갱신</h2><p>옵티마이저는 통계 정보를 기반으로 실행 계획을 세웁니다. 데이터가 많이 변경되었다면 통계를 갱신해줘야 합니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- MySQL</span></span><br><span class="line">ANALYZE <span class="keyword">TABLE</span> orders;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- PostgreSQL</span></span><br><span class="line">ANALYZE orders;</span><br><span class="line">VACUUM ANALYZE orders;  <span class="comment">-- 통계 갱신 + 공간 정리</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>인덱스는 강력하지만 만능이 아닙니다. <strong>측정 없는 최적화는 추측</strong>일 뿐이므로, 반드시 실행 계획과 실제 쿼리 응답 시간을 기준으로 인덱스를 추가하거나 제거하는 습관을 들여야 합니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4/" rel="tag"># 데이터베이스</a>
+              <a href="/tags/%EC%84%B1%EB%8A%A5%EC%B5%9C%EC%A0%81%ED%99%94/" rel="tag"># 성능최적화</a>
+              <a href="/tags/SQL/" rel="tag"># SQL</a>
+              <a href="/tags/%EC%9D%B8%EB%8D%B1%EC%8A%A4/" rel="tag"># 인덱스</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/css-flexbox-and-grid/" rel="prev" title="CSS Flexbox와 Grid 완벽 비교">
+      <i class="fa fa-chevron-left"></i> CSS Flexbox와 Grid 완벽 비교
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/https-ssl-tls-explained/" rel="next" title="HTTPS와 SSL/TLS 동작 원리">
+      HTTPS와 SSL/TLS 동작 원리 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9D%B8%EB%8D%B1%EC%8A%A4%EB%9E%80"><span class="nav-number">1.</span> <span class="nav-text">인덱스란?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9D%B8%EB%8D%B1%EC%8A%A4%EC%9D%98-%EB%8F%99%EC%9E%91-%EC%9B%90%EB%A6%AC"><span class="nav-number">2.</span> <span class="nav-text">인덱스의 동작 원리</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#B-Tree%EC%9D%98-%ED%8A%B9%EC%A7%95"><span class="nav-number">2.1.</span> <span class="nav-text">B-Tree의 특징</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%9D%B8%EB%8D%B1%EC%8A%A4%EA%B0%80-%EB%B9%A0%EB%A5%B8-%EC%9D%B4%EC%9C%A0"><span class="nav-number">2.2.</span> <span class="nav-text">인덱스가 빠른 이유</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9D%B8%EB%8D%B1%EC%8A%A4%EA%B0%80-%ED%9A%A8%EA%B3%BC%EC%A0%81%EC%9D%B8-%EA%B2%BD%EC%9A%B0"><span class="nav-number">3.</span> <span class="nav-text">인덱스가 효과적인 경우</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9D%B8%EB%8D%B1%EC%8A%A4%EA%B0%80-%EB%AC%B4%EB%A0%A5%ED%99%94%EB%90%98%EB%8A%94-%EA%B2%BD%EC%9A%B0"><span class="nav-number">4.</span> <span class="nav-text">인덱스가 무력화되는 경우</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B3%B5%ED%95%A9-%EC%9D%B8%EB%8D%B1%EC%8A%A4-Composite-Index"><span class="nav-number">5.</span> <span class="nav-text">복합 인덱스(Composite Index)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%BB%AC%EB%9F%BC-%EC%88%9C%EC%84%9C-%EA%B2%B0%EC%A0%95-%EC%9B%90%EC%B9%99"><span class="nav-number">5.1.</span> <span class="nav-text">컬럼 순서 결정 원칙</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%BB%A4%EB%B2%84%EB%A7%81-%EC%9D%B8%EB%8D%B1%EC%8A%A4-Covering-Index"><span class="nav-number">6.</span> <span class="nav-text">커버링 인덱스(Covering Index)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%8B%A4%ED%96%89-%EA%B3%84%ED%9A%8D-%EB%B6%84%EC%84%9D"><span class="nav-number">7.</span> <span class="nav-text">실행 계획 분석</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%A3%BC%EC%9A%94-%ED%99%95%EC%9D%B8-%EC%82%AC%ED%95%AD"><span class="nav-number">7.1.</span> <span class="nav-text">주요 확인 사항</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9D%B8%EB%8D%B1%EC%8A%A4%EC%9D%98-%EB%B9%84%EC%9A%A9"><span class="nav-number">8.</span> <span class="nav-text">인덱스의 비용</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%EC%93%B0%EA%B8%B0-%EC%84%B1%EB%8A%A5-%EC%A0%80%ED%95%98"><span class="nav-number">8.1.</span> <span class="nav-text">1. 쓰기 성능 저하</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%EC%A0%80%EC%9E%A5-%EA%B3%B5%EA%B0%84"><span class="nav-number">8.2.</span> <span class="nav-text">2. 저장 공간</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%EC%98%B5%ED%8B%B0%EB%A7%88%EC%9D%B4%EC%A0%80-%ED%98%BC%EB%9E%80"><span class="nav-number">8.3.</span> <span class="nav-text">3. 옵티마이저 혼란</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9D%B8%EB%8D%B1%EC%8A%A4-%EC%84%A4%EA%B3%84-%EC%B2%B4%ED%81%AC%EB%A6%AC%EC%8A%A4%ED%8A%B8"><span class="nav-number">9.</span> <span class="nav-text">인덱스 설계 체크리스트</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%86%B5%EA%B3%84-%EC%A0%95%EB%B3%B4-%EA%B0%B1%EC%8B%A0"><span class="nav-number">10.</span> <span class="nav-text">통계 정보 갱신</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">11.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">24</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">89</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://plus.google.com/yourname" title="Google → https:&#x2F;&#x2F;plus.google.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>Google</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

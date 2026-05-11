@@ -1,7 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://ew32.github.io/posts/windows-package-manager-chocolatey/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/posts/windows-subsystem-for-linux-guide/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/posts/wsl-ubuntu-dev-environment/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/posts/aws-lambda-serverless-intro/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
     <loc>http://ew32.github.io/posts/cloud-computing-overview-md/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/posts/css-flexbox-and-grid/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
@@ -9,7 +29,19 @@
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
+    <loc>http://ew32.github.io/posts/docker-container-basics/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/posts/git-branch-strategy/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
     <loc>http://ew32.github.io/posts/hello-world/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/posts/https-ssl-tls-explained/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
@@ -33,6 +65,18 @@
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
+    <loc>http://ew32.github.io/posts/react-hooks-complete-guide/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/posts/redis-caching-strategies/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/posts/restful-api-design-principles/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
     <loc>http://ew32.github.io/posts/semantic-html-tags-overview/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
@@ -41,19 +85,15 @@
     <lastmod>2026-05-11</lastmod>
   </url>
   <url>
+    <loc>http://ew32.github.io/posts/sql-index-optimization/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
+    <loc>http://ew32.github.io/posts/typescript-getting-started/</loc>
+    <lastmod>2026-05-11</lastmod>
+  </url>
+  <url>
     <loc>http://ew32.github.io/posts/understanding-public-private-key-encryption/</loc>
-    <lastmod>2026-05-11</lastmod>
-  </url>
-  <url>
-    <loc>http://ew32.github.io/posts/windows-package-manager-chocolatey/</loc>
-    <lastmod>2026-05-11</lastmod>
-  </url>
-  <url>
-    <loc>http://ew32.github.io/posts/windows-subsystem-for-linux-guide/</loc>
-    <lastmod>2026-05-11</lastmod>
-  </url>
-  <url>
-    <loc>http://ew32.github.io/posts/wsl-ubuntu-dev-environment/</loc>
     <lastmod>2026-05-11</lastmod>
   </url>
 </urlset> 
