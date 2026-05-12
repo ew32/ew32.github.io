@@ -23,20 +23,20 @@
   <meta name="description" content="네트워크 기반 파일 시스템과 로컬 디스크 파일 시스템의 구조, 장단점, 대표 사례를 비교합니다.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="네트워크 및 디스크 기반 파일 시스템">
-<meta property="og:url" content="http://ew32.github.io/posts/network-and-disk-based-file-systems-md/">
+<meta property="og:url" content="https://ew32.github.io/posts/network-and-disk-based-file-systems-md/">
 <meta property="og:site_name" content="EW32 Tech Blog">
 <meta property="og:description" content="네트워크 기반 파일 시스템과 로컬 디스크 파일 시스템의 구조, 장단점, 대표 사례를 비교합니다.">
 <meta property="og:locale" content="ko_KR">
 <meta property="article:published_time" content="2024-07-08T12:42:12.000Z">
-<meta property="article:modified_time" content="2026-05-11T06:23:19.900Z">
+<meta property="article:modified_time" content="2026-05-12T01:49:24.840Z">
 <meta property="article:author" content="EW32">
+<meta property="article:tag" content="스토리지">
 <meta property="article:tag" content="파일시스템">
 <meta property="article:tag" content="NFS">
 <meta property="article:tag" content="NTFS">
-<meta property="article:tag" content="스토리지">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://ew32.github.io/posts/network-and-disk-based-file-systems-md/">
+<link rel="canonical" href="https://ew32.github.io/posts/network-and-disk-based-file-systems-md/">
 
 
 <script id="page-configurations">
@@ -89,6 +89,7 @@
   </style>
 </noscript>
 
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage">
@@ -131,6 +132,11 @@
     <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
 
   </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
         <li class="menu-item menu-item-tags">
 
     <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
@@ -144,6 +150,11 @@
         <li class="menu-item menu-item-archives">
 
     <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
 
   </li>
   </ul>
@@ -174,7 +185,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
-    <link itemprop="mainEntityOfPage" href="http://ew32.github.io/posts/network-and-disk-based-file-systems-md/">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/network-and-disk-based-file-systems-md/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -204,7 +215,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-11 15:23:19" itemprop="dateModified" datetime="2026-05-11T15:23:19+09:00">2026-05-11</time>
+                <time title="Updated at: 2026-05-12 10:49:24" itemprop="dateModified" datetime="2026-05-12T10:49:24+09:00">2026-05-12</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -298,10 +309,10 @@
 
       <footer class="post-footer">
           <div class="post-tags">
+              <a href="/tags/%EC%8A%A4%ED%86%A0%EB%A6%AC%EC%A7%80/" rel="tag"># 스토리지</a>
               <a href="/tags/%ED%8C%8C%EC%9D%BC%EC%8B%9C%EC%8A%A4%ED%85%9C/" rel="tag"># 파일시스템</a>
               <a href="/tags/NFS/" rel="tag"># NFS</a>
               <a href="/tags/NTFS/" rel="tag"># NTFS</a>
-              <a href="/tags/%EC%8A%A4%ED%86%A0%EB%A6%AC%EC%A7%80/" rel="tag"># 스토리지</a>
           </div>
 
         
@@ -389,27 +400,30 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">24</span>
+          <span class="site-state-item-count">114</span>
           <span class="site-state-item-name">포스트</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-count">27</span>
         <span class="site-state-item-name">카테고리</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">89</span>
+        <span class="site-state-item-count">307</span>
         <span class="site-state-item-name">태그</span></a>
       </div>
   </nav>
 </div>
   <div class="links-of-author motion-element">
       <span class="links-of-author-item">
-        <a href="https://plus.google.com/yourname" title="Google → https:&#x2F;&#x2F;plus.google.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>Google</a>
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
       </span>
   </div>
 

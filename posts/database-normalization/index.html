@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="관계형 데이터베이스 설계의 핵심인 정규화 과정을 1NF부터 BCNF까지 예시와 함께 단계별로 살펴봅니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="데이터베이스 정규화 1NF부터 BCNF까지">
+<meta property="og:url" content="https://ew32.github.io/posts/database-normalization/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="관계형 데이터베이스 설계의 핵심인 정규화 과정을 1NF부터 BCNF까지 예시와 함께 단계별로 살펴봅니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-09T07:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-12T01:49:24.838Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="정규화">
+<meta property="article:tag" content="RDBMS">
+<meta property="article:tag" content="데이터모델링">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/database-normalization/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>데이터베이스 정규화 1NF부터 BCNF까지 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/database-normalization/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          데이터베이스 정규화 1NF부터 BCNF까지
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-09 16:00:00" itemprop="dateCreated datePublished" datetime="2026-05-09T16:00:00+09:00">2026-05-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-12 10:49:24" itemprop="dateModified" datetime="2026-05-12T10:49:24+09:00">2026-05-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">관계형 데이터베이스 설계의 핵심인 정규화 과정을 1NF부터 BCNF까지 예시와 함께 단계별로 살펴봅니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="정규화란-무엇인가"><a href="#정규화란-무엇인가" class="headerlink" title="정규화란 무엇인가"></a>정규화란 무엇인가</h2><p><strong>정규화(Normalization)</strong> 는 관계형 데이터베이스에서 중복을 제거하고 무결성을 높이기 위해 테이블 구조를 단계적으로 분해하는 과정입니다. 정규화의 목적은 단순히 “테이블을 잘게 쪼개는 것”이 아니라 다음 세 가지를 방지하는 데 있습니다.</p>
+<ul>
+<li><strong>삽입 이상(Insertion Anomaly)</strong>: 불필요한 NULL을 강제하는 구조</li>
+<li><strong>갱신 이상(Update Anomaly)</strong>: 같은 값을 여러 곳에서 동시에 수정해야 함</li>
+<li><strong>삭제 이상(Deletion Anomaly)</strong>: 의도치 않게 다른 정보까지 사라짐</li>
+</ul>
+<h2 id="제1정규형-1NF"><a href="#제1정규형-1NF" class="headerlink" title="제1정규형 (1NF)"></a>제1정규형 (1NF)</h2><p><strong>모든 속성이 원자값(atomic value)을 가져야 한다.</strong></p>
+<p>1NF를 위반한 예:</p>
+<table>
+<thead>
+<tr>
+<th>student_id</th>
+<th>name</th>
+<th>phones</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>김철수</td>
+<td>010-1111, 010-2222</td>
+</tr>
+</tbody></table>
+<p>전화번호 필드에 여러 값이 들어 있어 1NF를 위반합니다. 해결 방법은 별도 테이블로 분리하거나 행을 분할하는 것입니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> student_phone (</span><br><span class="line">    student_id <span class="type">INT</span>,</span><br><span class="line">    phone <span class="type">VARCHAR</span>(<span class="number">20</span>),</span><br><span class="line">    <span class="keyword">PRIMARY</span> KEY (student_id, phone)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<h2 id="제2정규형-2NF"><a href="#제2정규형-2NF" class="headerlink" title="제2정규형 (2NF)"></a>제2정규형 (2NF)</h2><p><strong>1NF를 만족하면서, 모든 비주요 속성이 기본키 전체에 함수적으로 종속되어야 한다.</strong></p>
+<p>복합키의 일부에만 의존하는 속성이 있으면 부분 함수 종속이 발생해 2NF를 위반합니다.</p>
+<p>위반 예: <code>(주문번호, 상품번호)</code>가 PK인 테이블</p>
+<table>
+<thead>
+<tr>
+<th>order_id</th>
+<th>product_id</th>
+<th>quantity</th>
+<th>product_name</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>100</td>
+<td>A1</td>
+<td>2</td>
+<td>노트북</td>
+</tr>
+</tbody></table>
+<p><code>product_name</code>은 <code>product_id</code>에만 의존하므로 분리해야 합니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 분리 후</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> order_item (</span><br><span class="line">    order_id <span class="type">INT</span>,</span><br><span class="line">    product_id <span class="type">VARCHAR</span>(<span class="number">10</span>),</span><br><span class="line">    quantity <span class="type">INT</span>,</span><br><span class="line">    <span class="keyword">PRIMARY</span> KEY (order_id, product_id)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> product (</span><br><span class="line">    product_id <span class="type">VARCHAR</span>(<span class="number">10</span>) <span class="keyword">PRIMARY</span> KEY,</span><br><span class="line">    product_name <span class="type">VARCHAR</span>(<span class="number">100</span>)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<h2 id="제3정규형-3NF"><a href="#제3정규형-3NF" class="headerlink" title="제3정규형 (3NF)"></a>제3정규형 (3NF)</h2><p><strong>2NF를 만족하면서, 비주요 속성 간의 이행적 종속(transitive dependency)이 없어야 한다.</strong></p>
+<p>위반 예:</p>
+<table>
+<thead>
+<tr>
+<th>employee_id</th>
+<th>name</th>
+<th>department_id</th>
+<th>department_name</th>
+</tr>
+</thead>
+</table>
+<p><code>department_name</code>은 PK인 <code>employee_id</code>에 직접 의존하지 않고 <code>department_id</code>를 거쳐 이행적으로 의존합니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 분리 후</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> employee (</span><br><span class="line">    employee_id <span class="type">INT</span> <span class="keyword">PRIMARY</span> KEY,</span><br><span class="line">    name <span class="type">VARCHAR</span>(<span class="number">50</span>),</span><br><span class="line">    department_id <span class="type">INT</span> <span class="keyword">REFERENCES</span> department(department_id)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> department (</span><br><span class="line">    department_id <span class="type">INT</span> <span class="keyword">PRIMARY</span> KEY,</span><br><span class="line">    department_name <span class="type">VARCHAR</span>(<span class="number">50</span>)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<h2 id="BCNF-Boyce-Codd-Normal-Form"><a href="#BCNF-Boyce-Codd-Normal-Form" class="headerlink" title="BCNF (Boyce-Codd Normal Form)"></a>BCNF (Boyce-Codd Normal Form)</h2><p><strong>모든 함수적 종속에서 결정자가 후보키여야 한다.</strong></p>
+<p>3NF는 만족하지만 BCNF는 위반하는 사례가 있습니다.</p>
+<p>예: <code>(학생, 과목)</code> → 교수, <code>교수</code> → 과목</p>
+<table>
+<thead>
+<tr>
+<th>student</th>
+<th>course</th>
+<th>professor</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>김철수</td>
+<td>DB</td>
+<td>박교수</td>
+</tr>
+<tr>
+<td>이영희</td>
+<td>OS</td>
+<td>최교수</td>
+</tr>
+</tbody></table>
+<p><code>교수 → 과목</code> 종속이 존재하지만 <code>교수</code>는 후보키가 아니므로 BCNF 위반입니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- BCNF 분해</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> professor_course (</span><br><span class="line">    professor <span class="type">VARCHAR</span>(<span class="number">50</span>) <span class="keyword">PRIMARY</span> KEY,</span><br><span class="line">    course <span class="type">VARCHAR</span>(<span class="number">50</span>)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> student_professor (</span><br><span class="line">    student <span class="type">VARCHAR</span>(<span class="number">50</span>),</span><br><span class="line">    professor <span class="type">VARCHAR</span>(<span class="number">50</span>),</span><br><span class="line">    <span class="keyword">PRIMARY</span> KEY (student, professor)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<h2 id="정규화-단계-요약"><a href="#정규화-단계-요약" class="headerlink" title="정규화 단계 요약"></a>정규화 단계 요약</h2><table>
+<thead>
+<tr>
+<th>단계</th>
+<th>핵심 규칙</th>
+<th>제거하는 종속</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1NF</td>
+<td>원자값</td>
+<td>다중값 속성</td>
+</tr>
+<tr>
+<td>2NF</td>
+<td>완전 함수 종속</td>
+<td>부분 함수 종속</td>
+</tr>
+<tr>
+<td>3NF</td>
+<td>직접 종속</td>
+<td>이행적 종속</td>
+</tr>
+<tr>
+<td>BCNF</td>
+<td>결정자 &#x3D; 후보키</td>
+<td>모든 비후보키 결정자</td>
+</tr>
+<tr>
+<td>4NF</td>
+<td>다치 종속 제거</td>
+<td>다중값 종속</td>
+</tr>
+<tr>
+<td>5NF</td>
+<td>조인 종속 제거</td>
+<td>조인 종속</td>
+</tr>
+</tbody></table>
+<h2 id="정규화의-한계와-반정규화"><a href="#정규화의-한계와-반정규화" class="headerlink" title="정규화의 한계와 반정규화"></a>정규화의 한계와 반정규화</h2><p>정규화는 무결성을 높이지만 <strong>조인 비용</strong>을 증가시킵니다. 대량의 읽기가 발생하는 시스템에서는 의도적으로 <strong>반정규화(Denormalization)</strong> 를 적용하기도 합니다.</p>
+<ul>
+<li>자주 조회되는 컬럼을 중복 저장</li>
+<li>집계 결과를 캐시 테이블에 저장</li>
+<li>읽기 전용 뷰나 머티리얼라이즈드 뷰 활용</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 반정규화 예시: 주문 테이블에 사용자 이름 중복 저장</span></span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> orders <span class="keyword">ADD</span> <span class="keyword">COLUMN</span> user_name <span class="type">VARCHAR</span>(<span class="number">50</span>);</span><br></pre></td></tr></table></figure>
+
+<h2 id="실무-권장-가이드라인"><a href="#실무-권장-가이드라인" class="headerlink" title="실무 권장 가이드라인"></a>실무 권장 가이드라인</h2><ul>
+<li>OLTP 시스템은 <strong>3NF까지 적용</strong>하는 것이 일반적</li>
+<li>분석&#x2F;리포팅용 OLAP은 <strong>스타 스키마</strong> 등 반정규화 형태</li>
+<li>BCNF 이상은 학문적·특수 사례에서만 의식적으로 적용</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>정규화는 데이터베이스 설계의 기초이지만, 맹목적으로 모든 단계를 적용할 필요는 없습니다. 1NF~3NF를 기본으로 적용하고, 성능 요구가 명확할 때 반정규화를 도입하는 것이 실용적입니다. 중요한 것은 정규화의 단계 자체보다, 그 속에서 다루는 함수 종속과 이상 현상을 이해하는 일입니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%EC%A0%95%EA%B7%9C%ED%99%94/" rel="tag"># 정규화</a>
+              <a href="/tags/RDBMS/" rel="tag"># RDBMS</a>
+              <a href="/tags/%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%AA%A8%EB%8D%B8%EB%A7%81/" rel="tag"># 데이터모델링</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/mysql-vs-postgresql/" rel="prev" title="MySQL vs PostgreSQL 비교">
+      <i class="fa fa-chevron-left"></i> MySQL vs PostgreSQL 비교
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/transactions-and-acid/" rel="next" title="트랜잭션과 ACID 원칙">
+      트랜잭션과 ACID 원칙 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%95%EA%B7%9C%ED%99%94%EB%9E%80-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80"><span class="nav-number">1.</span> <span class="nav-text">정규화란 무엇인가</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%9C1%EC%A0%95%EA%B7%9C%ED%98%95-1NF"><span class="nav-number">2.</span> <span class="nav-text">제1정규형 (1NF)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%9C2%EC%A0%95%EA%B7%9C%ED%98%95-2NF"><span class="nav-number">3.</span> <span class="nav-text">제2정규형 (2NF)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%9C3%EC%A0%95%EA%B7%9C%ED%98%95-3NF"><span class="nav-number">4.</span> <span class="nav-text">제3정규형 (3NF)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BCNF-Boyce-Codd-Normal-Form"><span class="nav-number">5.</span> <span class="nav-text">BCNF (Boyce-Codd Normal Form)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%95%EA%B7%9C%ED%99%94-%EB%8B%A8%EA%B3%84-%EC%9A%94%EC%95%BD"><span class="nav-number">6.</span> <span class="nav-text">정규화 단계 요약</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%95%EA%B7%9C%ED%99%94%EC%9D%98-%ED%95%9C%EA%B3%84%EC%99%80-%EB%B0%98%EC%A0%95%EA%B7%9C%ED%99%94"><span class="nav-number">7.</span> <span class="nav-text">정규화의 한계와 반정규화</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%8B%A4%EB%AC%B4-%EA%B6%8C%EC%9E%A5-%EA%B0%80%EC%9D%B4%EB%93%9C%EB%9D%BC%EC%9D%B8"><span class="nav-number">8.</span> <span class="nav-text">실무 권장 가이드라인</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">9.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">114</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">307</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

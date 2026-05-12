@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <author>
+    <name>EW32</name>
+  </author>
+  <generator uri="https://hexo.io/">Hexo</generator>
+  <id>https://ew32.github.io/</id>
+  <link href="https://ew32.github.io/" rel="alternate"/>
+  <link href="https://ew32.github.io/atom.xml" rel="self"/>
+  <rights>All rights reserved 2026, EW32</rights>
+  <subtitle>실무 중심 개발·인프라·보안 아카이브</subtitle>
+  <title>EW32 Tech Blog</title>
+  <updated>2026-05-12T01:49:24.838Z</updated>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="Backend" scheme="https://ew32.github.io/categories/Backend/"/>
+    <category term="Java" scheme="https://ew32.github.io/categories/Backend/Java/"/>
+    <category term="디자인패턴" scheme="https://ew32.github.io/tags/%EB%94%94%EC%9E%90%EC%9D%B8%ED%8C%A8%ED%84%B4/"/>
+    <category term="Singleton" scheme="https://ew32.github.io/tags/Singleton/"/>
+    <category term="OOP" scheme="https://ew32.github.io/tags/OOP/"/>
+    <id>https://ew32.github.io/posts/design-patterns-singleton/</id>
+    <link href="https://ew32.github.io/posts/design-patterns-singleton/"/>
+    <published>2026-05-29T02:00:00.000Z</published>
+    <summary>싱글톤 패턴의 개념, Java 구현 방식별 비교, 사용 시 주의점을 정리합니다.</summary>
+    <title>디자인 패턴 - 싱글톤 패턴</title>
+    <updated>2026-05-12T01:49:24.838Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="Tutorial" scheme="https://ew32.github.io/categories/Tutorial/"/>
+    <category term="정규표현식" scheme="https://ew32.github.io/tags/%EC%A0%95%EA%B7%9C%ED%91%9C%ED%98%84%EC%8B%9D/"/>
+    <category term="RegEx" scheme="https://ew32.github.io/tags/RegEx/"/>
+    <category term="패턴매칭" scheme="https://ew32.github.io/tags/%ED%8C%A8%ED%84%B4%EB%A7%A4%EC%B9%AD/"/>
+    <id>https://ew32.github.io/posts/regex-complete-guide/</id>
+    <link href="https://ew32.github.io/posts/regex-complete-guide/"/>
+    <published>2026-05-29T00:00:00.000Z</published>
+    <summary>정규표현식의 메타문자, 그룹, 룩어라운드까지 핵심 문법을 예제와 함께 정리합니다.</summary>
+    <title>정규표현식 완벽 가이드</title>
+    <updated>2026-05-12T01:49:24.840Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="개발환경" scheme="https://ew32.github.io/categories/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/"/>
+    <category term="생산성" scheme="https://ew32.github.io/tags/%EC%83%9D%EC%82%B0%EC%84%B1/"/>
+    <category term="Linux" scheme="https://ew32.github.io/tags/Linux/"/>
+    <category term="tmux" scheme="https://ew32.github.io/tags/tmux/"/>
+    <category term="터미널" scheme="https://ew32.github.io/tags/%ED%84%B0%EB%AF%B8%EB%84%90/"/>
+    <id>https://ew32.github.io/posts/tmux-guide/</id>
+    <link href="https://ew32.github.io/posts/tmux-guide/"/>
+    <published>2026-05-28T07:00:00.000Z</published>
+    <summary>tmux의 세션/윈도우/페인 개념과 자주 쓰는 단축키, 설정 커스터마이즈를 소개합니다.</summary>
+    <title>tmux 활용 - 터미널 멀티플렉서 입문</title>
+    <updated>2026-05-12T01:49:24.841Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="개발환경" scheme="https://ew32.github.io/categories/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/"/>
+    <category term="Linux" scheme="https://ew32.github.io/tags/Linux/"/>
+    <category term="Vim" scheme="https://ew32.github.io/tags/Vim/"/>
+    <category term="에디터" scheme="https://ew32.github.io/tags/%EC%97%90%EB%94%94%ED%84%B0/"/>
+    <category term="단축키" scheme="https://ew32.github.io/tags/%EB%8B%A8%EC%B6%95%ED%82%A4/"/>
+    <id>https://ew32.github.io/posts/vim-basics/</id>
+    <link href="https://ew32.github.io/posts/vim-basics/"/>
+    <published>2026-05-28T05:00:00.000Z</published>
+    <summary>Vim의 모드 개념과 기본 이동, 편집, 시각 모드 사용법을 입문자 관점에서 정리합니다.</summary>
+    <title>Vim 기초 - 모드, 이동, 편집</title>
+    <updated>2026-05-12T01:49:24.841Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="개발환경" scheme="https://ew32.github.io/categories/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/"/>
+    <category term="생산성" scheme="https://ew32.github.io/tags/%EC%83%9D%EC%82%B0%EC%84%B1/"/>
+    <category term="에디터" scheme="https://ew32.github.io/tags/%EC%97%90%EB%94%94%ED%84%B0/"/>
+    <category term="단축키" scheme="https://ew32.github.io/tags/%EB%8B%A8%EC%B6%95%ED%82%A4/"/>
+    <category term="VSCode" scheme="https://ew32.github.io/tags/VSCode/"/>
+    <id>https://ew32.github.io/posts/vscode-shortcuts-extensions/</id>
+    <link href="https://ew32.github.io/posts/vscode-shortcuts-extensions/"/>
+    <published>2026-05-28T02:00:00.000Z</published>
+    <summary>VSCode 생산성을 극대화하는 단축키와 추천 확장 프로그램을 카테고리별로 정리합니다.</summary>
+    <title>VSCode 필수 단축키와 확장 프로그램</title>
+    <updated>2026-05-12T01:49:24.842Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="AI도구" scheme="https://ew32.github.io/categories/AI%EB%8F%84%EA%B5%AC/"/>
+    <category term="LLM" scheme="https://ew32.github.io/tags/LLM/"/>
+    <category term="RAG" scheme="https://ew32.github.io/tags/RAG/"/>
+    <category term="VectorDB" scheme="https://ew32.github.io/tags/VectorDB/"/>
+    <category term="임베딩" scheme="https://ew32.github.io/tags/%EC%9E%84%EB%B2%A0%EB%94%A9/"/>
+    <id>https://ew32.github.io/posts/rag-explained/</id>
+    <link href="https://ew32.github.io/posts/rag-explained/"/>
+    <published>2026-05-28T00:00:00.000Z</published>
+    <summary>RAG의 개념, 임베딩과 벡터 DB를 활용한 파이프라인, 품질 향상 기법을 정리합니다.</summary>
+    <title>RAG(검색 증강 생성) 동작 원리</title>
+    <updated>2026-05-12T01:49:24.840Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="AI도구" scheme="https://ew32.github.io/categories/AI%EB%8F%84%EA%B5%AC/"/>
+    <category term="LLM" scheme="https://ew32.github.io/tags/LLM/"/>
+    <category term="AI" scheme="https://ew32.github.io/tags/AI/"/>
+    <category term="LangChain" scheme="https://ew32.github.io/tags/LangChain/"/>
+    <category term="Python" scheme="https://ew32.github.io/tags/Python/"/>
+    <id>https://ew32.github.io/posts/langchain-basics/</id>
+    <link href="https://ew32.github.io/posts/langchain-basics/"/>
+    <published>2026-05-27T07:00:00.000Z</published>
+    <summary>LangChain의 핵심 구성 요소와 LLM 애플리케이션 구축 방법을 예제와 함께 정리합니다.</summary>
+    <title>LangChain 기초 - LLM 애플리케이션 빌드</title>
+    <updated>2026-05-12T01:49:24.839Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="AI도구" scheme="https://ew32.github.io/categories/AI%EB%8F%84%EA%B5%AC/"/>
+    <category term="LLM" scheme="https://ew32.github.io/tags/LLM/"/>
+    <category term="AI" scheme="https://ew32.github.io/tags/AI/"/>
+    <category term="Claude" scheme="https://ew32.github.io/tags/Claude/"/>
+    <category term="Anthropic" scheme="https://ew32.github.io/tags/Anthropic/"/>
+    <id>https://ew32.github.io/posts/claude-effective-usage/</id>
+    <link href="https://ew32.github.io/posts/claude-effective-usage/"/>
+    <published>2026-05-27T05:00:00.000Z</published>
+    <summary>Anthropic Claude의 특성과 효과적인 프롬프팅 전략, 활용 시나리오를 정리합니다.</summary>
+    <title>Claude를 효과적으로 사용하는 방법</title>
+    <updated>2026-05-12T01:49:24.838Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="AI도구" scheme="https://ew32.github.io/categories/AI%EB%8F%84%EA%B5%AC/"/>
+    <category term="Copilot" scheme="https://ew32.github.io/tags/Copilot/"/>
+    <category term="GitHub" scheme="https://ew32.github.io/tags/GitHub/"/>
+    <category term="AI코딩" scheme="https://ew32.github.io/tags/AI%EC%BD%94%EB%94%A9/"/>
+    <category term="생산성" scheme="https://ew32.github.io/tags/%EC%83%9D%EC%82%B0%EC%84%B1/"/>
+    <id>https://ew32.github.io/posts/github-copilot-usage/</id>
+    <link href="https://ew32.github.io/posts/github-copilot-usage/"/>
+    <published>2026-05-27T02:00:00.000Z</published>
+    <summary>GitHub Copilot의 핵심 기능과 효과적인 활용 패턴, 한계점을 정리한 실전 가이드입니다.</summary>
+    <title>GitHub Copilot 활용 가이드</title>
+    <updated>2026-05-12T01:49:24.838Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="AI도구" scheme="https://ew32.github.io/categories/AI%EB%8F%84%EA%B5%AC/"/>
+    <category term="ChatGPT" scheme="https://ew32.github.io/tags/ChatGPT/"/>
+    <category term="프롬프트" scheme="https://ew32.github.io/tags/%ED%94%84%EB%A1%AC%ED%94%84%ED%8A%B8/"/>
+    <category term="LLM" scheme="https://ew32.github.io/tags/LLM/"/>
+    <category term="AI" scheme="https://ew32.github.io/tags/AI/"/>
+    <id>https://ew32.github.io/posts/chatgpt-prompt-engineering/</id>
+    <link href="https://ew32.github.io/posts/chatgpt-prompt-engineering/"/>
+    <published>2026-05-27T00:00:00.000Z</published>
+    <summary>ChatGPT에서 원하는 답변을 얻기 위한 프롬프트 엔지니어링 핵심 기법과 패턴을 정리합니다.</summary>
+    <title>ChatGPT 프롬프트 엔지니어링 기법</title>
+    <updated>2026-05-12T01:49:24.838Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="Cloud" scheme="https://ew32.github.io/categories/Cloud/"/>
+    <category term="Infrastructure" scheme="https://ew32.github.io/categories/Cloud/Infrastructure/"/>
+    <category term="DevOps" scheme="https://ew32.github.io/tags/DevOps/"/>
+    <category term="GitHubActions" scheme="https://ew32.github.io/tags/GitHubActions/"/>
+    <category term="CI/CD" scheme="https://ew32.github.io/tags/CI-CD/"/>
+    <category term="자동화" scheme="https://ew32.github.io/tags/%EC%9E%90%EB%8F%99%ED%99%94/"/>
+    <id>https://ew32.github.io/posts/github-actions-getting-started/</id>
+    <link href="https://ew32.github.io/posts/github-actions-getting-started/"/>
+    <published>2026-05-26T07:00:00.000Z</published>
+    <summary>GitHub Actions의 기본 개념과 워크플로 작성법, 실전 CI/CD 예제를 정리합니다.</summary>
+    <title>GitHub Actions로 CI/CD 시작하기</title>
+    <updated>2026-05-12T01:49:24.838Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="Cloud" scheme="https://ew32.github.io/categories/Cloud/"/>
+    <category term="Infrastructure" scheme="https://ew32.github.io/categories/Cloud/Infrastructure/"/>
+    <category term="AWS" scheme="https://ew32.github.io/tags/AWS/"/>
+    <category term="DevOps" scheme="https://ew32.github.io/tags/DevOps/"/>
+    <category term="Terraform" scheme="https://ew32.github.io/tags/Terraform/"/>
+    <category term="IaC" scheme="https://ew32.github.io/tags/IaC/"/>
+    <id>https://ew32.github.io/posts/terraform-basics/</id>
+    <link href="https://ew32.github.io/posts/terraform-basics/"/>
+    <published>2026-05-26T05:00:00.000Z</published>
+    <summary>HashiCorp Terraform을 활용해 인프라를 코드로 관리하는 핵심 개념과 실전 사용법을 정리합니다.</summary>
+    <title>Terraform 기초 - IaC로 인프라 관리하기</title>
+    <updated>2026-05-12T01:49:24.841Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="Cloud" scheme="https://ew32.github.io/categories/Cloud/"/>
+    <category term="Infrastructure" scheme="https://ew32.github.io/categories/Cloud/Infrastructure/"/>
+    <category term="AWS" scheme="https://ew32.github.io/tags/AWS/"/>
+    <category term="EC2" scheme="https://ew32.github.io/tags/EC2/"/>
+    <category term="ECS" scheme="https://ew32.github.io/tags/ECS/"/>
+    <category term="EKS" scheme="https://ew32.github.io/tags/EKS/"/>
+    <id>https://ew32.github.io/posts/aws-ec2-ecs-eks-comparison/</id>
+    <link href="https://ew32.github.io/posts/aws-ec2-ecs-eks-comparison/"/>
+    <published>2026-05-26T02:00:00.000Z</published>
+    <summary>AWS의 컴퓨팅 서비스인 EC2, ECS, EKS의 차이와 선택 기준을 정리합니다.</summary>
+    <title>AWS EC2, ECS, EKS 비교</title>
+    <updated>2026-05-12T01:49:24.838Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="Cloud" scheme="https://ew32.github.io/categories/Cloud/"/>
+    <category term="Infrastructure" scheme="https://ew32.github.io/categories/Cloud/Infrastructure/"/>
+    <category term="AWS" scheme="https://ew32.github.io/tags/AWS/"/>
+    <category term="클라우드" scheme="https://ew32.github.io/tags/%ED%81%B4%EB%9D%BC%EC%9A%B0%EB%93%9C/"/>
+    <category term="S3" scheme="https://ew32.github.io/tags/S3/"/>
+    <category term="스토리지" scheme="https://ew32.github.io/tags/%EC%8A%A4%ED%86%A0%EB%A6%AC%EC%A7%80/"/>
+    <id>https://ew32.github.io/posts/aws-s3-guide/</id>
+    <link href="https://ew32.github.io/posts/aws-s3-guide/"/>
+    <published>2026-05-26T00:00:00.000Z</published>
+    <summary>AWS S3의 주요 개념과 보안 설정, 비용 최적화 전략을 실무 관점에서 정리합니다.</summary>
+    <title>AWS S3 활용 가이드</title>
+    <updated>2026-05-12T01:49:24.838Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="Cloud" scheme="https://ew32.github.io/categories/Cloud/"/>
+    <category term="Infrastructure" scheme="https://ew32.github.io/categories/Cloud/Infrastructure/"/>
+    <category term="컨테이너" scheme="https://ew32.github.io/tags/%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88/"/>
+    <category term="Kubernetes" scheme="https://ew32.github.io/tags/Kubernetes/"/>
+    <category term="K8s" scheme="https://ew32.github.io/tags/K8s/"/>
+    <category term="오케스트레이션" scheme="https://ew32.github.io/tags/%EC%98%A4%EC%BC%80%EC%8A%A4%ED%8A%B8%EB%A0%88%EC%9D%B4%EC%85%98/"/>
+    <id>https://ew32.github.io/posts/kubernetes-introduction/</id>
+    <link href="https://ew32.github.io/posts/kubernetes-introduction/"/>
+    <published>2026-05-25T07:00:00.000Z</published>
+    <summary>컨테이너 오케스트레이션의 표준인 Kubernetes의 핵심 개념과 동작 원리를 정리합니다.</summary>
+    <title>Kubernetes 입문 - 핵심 개념 정리</title>
+    <updated>2026-05-12T01:49:24.839Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="System" scheme="https://ew32.github.io/categories/System/"/>
+    <category term="OS" scheme="https://ew32.github.io/categories/System/OS/"/>
+    <category term="Linux" scheme="https://ew32.github.io/tags/Linux/"/>
+    <category term="Shell" scheme="https://ew32.github.io/tags/Shell/"/>
+    <category term="Bash" scheme="https://ew32.github.io/tags/Bash/"/>
+    <category term="스크립트" scheme="https://ew32.github.io/tags/%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8/"/>
+    <id>https://ew32.github.io/posts/shell-scripting-basics/</id>
+    <link href="https://ew32.github.io/posts/shell-scripting-basics/"/>
+    <published>2026-05-25T05:00:00.000Z</published>
+    <summary>리눅스 자동화의 핵심인 Bash 셸 스크립트의 문법과 실무 패턴을 정리합니다.</summary>
+    <title>Shell 스크립트 기초 가이드</title>
+    <updated>2026-05-12T01:49:24.841Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="System" scheme="https://ew32.github.io/categories/System/"/>
+    <category term="OS" scheme="https://ew32.github.io/categories/System/OS/"/>
+    <category term="Linux" scheme="https://ew32.github.io/tags/Linux/"/>
+    <category term="권한" scheme="https://ew32.github.io/tags/%EA%B6%8C%ED%95%9C/"/>
+    <category term="chmod" scheme="https://ew32.github.io/tags/chmod/"/>
+    <category term="chown" scheme="https://ew32.github.io/tags/chown/"/>
+    <id>https://ew32.github.io/posts/linux-file-permissions/</id>
+    <link href="https://ew32.github.io/posts/linux-file-permissions/"/>
+    <published>2026-05-25T02:00:00.000Z</published>
+    <summary>리눅스 파일 권한 체계와 chmod, chown 명령어 사용법을 실무 예제와 함께 정리합니다.</summary>
+    <title>리눅스 파일 권한 완벽 이해</title>
+    <updated>2026-05-12T01:49:24.839Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="System" scheme="https://ew32.github.io/categories/System/"/>
+    <category term="OS" scheme="https://ew32.github.io/categories/System/OS/"/>
+    <category term="메모리관리" scheme="https://ew32.github.io/tags/%EB%A9%94%EB%AA%A8%EB%A6%AC%EA%B4%80%EB%A6%AC/"/>
+    <category term="페이징" scheme="https://ew32.github.io/tags/%ED%8E%98%EC%9D%B4%EC%A7%95/"/>
+    <category term="세그멘테이션" scheme="https://ew32.github.io/tags/%EC%84%B8%EA%B7%B8%EB%A9%98%ED%85%8C%EC%9D%B4%EC%85%98/"/>
+    <category term="OS" scheme="https://ew32.github.io/tags/OS/"/>
+    <id>https://ew32.github.io/posts/memory-management-paging-segmentation/</id>
+    <link href="https://ew32.github.io/posts/memory-management-paging-segmentation/"/>
+    <published>2026-05-25T00:00:00.000Z</published>
+    <summary>운영체제가 메모리를 효율적으로 관리하는 두 가지 핵심 기법인 페이징과 세그멘테이션을 비교 정리합니다.</summary>
+    <title>메모리 관리 - 페이징과 세그멘테이션</title>
+    <updated>2026-05-12T01:49:24.839Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="System" scheme="https://ew32.github.io/categories/System/"/>
+    <category term="OS" scheme="https://ew32.github.io/categories/System/OS/"/>
+    <category term="비동기" scheme="https://ew32.github.io/tags/%EB%B9%84%EB%8F%99%EA%B8%B0/"/>
+    <category term="동기" scheme="https://ew32.github.io/tags/%EB%8F%99%EA%B8%B0/"/>
+    <category term="블로킹" scheme="https://ew32.github.io/tags/%EB%B8%94%EB%A1%9C%ED%82%B9/"/>
+    <category term="논블로킹" scheme="https://ew32.github.io/tags/%EB%85%BC%EB%B8%94%EB%A1%9C%ED%82%B9/"/>
+    <id>https://ew32.github.io/posts/sync-async-blocking-nonblocking/</id>
+    <link href="https://ew32.github.io/posts/sync-async-blocking-nonblocking/"/>
+    <published>2026-05-24T07:00:00.000Z</published>
+    <summary>헷갈리기 쉬운 동기/비동기와 블로킹/논블로킹 개념을 명확히 구분해 설명합니다.</summary>
+    <title>동기/비동기 vs 블로킹/논블로킹 차이</title>
+    <updated>2026-05-12T01:49:24.841Z</updated>
+  </entry>
+  <entry>
+    <author>
+      <name>EW32</name>
+    </author>
+    <category term="System" scheme="https://ew32.github.io/categories/System/"/>
+    <category term="OS" scheme="https://ew32.github.io/categories/System/OS/"/>
+    <category term="동시성" scheme="https://ew32.github.io/tags/%EB%8F%99%EC%8B%9C%EC%84%B1/"/>
+    <category term="OS" scheme="https://ew32.github.io/tags/OS/"/>
+    <category term="프로세스" scheme="https://ew32.github.io/tags/%ED%94%84%EB%A1%9C%EC%84%B8%EC%8A%A4/"/>
+    <category term="스레드" scheme="https://ew32.github.io/tags/%EC%8A%A4%EB%A0%88%EB%93%9C/"/>
+    <id>https://ew32.github.io/posts/process-vs-thread/</id>
+    <link href="https://ew32.github.io/posts/process-vs-thread/"/>
+    <published>2026-05-24T05:00:00.000Z</published>
+    <summary>운영체제의 핵심 개념인 프로세스와 스레드의 차이점과 동시성 처리 방식을 정리합니다.</summary>
+    <title>프로세스와 스레드의 차이</title>
+    <updated>2026-05-12T01:49:24.840Z</updated>
+  </entry>
+</feed>

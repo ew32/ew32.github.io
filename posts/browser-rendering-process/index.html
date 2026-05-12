@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="HTML이 화면에 그려지기까지 브라우저가 거치는 단계와 최적화 포인트를 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="브라우저 렌더링 과정 - Critical Rendering Path">
+<meta property="og:url" content="https://ew32.github.io/posts/browser-rendering-process/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="HTML이 화면에 그려지기까지 브라우저가 거치는 단계와 최적화 포인트를 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-22T07:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-12T01:49:24.838Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="브라우저">
+<meta property="article:tag" content="렌더링">
+<meta property="article:tag" content="CRP">
+<meta property="article:tag" content="성능">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/browser-rendering-process/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>브라우저 렌더링 과정 - Critical Rendering Path | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/browser-rendering-process/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          브라우저 렌더링 과정 - Critical Rendering Path
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-22 16:00:00" itemprop="dateCreated datePublished" datetime="2026-05-22T16:00:00+09:00">2026-05-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-12 10:49:24" itemprop="dateModified" datetime="2026-05-12T10:49:24+09:00">2026-05-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Frontend/HTML/" itemprop="url" rel="index"><span itemprop="name">HTML</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">HTML이 화면에 그려지기까지 브라우저가 거치는 단계와 최적화 포인트를 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Critical-Rendering-Path란"><a href="#Critical-Rendering-Path란" class="headerlink" title="Critical Rendering Path란?"></a>Critical Rendering Path란?</h2><p>**Critical Rendering Path(CRP)**는 브라우저가 HTML, CSS, JavaScript를 받아 화면의 픽셀로 변환하는 과정입니다. 이 경로의 각 단계를 이해하면 성능 병목을 정확히 짚어내고, **첫 페인트(First Paint)**와 <strong>LCP</strong>를 효과적으로 단축할 수 있습니다.</p>
+<p>CRP는 크게 다음 단계로 구성됩니다.</p>
+<ol>
+<li>DOM 구성</li>
+<li>CSSOM 구성</li>
+<li>Render Tree 결합</li>
+<li>Layout (Reflow)</li>
+<li>Paint</li>
+<li>Composite</li>
+</ol>
+<h2 id="1단계-DOM-구성"><a href="#1단계-DOM-구성" class="headerlink" title="1단계: DOM 구성"></a>1단계: DOM 구성</h2><p>브라우저는 HTML을 받으면 <strong>토큰화 → 노드 생성 → 트리 구축</strong> 순서로 DOM 트리를 만듭니다.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">head</span>&gt;</span><span class="tag">&lt;<span class="name">title</span>&gt;</span>예시<span class="tag">&lt;/<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">h1</span>&gt;</span>제목<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">p</span>&gt;</span>본문<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>위 HTML은 다음과 같은 트리 구조가 됩니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Document</span><br><span class="line">└── html</span><br><span class="line">    ├── head</span><br><span class="line">    │   └── title</span><br><span class="line">    └── body</span><br><span class="line">        ├── h1</span><br><span class="line">        └── p</span><br></pre></td></tr></table></figure>
+
+<p>HTML 파싱은 점진적(streaming)으로 수행되어, 일부분만 받아도 처리가 시작됩니다.</p>
+<h2 id="2단계-CSSOM-구성"><a href="#2단계-CSSOM-구성" class="headerlink" title="2단계: CSSOM 구성"></a>2단계: CSSOM 구성</h2><p>CSS 파일은 HTML 파싱 중 발견되는 즉시 요청되며, 별도의 <strong>CSSOM(CSS Object Model)</strong> 트리로 구성됩니다.</p>
+<p>CSS는 **렌더링 차단 리소스(render-blocking resource)**입니다. CSSOM이 완성되기 전까지 브라우저는 Render Tree를 만들 수 없으므로 화면을 그리지 못합니다.</p>
+<h3 id="CSS-차단-최소화"><a href="#CSS-차단-최소화" class="headerlink" title="CSS 차단 최소화"></a>CSS 차단 최소화</h3><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 즉시 필요 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">&quot;stylesheet&quot;</span> <span class="attr">href</span>=<span class="string">&quot;/critical.css&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- 인쇄용은 비차단 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">&quot;stylesheet&quot;</span> <span class="attr">href</span>=<span class="string">&quot;/print.css&quot;</span> <span class="attr">media</span>=<span class="string">&quot;print&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- 비동기 로드 패턴 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">&quot;preload&quot;</span> <span class="attr">href</span>=<span class="string">&quot;/non-critical.css&quot;</span> <span class="attr">as</span>=<span class="string">&quot;style&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">onload</span>=<span class="string">&quot;this.onload=null;this.rel=&#x27;stylesheet&#x27;&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="3단계-Render-Tree-결합"><a href="#3단계-Render-Tree-결합" class="headerlink" title="3단계: Render Tree 결합"></a>3단계: Render Tree 결합</h2><p>DOM과 CSSOM이 결합되어 <strong>Render Tree</strong>가 생성됩니다. 이때 <code>display: none</code> 요소나 <code>&lt;head&gt;</code>, <code>&lt;script&gt;</code> 등 시각적으로 표현되지 않는 노드는 제외됩니다.</p>
+<table>
+<thead>
+<tr>
+<th>속성</th>
+<th>Render Tree 포함 여부</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>display: none</code></td>
+<td>제외</td>
+</tr>
+<tr>
+<td><code>visibility: hidden</code></td>
+<td>포함 (공간 차지)</td>
+</tr>
+<tr>
+<td><code>opacity: 0</code></td>
+<td>포함</td>
+</tr>
+</tbody></table>
+<h2 id="4단계-Layout-Reflow"><a href="#4단계-Layout-Reflow" class="headerlink" title="4단계: Layout (Reflow)"></a>4단계: Layout (Reflow)</h2><p>각 노드의 정확한 위치와 크기를 계산하는 단계입니다. 뷰포트 크기, 박스 모델, 텍스트 줄바꿈 등이 모두 여기서 결정됩니다.</p>
+<p>다음 작업은 Layout을 재발생시킵니다.</p>
+<ul>
+<li>윈도우 리사이즈</li>
+<li><code>width</code>, <code>height</code>, <code>margin</code>, <code>padding</code> 변경</li>
+<li>폰트 변경</li>
+<li>DOM 노드 추가&#x2F;제거</li>
+<li><code>offsetWidth</code>, <code>scrollTop</code> 등 강제 동기 레이아웃 트리거 속성 읽기</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 강제 동기 레이아웃 - 성능 저하</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">let</span> el <span class="keyword">of</span> elements) &#123;</span><br><span class="line">  el.<span class="property">style</span>.<span class="property">width</span> = el.<span class="property">offsetWidth</span> + <span class="number">10</span> + <span class="string">&#x27;px&#x27;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 개선 - 읽기와 쓰기 분리</span></span><br><span class="line"><span class="keyword">const</span> widths = elements.<span class="title function_">map</span>(<span class="function"><span class="params">el</span> =&gt;</span> el.<span class="property">offsetWidth</span>);</span><br><span class="line">elements.<span class="title function_">forEach</span>(<span class="function">(<span class="params">el, i</span>) =&gt;</span> &#123;</span><br><span class="line">  el.<span class="property">style</span>.<span class="property">width</span> = widths[i] + <span class="number">10</span> + <span class="string">&#x27;px&#x27;</span>;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="5단계-Paint"><a href="#5단계-Paint" class="headerlink" title="5단계: Paint"></a>5단계: Paint</h2><p>Layout이 완료되면 각 노드를 실제 픽셀로 변환합니다. 텍스트, 색상, 이미지, 보더, 그림자 등이 비트맵으로 그려집니다.</p>
+<p>다음 속성 변경은 Layout 없이 Paint만 다시 발생시킵니다.</p>
+<ul>
+<li><code>color</code>, <code>background-color</code></li>
+<li><code>box-shadow</code></li>
+<li><code>border-radius</code></li>
+</ul>
+<h2 id="6단계-Composite"><a href="#6단계-Composite" class="headerlink" title="6단계: Composite"></a>6단계: Composite</h2><p>Paint된 결과는 여러 레이어로 나뉘어 합성됩니다. GPU에서 처리되어 매우 효율적입니다.</p>
+<p><strong>Composite만 발생시키는 속성</strong>: <code>transform</code>, <code>opacity</code></p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 비효율 - Layout + Paint + Composite */</span></span><br><span class="line"><span class="selector-class">.animation</span> &#123;</span><br><span class="line">  <span class="attribute">animation</span>: move <span class="number">1s</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">@keyframes</span> move &#123;</span><br><span class="line">  <span class="selector-tag">from</span> &#123; <span class="attribute">left</span>: <span class="number">0</span>; &#125;</span><br><span class="line">  <span class="selector-tag">to</span> &#123; <span class="attribute">left</span>: <span class="number">100px</span>; &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 효율 - Composite만 */</span></span><br><span class="line"><span class="selector-class">.animation</span> &#123;</span><br><span class="line">  <span class="attribute">animation</span>: move <span class="number">1s</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">@keyframes</span> move &#123;</span><br><span class="line">  <span class="selector-tag">from</span> &#123; <span class="attribute">transform</span>: <span class="built_in">translateX</span>(<span class="number">0</span>); &#125;</span><br><span class="line">  <span class="selector-tag">to</span> &#123; <span class="attribute">transform</span>: <span class="built_in">translateX</span>(<span class="number">100px</span>); &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="JavaScript의-영향"><a href="#JavaScript의-영향" class="headerlink" title="JavaScript의 영향"></a>JavaScript의 영향</h2><p><code>&lt;script&gt;</code> 태그는 <strong>파서 차단(parser-blocking)</strong> 리소스로, HTML 파싱을 중단시킵니다.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 동기 로드 - 파싱 차단 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">&quot;app.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- defer - 파싱 후 실행, 순서 보장 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">&quot;app.js&quot;</span> <span class="attr">defer</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- async - 다운로드 즉시 실행, 순서 보장 안 됨 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">&quot;analytics.js&quot;</span> <span class="attr">async</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>속성</th>
+<th>다운로드</th>
+<th>실행 시점</th>
+<th>순서 보장</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>없음</td>
+<td>HTML 파싱 차단</td>
+<td>다운로드 즉시</td>
+<td>보장</td>
+</tr>
+<tr>
+<td>async</td>
+<td>비동기</td>
+<td>다운로드 직후</td>
+<td>미보장</td>
+</tr>
+<tr>
+<td>defer</td>
+<td>비동기</td>
+<td>DOMContentLoaded 직전</td>
+<td>보장</td>
+</tr>
+</tbody></table>
+<h2 id="레이어-생성-트리거"><a href="#레이어-생성-트리거" class="headerlink" title="레이어 생성 트리거"></a>레이어 생성 트리거</h2><p>다음 속성은 별도 합성 레이어(compositing layer)를 만들어 성능을 향상시킵니다.</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.optimized</span> &#123;</span><br><span class="line">  <span class="attribute">will-change</span>: transform;</span><br><span class="line">  <span class="attribute">transform</span>: <span class="built_in">translateZ</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>단, 과도한 레이어는 메모리를 소모하므로 필요한 곳에만 사용해야 합니다.</p>
+<h2 id="최적화-체크리스트"><a href="#최적화-체크리스트" class="headerlink" title="최적화 체크리스트"></a>최적화 체크리스트</h2><ul>
+<li>CSS는 <code>&lt;head&gt;</code>에서 빠르게 로드, 비핵심은 비동기</li>
+<li>JS는 <code>defer</code> 또는 <code>async</code> 활용</li>
+<li>애니메이션은 <code>transform</code>과 <code>opacity</code> 위주</li>
+<li>강제 동기 레이아웃 방지 (읽기&#x2F;쓰기 분리)</li>
+<li>큰 DOM 변경은 <code>DocumentFragment</code> 사용</li>
+<li>자주 변경되는 요소는 <code>will-change</code> 또는 <code>contain</code> 속성</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>브라우저 렌더링 과정을 이해하면 <strong>어디서 비용이 발생하는지</strong> 정확히 파악할 수 있습니다. CRP의 단계마다 차단을 최소화하고, 애니메이션은 합성 단계에서 처리되도록 설계하면 60fps의 부드러운 사용자 경험을 안정적으로 제공할 수 있습니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%EB%B8%8C%EB%9D%BC%EC%9A%B0%EC%A0%80/" rel="tag"># 브라우저</a>
+              <a href="/tags/%EB%A0%8C%EB%8D%94%EB%A7%81/" rel="tag"># 렌더링</a>
+              <a href="/tags/CRP/" rel="tag"># CRP</a>
+              <a href="/tags/%EC%84%B1%EB%8A%A5/" rel="tag"># 성능</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/code-splitting-guide/" rel="prev" title="코드 스플리팅과 동적 임포트">
+      <i class="fa fa-chevron-left"></i> 코드 스플리팅과 동적 임포트
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/tcp-vs-udp/" rel="next" title="TCP와 UDP 프로토콜 비교">
+      TCP와 UDP 프로토콜 비교 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Critical-Rendering-Path%EB%9E%80"><span class="nav-number">1.</span> <span class="nav-text">Critical Rendering Path란?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1%EB%8B%A8%EA%B3%84-DOM-%EA%B5%AC%EC%84%B1"><span class="nav-number">2.</span> <span class="nav-text">1단계: DOM 구성</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2%EB%8B%A8%EA%B3%84-CSSOM-%EA%B5%AC%EC%84%B1"><span class="nav-number">3.</span> <span class="nav-text">2단계: CSSOM 구성</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CSS-%EC%B0%A8%EB%8B%A8-%EC%B5%9C%EC%86%8C%ED%99%94"><span class="nav-number">3.1.</span> <span class="nav-text">CSS 차단 최소화</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3%EB%8B%A8%EA%B3%84-Render-Tree-%EA%B2%B0%ED%95%A9"><span class="nav-number">4.</span> <span class="nav-text">3단계: Render Tree 결합</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4%EB%8B%A8%EA%B3%84-Layout-Reflow"><span class="nav-number">5.</span> <span class="nav-text">4단계: Layout (Reflow)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5%EB%8B%A8%EA%B3%84-Paint"><span class="nav-number">6.</span> <span class="nav-text">5단계: Paint</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6%EB%8B%A8%EA%B3%84-Composite"><span class="nav-number">7.</span> <span class="nav-text">6단계: Composite</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JavaScript%EC%9D%98-%EC%98%81%ED%96%A5"><span class="nav-number">8.</span> <span class="nav-text">JavaScript의 영향</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A0%88%EC%9D%B4%EC%96%B4-%EC%83%9D%EC%84%B1-%ED%8A%B8%EB%A6%AC%EA%B1%B0"><span class="nav-number">9.</span> <span class="nav-text">레이어 생성 트리거</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%B5%9C%EC%A0%81%ED%99%94-%EC%B2%B4%ED%81%AC%EB%A6%AC%EC%8A%A4%ED%8A%B8"><span class="nav-number">10.</span> <span class="nav-text">최적화 체크리스트</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">11.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">114</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">307</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="HTTP 프로토콜의 진화 과정을 따라 HTTP&#x2F;2와 HTTP&#x2F;3의 핵심 차이점을 살펴봅니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTP&#x2F;2와 HTTP&#x2F;3 차이점 정리">
+<meta property="og:url" content="https://ew32.github.io/posts/http2-vs-http3/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="HTTP 프로토콜의 진화 과정을 따라 HTTP&#x2F;2와 HTTP&#x2F;3의 핵심 차이점을 살펴봅니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-23T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-12T01:49:24.838Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="HTTP">
+<meta property="article:tag" content="HTTP2">
+<meta property="article:tag" content="HTTP3">
+<meta property="article:tag" content="QUIC">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/http2-vs-http3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>HTTP/2와 HTTP/3 차이점 정리 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/http2-vs-http3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          HTTP/2와 HTTP/3 차이점 정리
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-23 11:00:00" itemprop="dateCreated datePublished" datetime="2026-05-23T11:00:00+09:00">2026-05-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-12 10:49:24" itemprop="dateModified" datetime="2026-05-12T10:49:24+09:00">2026-05-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/HTTP/" itemprop="url" rel="index"><span itemprop="name">HTTP</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">HTTP 프로토콜의 진화 과정을 따라 HTTP/2와 HTTP/3의 핵심 차이점을 살펴봅니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="HTTP-진화의-흐름"><a href="#HTTP-진화의-흐름" class="headerlink" title="HTTP 진화의 흐름"></a>HTTP 진화의 흐름</h2><p>HTTP는 1991년 HTTP&#x2F;0.9부터 시작해 30년 이상 진화해왔습니다. 각 버전은 이전의 성능 한계를 극복하는 방향으로 설계되었으며, **HTTP&#x2F;2(2015)**와 **HTTP&#x2F;3(2022)**는 현대 웹의 표준이 되었습니다.</p>
+<ul>
+<li><strong>HTTP&#x2F;1.1 (1997)</strong>: 텍스트 기반, Keep-Alive, 파이프라이닝</li>
+<li><strong>HTTP&#x2F;2 (2015)</strong>: 바이너리, 멀티플렉싱, 헤더 압축</li>
+<li><strong>HTTP&#x2F;3 (2022)</strong>: QUIC 기반, UDP 사용</li>
+</ul>
+<h2 id="HTTP-1-1의-한계"><a href="#HTTP-1-1의-한계" class="headerlink" title="HTTP&#x2F;1.1의 한계"></a>HTTP&#x2F;1.1의 한계</h2><p>HTTP&#x2F;1.1은 단일 TCP 연결에서 한 번에 하나의 요청만 처리합니다. 이를 우회하기 위해 브라우저는 도메인당 보통 6개의 동시 연결을 사용하지만, 다음과 같은 문제가 남습니다.</p>
+<ul>
+<li><strong>Head-of-Line Blocking</strong>: 앞 요청이 지연되면 뒤 요청도 대기</li>
+<li><strong>헤더 중복</strong>: 매 요청마다 동일한 헤더 반복 전송</li>
+<li><strong>TCP 핸드셰이크 비용</strong>: 새 연결마다 RTT 소모</li>
+</ul>
+<h2 id="HTTP-2의-핵심-특징"><a href="#HTTP-2의-핵심-특징" class="headerlink" title="HTTP&#x2F;2의 핵심 특징"></a>HTTP&#x2F;2의 핵심 특징</h2><h3 id="1-바이너리-프레이밍"><a href="#1-바이너리-프레이밍" class="headerlink" title="1. 바이너리 프레이밍"></a>1. 바이너리 프레이밍</h3><p>HTTP&#x2F;2는 텍스트가 아닌 <strong>바이너리 프레임</strong>으로 통신합니다. 메시지를 작은 프레임으로 쪼개고 인터리브하여 전송합니다.</p>
+<table>
+<thead>
+<tr>
+<th>프레임 타입</th>
+<th>역할</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HEADERS</td>
+<td>헤더 정보</td>
+</tr>
+<tr>
+<td>DATA</td>
+<td>본문 데이터</td>
+</tr>
+<tr>
+<td>SETTINGS</td>
+<td>연결 파라미터</td>
+</tr>
+<tr>
+<td>PRIORITY</td>
+<td>우선순위 지정</td>
+</tr>
+</tbody></table>
+<h3 id="2-멀티플렉싱"><a href="#2-멀티플렉싱" class="headerlink" title="2. 멀티플렉싱"></a>2. 멀티플렉싱</h3><p>하나의 TCP 연결에서 <strong>여러 요청과 응답이 동시에</strong> 인터리브되어 흐릅니다. HTTP&#x2F;1.1의 Head-of-Line Blocking이 응용 계층에서 해결됩니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1: Req1 -&gt; Res1 -&gt; Req2 -&gt; Res2 -&gt; Req3 -&gt; Res3</span><br><span class="line">HTTP/2:   [Req1, Req2, Req3] 동시 / [Res1, Res2, Res3] 동시</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-헤더-압축-HPACK"><a href="#3-헤더-압축-HPACK" class="headerlink" title="3. 헤더 압축 (HPACK)"></a>3. 헤더 압축 (HPACK)</h3><p>이전에 전송한 헤더를 인덱스로 참조하여 중복을 제거합니다. 동일한 사이트의 후속 요청에서는 헤더가 거의 0바이트에 가깝습니다.</p>
+<h3 id="4-Server-Push"><a href="#4-Server-Push" class="headerlink" title="4. Server Push"></a>4. Server Push</h3><p>서버가 클라이언트 요청 전에 필요한 리소스를 미리 전송합니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Client -&gt; GET /index.html</span><br><span class="line">Server -&gt; 200 OK + index.html</span><br><span class="line">Server -&gt; Push: style.css, app.js</span><br></pre></td></tr></table></figure>
+
+<p>(다만 효과적 활용이 어려워 Chrome은 2022년 Server Push를 deprecated 처리)</p>
+<h3 id="5-스트림-우선순위"><a href="#5-스트림-우선순위" class="headerlink" title="5. 스트림 우선순위"></a>5. 스트림 우선순위</h3><p>각 스트림에 우선순위를 부여하여 중요한 리소스를 먼저 받을 수 있습니다.</p>
+<h2 id="HTTP-2의-남은-문제"><a href="#HTTP-2의-남은-문제" class="headerlink" title="HTTP&#x2F;2의 남은 문제"></a>HTTP&#x2F;2의 남은 문제</h2><p>HTTP&#x2F;2는 여전히 <strong>TCP 위에서 동작</strong>합니다. 따라서 TCP 자체의 한계가 그대로 남습니다.</p>
+<ul>
+<li><strong>TCP 레벨의 Head-of-Line Blocking</strong>: 한 패킷이 손실되면 같은 연결의 모든 스트림이 대기</li>
+<li><strong>연결 설정 비용</strong>: TCP 3-way + TLS 1.2 핸드셰이크로 2~3 RTT 필요</li>
+<li><strong>연결 마이그레이션 불가</strong>: 네트워크 전환 시 연결 재수립</li>
+</ul>
+<h2 id="HTTP-3의-등장"><a href="#HTTP-3의-등장" class="headerlink" title="HTTP&#x2F;3의 등장"></a>HTTP&#x2F;3의 등장</h2><p>HTTP&#x2F;3은 <strong>QUIC</strong>라는 새로운 전송 프로토콜 위에서 동작합니다. QUIC는 UDP를 기반으로 신뢰성, 보안, 멀티플렉싱을 응용 계층에서 구현합니다.</p>
+<h3 id="QUIC의-특징"><a href="#QUIC의-특징" class="headerlink" title="QUIC의 특징"></a>QUIC의 특징</h3><ol>
+<li><strong>UDP 기반</strong>: 운영체제와 무관하게 빠른 진화 가능</li>
+<li><strong>TLS 1.3 통합</strong>: 핸드셰이크와 암호화가 1 RTT (0 RTT 재연결 가능)</li>
+<li><strong>스트림 레벨 신뢰성</strong>: 한 스트림의 패킷 손실이 다른 스트림에 영향 없음</li>
+<li><strong>연결 ID</strong>: IP가 바뀌어도 연결 유지 (Wi-Fi &lt;-&gt; LTE 전환)</li>
+</ol>
+<h3 id="HTTP-3-핸드셰이크"><a href="#HTTP-3-핸드셰이크" class="headerlink" title="HTTP&#x2F;3 핸드셰이크"></a>HTTP&#x2F;3 핸드셰이크</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">HTTP/2 over TLS 1.2: 3 RTT (TCP + TLS)</span><br><span class="line">HTTP/2 over TLS 1.3: 2 RTT</span><br><span class="line">HTTP/3 (QUIC):       1 RTT (재연결시 0 RTT)</span><br></pre></td></tr></table></figure>
+
+<h2 id="HTTP-2-vs-HTTP-3-비교"><a href="#HTTP-2-vs-HTTP-3-비교" class="headerlink" title="HTTP&#x2F;2 vs HTTP&#x2F;3 비교"></a>HTTP&#x2F;2 vs HTTP&#x2F;3 비교</h2><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>HTTP&#x2F;2</th>
+<th>HTTP&#x2F;3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>전송 계층</td>
+<td>TCP</td>
+<td>QUIC (UDP)</td>
+</tr>
+<tr>
+<td>암호화</td>
+<td>TLS 1.2&#x2F;1.3 (선택)</td>
+<td>TLS 1.3 (필수)</td>
+</tr>
+<tr>
+<td>Head-of-Line Blocking</td>
+<td>TCP 레벨 발생</td>
+<td>없음</td>
+</tr>
+<tr>
+<td>연결 설정</td>
+<td>2~3 RTT</td>
+<td>1 RTT (0 RTT 가능)</td>
+</tr>
+<tr>
+<td>헤더 압축</td>
+<td>HPACK</td>
+<td>QPACK</td>
+</tr>
+<tr>
+<td>연결 마이그레이션</td>
+<td>불가</td>
+<td>가능</td>
+</tr>
+<tr>
+<td>보급률</td>
+<td>매우 높음</td>
+<td>빠르게 증가 중</td>
+</tr>
+</tbody></table>
+<h2 id="서버-설정-예시"><a href="#서버-설정-예시" class="headerlink" title="서버 설정 예시"></a>서버 설정 예시</h2><h3 id="Nginx에서-HTTP-2"><a href="#Nginx에서-HTTP-2" class="headerlink" title="Nginx에서 HTTP&#x2F;2"></a>Nginx에서 HTTP&#x2F;2</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">443</span> ssl http2;</span><br><span class="line">    <span class="attribute">server_name</span> example.com;</span><br><span class="line">    <span class="attribute">ssl_certificate</span> cert.pem;</span><br><span class="line">    <span class="attribute">ssl_certificate_key</span> key.pem;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Nginx에서-HTTP-3-1-25-버전"><a href="#Nginx에서-HTTP-3-1-25-버전" class="headerlink" title="Nginx에서 HTTP&#x2F;3 (1.25+ 버전)"></a>Nginx에서 HTTP&#x2F;3 (1.25+ 버전)</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">443</span> ssl;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">443</span> quic reuseport;</span><br><span class="line">    <span class="attribute">http2</span> <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">http3</span> <span class="literal">on</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">add_header</span> Alt-Svc <span class="string">&#x27;h3=&quot;:443&quot;; ma=86400&#x27;</span>;</span><br><span class="line">    <span class="attribute">ssl_protocols</span> TLSv1.<span class="number">3</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="도입-시-고려사항"><a href="#도입-시-고려사항" class="headerlink" title="도입 시 고려사항"></a>도입 시 고려사항</h2><ul>
+<li><strong>HTTP&#x2F;3</strong>는 UDP 443 포트를 사용하므로 방화벽 정책 확인 필요</li>
+<li>대부분의 환경에서 <code>Alt-Svc</code> 헤더로 자동 업그레이드</li>
+<li>캐싱과 CDN 호환성 확인</li>
+<li>클라이언트가 미지원이면 HTTP&#x2F;2로 fallback</li>
+</ul>
+<h2 id="실제-성능-차이"><a href="#실제-성능-차이" class="headerlink" title="실제 성능 차이"></a>실제 성능 차이</h2><table>
+<thead>
+<tr>
+<th>시나리오</th>
+<th>HTTP&#x2F;2</th>
+<th>HTTP&#x2F;3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>안정된 유선 환경</td>
+<td>비슷</td>
+<td>약간 우위</td>
+</tr>
+<tr>
+<td>모바일&#x2F;패킷 손실 환경</td>
+<td>큰 저하</td>
+<td>안정적 유지</td>
+</tr>
+<tr>
+<td>네트워크 전환</td>
+<td>재연결 필요</td>
+<td>연결 유지</td>
+</tr>
+</tbody></table>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>HTTP&#x2F;2는 멀티플렉싱과 헤더 압축으로 웹 성능을 크게 끌어올렸고, HTTP&#x2F;3는 <strong>QUIC</strong>라는 새로운 기반 위에서 TCP의 구조적 한계를 극복했습니다. 특히 모바일과 불안정한 네트워크 환경에서 HTTP&#x2F;3의 이점은 두드러지며, 앞으로 웹의 기본 프로토콜로 빠르게 자리잡을 것입니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/HTTP/" rel="tag"># HTTP</a>
+              <a href="/tags/HTTP2/" rel="tag"># HTTP2</a>
+              <a href="/tags/HTTP3/" rel="tag"># HTTP3</a>
+              <a href="/tags/QUIC/" rel="tag"># QUIC</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/tcp-vs-udp/" rel="prev" title="TCP와 UDP 프로토콜 비교">
+      <i class="fa fa-chevron-left"></i> TCP와 UDP 프로토콜 비교
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/websocket-explained/" rel="next" title="WebSocket 동작 원리와 활용">
+      WebSocket 동작 원리와 활용 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP-%EC%A7%84%ED%99%94%EC%9D%98-%ED%9D%90%EB%A6%84"><span class="nav-number">1.</span> <span class="nav-text">HTTP 진화의 흐름</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP-1-1%EC%9D%98-%ED%95%9C%EA%B3%84"><span class="nav-number">2.</span> <span class="nav-text">HTTP&#x2F;1.1의 한계</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP-2%EC%9D%98-%ED%95%B5%EC%8B%AC-%ED%8A%B9%EC%A7%95"><span class="nav-number">3.</span> <span class="nav-text">HTTP&#x2F;2의 핵심 특징</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%EB%B0%94%EC%9D%B4%EB%84%88%EB%A6%AC-%ED%94%84%EB%A0%88%EC%9D%B4%EB%B0%8D"><span class="nav-number">3.1.</span> <span class="nav-text">1. 바이너리 프레이밍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%EB%A9%80%ED%8B%B0%ED%94%8C%EB%A0%89%EC%8B%B1"><span class="nav-number">3.2.</span> <span class="nav-text">2. 멀티플렉싱</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%ED%97%A4%EB%8D%94-%EC%95%95%EC%B6%95-HPACK"><span class="nav-number">3.3.</span> <span class="nav-text">3. 헤더 압축 (HPACK)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-Server-Push"><span class="nav-number">3.4.</span> <span class="nav-text">4. Server Push</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%EC%8A%A4%ED%8A%B8%EB%A6%BC-%EC%9A%B0%EC%84%A0%EC%88%9C%EC%9C%84"><span class="nav-number">3.5.</span> <span class="nav-text">5. 스트림 우선순위</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP-2%EC%9D%98-%EB%82%A8%EC%9D%80-%EB%AC%B8%EC%A0%9C"><span class="nav-number">4.</span> <span class="nav-text">HTTP&#x2F;2의 남은 문제</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP-3%EC%9D%98-%EB%93%B1%EC%9E%A5"><span class="nav-number">5.</span> <span class="nav-text">HTTP&#x2F;3의 등장</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#QUIC%EC%9D%98-%ED%8A%B9%EC%A7%95"><span class="nav-number">5.1.</span> <span class="nav-text">QUIC의 특징</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP-3-%ED%95%B8%EB%93%9C%EC%85%B0%EC%9D%B4%ED%81%AC"><span class="nav-number">5.2.</span> <span class="nav-text">HTTP&#x2F;3 핸드셰이크</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP-2-vs-HTTP-3-%EB%B9%84%EA%B5%90"><span class="nav-number">6.</span> <span class="nav-text">HTTP&#x2F;2 vs HTTP&#x2F;3 비교</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%84%9C%EB%B2%84-%EC%84%A4%EC%A0%95-%EC%98%88%EC%8B%9C"><span class="nav-number">7.</span> <span class="nav-text">서버 설정 예시</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Nginx%EC%97%90%EC%84%9C-HTTP-2"><span class="nav-number">7.1.</span> <span class="nav-text">Nginx에서 HTTP&#x2F;2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Nginx%EC%97%90%EC%84%9C-HTTP-3-1-25-%EB%B2%84%EC%A0%84"><span class="nav-number">7.2.</span> <span class="nav-text">Nginx에서 HTTP&#x2F;3 (1.25+ 버전)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%8F%84%EC%9E%85-%EC%8B%9C-%EA%B3%A0%EB%A0%A4%EC%82%AC%ED%95%AD"><span class="nav-number">8.</span> <span class="nav-text">도입 시 고려사항</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%8B%A4%EC%A0%9C-%EC%84%B1%EB%8A%A5-%EC%B0%A8%EC%9D%B4"><span class="nav-number">9.</span> <span class="nav-text">실제 성능 차이</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">10.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">114</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">307</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="RAG의 개념, 임베딩과 벡터 DB를 활용한 파이프라인, 품질 향상 기법을 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RAG(검색 증강 생성) 동작 원리">
+<meta property="og:url" content="https://ew32.github.io/posts/rag-explained/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="RAG의 개념, 임베딩과 벡터 DB를 활용한 파이프라인, 품질 향상 기법을 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-28T00:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-12T01:49:24.840Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="LLM">
+<meta property="article:tag" content="RAG">
+<meta property="article:tag" content="VectorDB">
+<meta property="article:tag" content="임베딩">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/rag-explained/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>RAG(검색 증강 생성) 동작 원리 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/rag-explained/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          RAG(검색 증강 생성) 동작 원리
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-28 09:00:00" itemprop="dateCreated datePublished" datetime="2026-05-28T09:00:00+09:00">2026-05-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-12 10:49:24" itemprop="dateModified" datetime="2026-05-12T10:49:24+09:00">2026-05-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/AI%EB%8F%84%EA%B5%AC/" itemprop="url" rel="index"><span itemprop="name">AI도구</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">RAG의 개념, 임베딩과 벡터 DB를 활용한 파이프라인, 품질 향상 기법을 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="RAG란-무엇인가"><a href="#RAG란-무엇인가" class="headerlink" title="RAG란 무엇인가?"></a>RAG란 무엇인가?</h2><p>**RAG(Retrieval-Augmented Generation)**는 LLM에게 외부 지식을 동적으로 주입하는 패턴입니다. 모델이 사전 학습된 지식만으로 답변하면 다음과 같은 문제가 발생합니다.</p>
+<ul>
+<li><strong>할루시네이션</strong>: 모르는 내용을 그럴듯하게 지어냄</li>
+<li><strong>지식 단절(Knowledge Cutoff)</strong>: 학습 시점 이후의 정보를 모름</li>
+<li><strong>도메인 무지</strong>: 사내 문서, 비공개 데이터는 모름</li>
+</ul>
+<p>RAG는 질문과 관련된 문서를 **검색(Retrieval)**해서 프롬프트에 포함시킨 뒤, 그 문맥을 기반으로 **생성(Generation)**하게 함으로써 이 문제들을 완화합니다.</p>
+<h2 id="기본-파이프라인"><a href="#기본-파이프라인" class="headerlink" title="기본 파이프라인"></a>기본 파이프라인</h2><p>RAG 시스템은 크게 <strong>인덱싱 단계</strong>와 <strong>질의 단계</strong>로 나뉩니다.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[인덱싱]</span><br><span class="line">문서 -&gt; 청크 분할 -&gt; 임베딩 -&gt; 벡터 DB 저장</span><br><span class="line"></span><br><span class="line">[질의]</span><br><span class="line">질문 -&gt; 임베딩 -&gt; 벡터 검색 -&gt; 관련 문서 -&gt; LLM 프롬프트 -&gt; 답변</span><br></pre></td></tr></table></figure>
+
+<h2 id="임베딩-Embedding"><a href="#임베딩-Embedding" class="headerlink" title="임베딩(Embedding)"></a>임베딩(Embedding)</h2><p><strong>임베딩</strong>은 텍스트를 고차원 벡터로 변환하는 과정입니다. 의미가 유사한 텍스트는 벡터 공간에서 가깝게 위치합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> openai <span class="keyword">import</span> OpenAI</span><br><span class="line"></span><br><span class="line">client = OpenAI()</span><br><span class="line">response = client.embeddings.create(</span><br><span class="line">    model=<span class="string">&quot;text-embedding-3-small&quot;</span>,</span><br><span class="line">    <span class="built_in">input</span>=<span class="string">&quot;환불 정책에 대해 알려주세요.&quot;</span></span><br><span class="line">)</span><br><span class="line">vector = response.data[<span class="number">0</span>].embedding  <span class="comment"># 1536차원 부동소수 배열</span></span><br></pre></td></tr></table></figure>
+
+<p>유사도 측정에는 주로 <strong>코사인 유사도</strong>를 사용합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">cosine_similarity</span>(<span class="params">a, b</span>):</span><br><span class="line">    <span class="keyword">return</span> np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))</span><br></pre></td></tr></table></figure>
+
+<h2 id="청크-분할-Chunking"><a href="#청크-분할-Chunking" class="headerlink" title="청크 분할(Chunking)"></a>청크 분할(Chunking)</h2><p>문서를 통째로 임베딩하면 검색 정확도가 떨어집니다. 적절한 단위로 <strong>청크 분할</strong>이 필요합니다.</p>
+<table>
+<thead>
+<tr>
+<th>전략</th>
+<th>설명</th>
+<th>장단점</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>고정 길이</td>
+<td>문자 또는 토큰 수로 자름</td>
+<td>단순하지만 문맥 잘림</td>
+</tr>
+<tr>
+<td>재귀 분할</td>
+<td>단락 -&gt; 문장 순으로 분할</td>
+<td>균형 잡힘, 가장 보편적</td>
+</tr>
+<tr>
+<td>의미 기반</td>
+<td>임베딩 변화량 기반</td>
+<td>품질 좋지만 비용 높음</td>
+</tr>
+<tr>
+<td>구조 기반</td>
+<td>Markdown 헤더 등 활용</td>
+<td>문서 구조가 명확할 때 유리</td>
+</tr>
+</tbody></table>
+<p>**청크 간 오버랩(overlap)**을 두면 경계에서 문맥 손실을 줄일 수 있습니다. 일반적으로 청크 크기의 10~20%를 오버랩으로 둡니다.</p>
+<h2 id="벡터-데이터베이스"><a href="#벡터-데이터베이스" class="headerlink" title="벡터 데이터베이스"></a>벡터 데이터베이스</h2><p>대량의 벡터에서 빠르게 유사 항목을 찾으려면 <strong>벡터 DB</strong>가 필요합니다. 대표적인 옵션입니다.</p>
+<table>
+<thead>
+<tr>
+<th>DB</th>
+<th>특징</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>FAISS</strong></td>
+<td>Facebook 개발, 로컬용으로 빠름</td>
+</tr>
+<tr>
+<td><strong>Pinecone</strong></td>
+<td>매니지드 서비스, 확장성 좋음</td>
+</tr>
+<tr>
+<td><strong>Weaviate</strong></td>
+<td>오픈소스, 하이브리드 검색 지원</td>
+</tr>
+<tr>
+<td><strong>Qdrant</strong></td>
+<td>Rust 기반, 빠르고 가벼움</td>
+</tr>
+<tr>
+<td><strong>pgvector</strong></td>
+<td>PostgreSQL 확장, 기존 DB와 통합</td>
+</tr>
+</tbody></table>
+<p>대부분 <strong>ANN(Approximate Nearest Neighbor)</strong> 알고리즘을 사용해 정확도를 약간 희생하고 속도를 크게 높입니다.</p>
+<h2 id="간단한-RAG-구현"><a href="#간단한-RAG-구현" class="headerlink" title="간단한 RAG 구현"></a>간단한 RAG 구현</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> openai <span class="keyword">import</span> OpenAI</span><br><span class="line"></span><br><span class="line">client = OpenAI()</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">retrieve</span>(<span class="params">query, chunks, embeddings, top_k=<span class="number">3</span></span>):</span><br><span class="line">    q_emb = client.embeddings.create(</span><br><span class="line">        model=<span class="string">&quot;text-embedding-3-small&quot;</span>, <span class="built_in">input</span>=query</span><br><span class="line">    ).data[<span class="number">0</span>].embedding</span><br><span class="line">    scores = [cosine_similarity(q_emb, e) <span class="keyword">for</span> e <span class="keyword">in</span> embeddings]</span><br><span class="line">    top_idx = <span class="built_in">sorted</span>(<span class="built_in">range</span>(<span class="built_in">len</span>(scores)), key=<span class="keyword">lambda</span> i: -scores[i])[:top_k]</span><br><span class="line">    <span class="keyword">return</span> [chunks[i] <span class="keyword">for</span> i <span class="keyword">in</span> top_idx]</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">answer</span>(<span class="params">query, chunks, embeddings</span>):</span><br><span class="line">    context = <span class="string">&quot;\n\n&quot;</span>.join(retrieve(query, chunks, embeddings))</span><br><span class="line">    prompt = <span class="string">f&quot;&quot;&quot;다음 컨텍스트를 참고해 질문에 답하세요.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">컨텍스트:</span></span><br><span class="line"><span class="string"><span class="subst">&#123;context&#125;</span></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">질문: <span class="subst">&#123;query&#125;</span></span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line">    res = client.chat.completions.create(</span><br><span class="line">        model=<span class="string">&quot;gpt-4o-mini&quot;</span>,</span><br><span class="line">        messages=[&#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>, <span class="string">&quot;content&quot;</span>: prompt&#125;]</span><br><span class="line">    )</span><br><span class="line">    <span class="keyword">return</span> res.choices[<span class="number">0</span>].message.content</span><br></pre></td></tr></table></figure>
+
+<h2 id="품질-향상-기법"><a href="#품질-향상-기법" class="headerlink" title="품질 향상 기법"></a>품질 향상 기법</h2><p>기본 RAG로는 부족한 경우가 많습니다. 다음 기법으로 품질을 개선할 수 있습니다.</p>
+<ol>
+<li><strong>하이브리드 검색</strong>: 벡터 검색 + BM25 같은 키워드 검색 결합</li>
+<li><strong>리랭킹(Reranking)</strong>: Cross-Encoder로 상위 N개를 재정렬</li>
+<li><strong>쿼리 재작성</strong>: 모호한 질문을 LLM이 명확히 변환 후 검색</li>
+<li><strong>HyDE</strong>: 가상의 답변을 생성해 그 임베딩으로 검색</li>
+<li><strong>메타데이터 필터</strong>: 날짜, 카테고리 등으로 검색 범위 축소</li>
+<li><strong>MMR</strong>: 다양성을 고려해 중복 없는 청크 선택</li>
+</ol>
+<h2 id="평가-지표"><a href="#평가-지표" class="headerlink" title="평가 지표"></a>평가 지표</h2><p>RAG 품질은 다음 관점에서 평가합니다.</p>
+<ul>
+<li><strong>검색 정확도</strong>: 정답 문서가 상위에 검색되는가? (Recall@k, MRR)</li>
+<li><strong>답변 충실도(Faithfulness)</strong>: 답변이 검색된 문서에 근거하는가?</li>
+<li><strong>답변 관련성</strong>: 답변이 질문에 맞는가?</li>
+<li><strong>응답 시간</strong>: 사용자 경험에 영향</li>
+</ul>
+<p><strong>RAGAS</strong> 같은 프레임워크가 LLM 기반 자동 평가를 지원합니다.</p>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>RAG는 LLM의 한계를 극복하는 <strong>가장 실용적인 패턴</strong>이며, 사내 챗봇, 문서 Q&amp;A, 고객 지원 자동화 등에 광범위하게 활용됩니다. 청크 분할, 임베딩 품질, 검색 전략의 세부 튜닝이 결과 품질을 좌우하므로, 단순 구현 이후에는 평가와 개선을 반복하는 것이 핵심입니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/LLM/" rel="tag"># LLM</a>
+              <a href="/tags/RAG/" rel="tag"># RAG</a>
+              <a href="/tags/VectorDB/" rel="tag"># VectorDB</a>
+              <a href="/tags/%EC%9E%84%EB%B2%A0%EB%94%A9/" rel="tag"># 임베딩</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/langchain-basics/" rel="prev" title="LangChain 기초 - LLM 애플리케이션 빌드">
+      <i class="fa fa-chevron-left"></i> LangChain 기초 - LLM 애플리케이션 빌드
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/vscode-shortcuts-extensions/" rel="next" title="VSCode 필수 단축키와 확장 프로그램">
+      VSCode 필수 단축키와 확장 프로그램 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#RAG%EB%9E%80-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80"><span class="nav-number">1.</span> <span class="nav-text">RAG란 무엇인가?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B8%B0%EB%B3%B8-%ED%8C%8C%EC%9D%B4%ED%94%84%EB%9D%BC%EC%9D%B8"><span class="nav-number">2.</span> <span class="nav-text">기본 파이프라인</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9E%84%EB%B2%A0%EB%94%A9-Embedding"><span class="nav-number">3.</span> <span class="nav-text">임베딩(Embedding)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%B2%AD%ED%81%AC-%EB%B6%84%ED%95%A0-Chunking"><span class="nav-number">4.</span> <span class="nav-text">청크 분할(Chunking)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B2%A1%ED%84%B0-%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4"><span class="nav-number">5.</span> <span class="nav-text">벡터 데이터베이스</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B0%84%EB%8B%A8%ED%95%9C-RAG-%EA%B5%AC%ED%98%84"><span class="nav-number">6.</span> <span class="nav-text">간단한 RAG 구현</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%92%88%EC%A7%88-%ED%96%A5%EC%83%81-%EA%B8%B0%EB%B2%95"><span class="nav-number">7.</span> <span class="nav-text">품질 향상 기법</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%8F%89%EA%B0%80-%EC%A7%80%ED%91%9C"><span class="nav-number">8.</span> <span class="nav-text">평가 지표</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">9.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">114</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">307</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

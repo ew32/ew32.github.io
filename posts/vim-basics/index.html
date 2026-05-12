@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Vim의 모드 개념과 기본 이동, 편집, 시각 모드 사용법을 입문자 관점에서 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vim 기초 - 모드, 이동, 편집">
+<meta property="og:url" content="https://ew32.github.io/posts/vim-basics/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="Vim의 모드 개념과 기본 이동, 편집, 시각 모드 사용법을 입문자 관점에서 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-28T05:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-12T01:49:24.841Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Vim">
+<meta property="article:tag" content="에디터">
+<meta property="article:tag" content="단축키">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/vim-basics/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>Vim 기초 - 모드, 이동, 편집 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/vim-basics/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Vim 기초 - 모드, 이동, 편집
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-28 14:00:00" itemprop="dateCreated datePublished" datetime="2026-05-28T14:00:00+09:00">2026-05-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-12 10:49:24" itemprop="dateModified" datetime="2026-05-12T10:49:24+09:00">2026-05-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%EA%B0%9C%EB%B0%9C%ED%99%98%EA%B2%BD/" itemprop="url" rel="index"><span itemprop="name">개발환경</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">Vim의 모드 개념과 기본 이동, 편집, 시각 모드 사용법을 입문자 관점에서 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="왜-Vim인가"><a href="#왜-Vim인가" class="headerlink" title="왜 Vim인가?"></a>왜 Vim인가?</h2><p><strong>Vim</strong>은 1991년 등장한 모달(modal) 텍스트 에디터로, 거의 모든 유닉스 계열 시스템에 기본 탑재되어 있습니다. 마우스 없이 키보드만으로 효율적으로 텍스트를 편집할 수 있도록 설계되었으며, 한 번 익숙해지면 다른 에디터에서도 Vim 키바인딩을 찾게 될 만큼 중독성이 강합니다.</p>
+<p>원격 서버 작업, Git 커밋 메시지, 설정 파일 수정 등 <strong>터미널 환경의 표준 도구</strong>이므로 개발자라면 기본기는 익혀두는 것이 좋습니다.</p>
+<h2 id="모드-Mode-의-이해"><a href="#모드-Mode-의-이해" class="headerlink" title="모드(Mode)의 이해"></a>모드(Mode)의 이해</h2><p>Vim의 가장 큰 특징은 <strong>모드</strong>입니다. 모드마다 키의 의미가 달라집니다.</p>
+<table>
+<thead>
+<tr>
+<th>모드</th>
+<th>진입 키</th>
+<th>용도</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Normal</strong></td>
+<td><code>Esc</code></td>
+<td>이동, 명령 실행 (기본 모드)</td>
+</tr>
+<tr>
+<td><strong>Insert</strong></td>
+<td><code>i</code>, <code>a</code>, <code>o</code></td>
+<td>텍스트 입력</td>
+</tr>
+<tr>
+<td><strong>Visual</strong></td>
+<td><code>v</code>, <code>V</code>, <code>Ctrl+v</code></td>
+<td>영역 선택</td>
+</tr>
+<tr>
+<td><strong>Command</strong></td>
+<td><code>:</code></td>
+<td>ex 명령어 입력</td>
+</tr>
+<tr>
+<td><strong>Replace</strong></td>
+<td><code>R</code></td>
+<td>덮어쓰기</td>
+</tr>
+</tbody></table>
+<p>다른 에디터와 가장 큰 차이는 <strong>Normal 모드가 기본</strong>이라는 점입니다. 입력하려면 명시적으로 Insert 모드로 들어가야 합니다.</p>
+<h2 id="기본-이동"><a href="#기본-이동" class="headerlink" title="기본 이동"></a>기본 이동</h2><p>Normal 모드에서 화살표 대신 <code>hjkl</code>을 사용합니다.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">      ↑</span><br><span class="line">      k</span><br><span class="line">← h       l →</span><br><span class="line">      j</span><br><span class="line">      ↓</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>명령</th>
+<th>동작</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>w</code></td>
+<td>다음 단어 시작으로</td>
+</tr>
+<tr>
+<td><code>b</code></td>
+<td>이전 단어 시작으로</td>
+</tr>
+<tr>
+<td><code>e</code></td>
+<td>단어 끝으로</td>
+</tr>
+<tr>
+<td><code>0</code></td>
+<td>줄 처음으로</td>
+</tr>
+<tr>
+<td><code>^</code></td>
+<td>줄의 첫 공백 아닌 문자로</td>
+</tr>
+<tr>
+<td><code>$</code></td>
+<td>줄 끝으로</td>
+</tr>
+<tr>
+<td><code>gg</code></td>
+<td>파일 처음으로</td>
+</tr>
+<tr>
+<td><code>G</code></td>
+<td>파일 끝으로</td>
+</tr>
+<tr>
+<td><code>42G</code></td>
+<td>42번째 줄로</td>
+</tr>
+<tr>
+<td><code>Ctrl+d</code></td>
+<td>반 페이지 아래</td>
+</tr>
+<tr>
+<td><code>Ctrl+u</code></td>
+<td>반 페이지 위</td>
+</tr>
+</tbody></table>
+<h2 id="Insert-모드-진입"><a href="#Insert-모드-진입" class="headerlink" title="Insert 모드 진입"></a>Insert 모드 진입</h2><table>
+<thead>
+<tr>
+<th>명령</th>
+<th>동작</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>i</code></td>
+<td>커서 위치에 삽입</td>
+</tr>
+<tr>
+<td><code>I</code></td>
+<td>줄 처음에 삽입</td>
+</tr>
+<tr>
+<td><code>a</code></td>
+<td>커서 다음에 삽입</td>
+</tr>
+<tr>
+<td><code>A</code></td>
+<td>줄 끝에 삽입</td>
+</tr>
+<tr>
+<td><code>o</code></td>
+<td>아래 새 줄 만들고 삽입</td>
+</tr>
+<tr>
+<td><code>O</code></td>
+<td>위에 새 줄 만들고 삽입</td>
+</tr>
+</tbody></table>
+<p>삽입을 마치면 항상 <code>Esc</code>로 Normal 모드에 돌아옵니다.</p>
+<h2 id="편집-명령"><a href="#편집-명령" class="headerlink" title="편집 명령"></a>편집 명령</h2><p>Vim 편집의 강력함은 <strong>연산자(operator) + 대상(motion)</strong> 조합에서 나옵니다.</p>
+<table>
+<thead>
+<tr>
+<th>연산자</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>d</code></td>
+<td>삭제 (delete)</td>
+</tr>
+<tr>
+<td><code>c</code></td>
+<td>변경 (change, 삭제 후 insert)</td>
+</tr>
+<tr>
+<td><code>y</code></td>
+<td>복사 (yank)</td>
+</tr>
+<tr>
+<td><code>p</code></td>
+<td>붙여넣기 (paste)</td>
+</tr>
+</tbody></table>
+<p>이를 motion과 결합합니다.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">dw    - 다음 단어까지 삭제</span><br><span class="line">d$    - 줄 끝까지 삭제</span><br><span class="line">dd    - 한 줄 삭제</span><br><span class="line">3dd   - 3줄 삭제</span><br><span class="line">ciw   - inner word 변경 (단어 선택해 수정)</span><br><span class="line">yy    - 한 줄 복사</span><br><span class="line">p     - 커서 뒤에 붙여넣기</span><br></pre></td></tr></table></figure>
+
+<p>**텍스트 객체(text object)**는 더 정교한 대상 선택을 가능하게 합니다.</p>
+<table>
+<thead>
+<tr>
+<th>객체</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>iw</code></td>
+<td>inner word</td>
+</tr>
+<tr>
+<td><code>aw</code></td>
+<td>a word (공백 포함)</td>
+</tr>
+<tr>
+<td><code>i&quot;</code></td>
+<td>따옴표 안쪽</td>
+</tr>
+<tr>
+<td><code>a&quot;</code></td>
+<td>따옴표 포함</td>
+</tr>
+<tr>
+<td><code>ip</code></td>
+<td>단락 안쪽</td>
+</tr>
+<tr>
+<td><code>i&#123;</code></td>
+<td>중괄호 블록 안쪽</td>
+</tr>
+</tbody></table>
+<p>예를 들어 <code>ci&quot;</code>는 따옴표 안 내용을 모두 지우고 입력 모드로 진입합니다.</p>
+<h2 id="실행-취소와-재실행"><a href="#실행-취소와-재실행" class="headerlink" title="실행 취소와 재실행"></a>실행 취소와 재실행</h2><table>
+<thead>
+<tr>
+<th>명령</th>
+<th>동작</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>u</code></td>
+<td>undo</td>
+</tr>
+<tr>
+<td><code>Ctrl+r</code></td>
+<td>redo</td>
+</tr>
+<tr>
+<td><code>.</code></td>
+<td>마지막 명령 반복</td>
+</tr>
+</tbody></table>
+<p><code>.</code> 명령은 Vim의 진가가 드러나는 기능으로, 동일한 편집을 여러 위치에 빠르게 적용할 수 있습니다.</p>
+<h2 id="Visual-모드"><a href="#Visual-모드" class="headerlink" title="Visual 모드"></a>Visual 모드</h2><p>선택 후 편집하는 방식이 익숙하다면 Visual 모드를 사용합니다.</p>
+<table>
+<thead>
+<tr>
+<th>명령</th>
+<th>동작</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>v</code></td>
+<td>문자 단위 선택</td>
+</tr>
+<tr>
+<td><code>V</code></td>
+<td>라인 단위 선택</td>
+</tr>
+<tr>
+<td><code>Ctrl+v</code></td>
+<td>블록(사각형) 선택</td>
+</tr>
+</tbody></table>
+<p>선택 후 <code>d</code>, <code>y</code>, <code>c</code> 등 연산자를 적용할 수 있습니다. 블록 모드는 여러 줄에 같은 텍스트를 삽입할 때 유용합니다.</p>
+<h2 id="검색과-치환"><a href="#검색과-치환" class="headerlink" title="검색과 치환"></a>검색과 치환</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">/pattern    아래로 검색</span><br><span class="line">?pattern    위로 검색</span><br><span class="line">n           다음 일치</span><br><span class="line">N           이전 일치</span><br><span class="line">*           커서 단어 검색</span><br><span class="line"></span><br><span class="line">:%s/old/new/g       파일 전체에서 치환</span><br><span class="line">:%s/old/new/gc      확인하면서 치환</span><br><span class="line">:5,20s/old/new/g    5~20번 줄만 치환</span><br></pre></td></tr></table></figure>
+
+<h2 id="파일과-명령-모드"><a href="#파일과-명령-모드" class="headerlink" title="파일과 명령 모드"></a>파일과 명령 모드</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">:w          저장</span><br><span class="line">:q          종료</span><br><span class="line">:wq 또는 :x  저장 후 종료</span><br><span class="line">:q!         저장 없이 강제 종료</span><br><span class="line">:e file     파일 열기</span><br><span class="line">:vs file    수직 분할로 열기</span><br><span class="line">:sp file    수평 분할로 열기</span><br></pre></td></tr></table></figure>
+
+<h2 id="기본-설정-vimrc"><a href="#기본-설정-vimrc" class="headerlink" title="기본 설정 (.vimrc)"></a>기본 설정 (.vimrc)</h2><p>Vim 동작은 홈 디렉터리의 <code>.vimrc</code>로 커스터마이즈합니다.</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">syntax</span> <span class="keyword">on</span></span><br><span class="line"><span class="keyword">set</span> <span class="keyword">number</span></span><br><span class="line"><span class="keyword">set</span> relativenumber</span><br><span class="line"><span class="keyword">set</span> tabstop=<span class="number">4</span></span><br><span class="line"><span class="keyword">set</span> <span class="built_in">shiftwidth</span>=<span class="number">4</span></span><br><span class="line"><span class="keyword">set</span> expandtab</span><br><span class="line"><span class="keyword">set</span> autoindent</span><br><span class="line"><span class="keyword">set</span> incsearch</span><br><span class="line"><span class="keyword">set</span> hlsearch</span><br><span class="line"><span class="keyword">set</span> ignorecase</span><br><span class="line"><span class="keyword">set</span> smartcase</span><br></pre></td></tr></table></figure>
+
+<h2 id="학습-팁"><a href="#학습-팁" class="headerlink" title="학습 팁"></a>학습 팁</h2><ul>
+<li><strong><code>vimtutor</code></strong> 명령으로 30분짜리 공식 튜토리얼을 진행해보세요</li>
+<li>처음 일주일은 일부러 다른 에디터 사용을 줄이고 Vim만 사용</li>
+<li>화살표 키 사용을 금지하면 <code>hjkl</code>이 빠르게 손에 익음</li>
+<li>한 번에 모든 명령을 외우지 말고 매주 3~5개씩 추가</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>Vim의 학습 곡선은 가파르지만, <strong>모드 + 연산자 + 모션</strong>이라는 일관된 문법을 이해하면 의외로 빠르게 익숙해집니다. 익숙한 IDE에 Vim 키바인딩 플러그인을 설치해 점진적으로 도입하는 것도 좋은 방법입니다. 한 번 손에 익으면 평생 무기가 됩니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/Vim/" rel="tag"># Vim</a>
+              <a href="/tags/%EC%97%90%EB%94%94%ED%84%B0/" rel="tag"># 에디터</a>
+              <a href="/tags/%EB%8B%A8%EC%B6%95%ED%82%A4/" rel="tag"># 단축키</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/vscode-shortcuts-extensions/" rel="prev" title="VSCode 필수 단축키와 확장 프로그램">
+      <i class="fa fa-chevron-left"></i> VSCode 필수 단축키와 확장 프로그램
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/tmux-guide/" rel="next" title="tmux 활용 - 터미널 멀티플렉서 입문">
+      tmux 활용 - 터미널 멀티플렉서 입문 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%99%9C-Vim%EC%9D%B8%EA%B0%80"><span class="nav-number">1.</span> <span class="nav-text">왜 Vim인가?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%AA%A8%EB%93%9C-Mode-%EC%9D%98-%EC%9D%B4%ED%95%B4"><span class="nav-number">2.</span> <span class="nav-text">모드(Mode)의 이해</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B8%B0%EB%B3%B8-%EC%9D%B4%EB%8F%99"><span class="nav-number">3.</span> <span class="nav-text">기본 이동</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Insert-%EB%AA%A8%EB%93%9C-%EC%A7%84%EC%9E%85"><span class="nav-number">4.</span> <span class="nav-text">Insert 모드 진입</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%8E%B8%EC%A7%91-%EB%AA%85%EB%A0%B9"><span class="nav-number">5.</span> <span class="nav-text">편집 명령</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%8B%A4%ED%96%89-%EC%B7%A8%EC%86%8C%EC%99%80-%EC%9E%AC%EC%8B%A4%ED%96%89"><span class="nav-number">6.</span> <span class="nav-text">실행 취소와 재실행</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Visual-%EB%AA%A8%EB%93%9C"><span class="nav-number">7.</span> <span class="nav-text">Visual 모드</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B2%80%EC%83%89%EA%B3%BC-%EC%B9%98%ED%99%98"><span class="nav-number">8.</span> <span class="nav-text">검색과 치환</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%8C%8C%EC%9D%BC%EA%B3%BC-%EB%AA%85%EB%A0%B9-%EB%AA%A8%EB%93%9C"><span class="nav-number">9.</span> <span class="nav-text">파일과 명령 모드</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B8%B0%EB%B3%B8-%EC%84%A4%EC%A0%95-vimrc"><span class="nav-number">10.</span> <span class="nav-text">기본 설정 (.vimrc)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%95%99%EC%8A%B5-%ED%8C%81"><span class="nav-number">11.</span> <span class="nav-text">학습 팁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">12.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">114</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">307</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

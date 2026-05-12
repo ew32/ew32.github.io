@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="SQL Injection의 동작 원리와 다양한 변종을 살펴보고, 매개변수 바인딩 등 근본적인 방어 방법을 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SQL Injection 원리와 방어">
+<meta property="og:url" content="https://ew32.github.io/posts/sql-injection-defense/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="SQL Injection의 동작 원리와 다양한 변종을 살펴보고, 매개변수 바인딩 등 근본적인 방어 방법을 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-13T00:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-12T01:49:24.841Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="데이터베이스">
+<meta property="article:tag" content="웹보안">
+<meta property="article:tag" content="OWASP">
+<meta property="article:tag" content="SQLInjection">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/sql-injection-defense/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>SQL Injection 원리와 방어 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/sql-injection-defense/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SQL Injection 원리와 방어
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-13 09:00:00" itemprop="dateCreated datePublished" datetime="2026-05-13T09:00:00+09:00">2026-05-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-12 10:49:24" itemprop="dateModified" datetime="2026-05-12T10:49:24+09:00">2026-05-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Security/" itemprop="url" rel="index"><span itemprop="name">Security</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">SQL Injection의 동작 원리와 다양한 변종을 살펴보고, 매개변수 바인딩 등 근본적인 방어 방법을 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="SQL-Injection이란"><a href="#SQL-Injection이란" class="headerlink" title="SQL Injection이란?"></a>SQL Injection이란?</h2><p>**SQL Injection(SQLi)**은 공격자가 입력값에 SQL 문법을 삽입해, 애플리케이션이 의도하지 않은 쿼리를 데이터베이스에 실행시키는 공격입니다. 20년이 넘는 시간 동안 OWASP Top 10에서 사라지지 않은, 가장 오래되고 가장 파괴적인 웹 취약점 중 하나입니다.</p>
+<p>성공적인 SQLi는 인증 우회, 데이터 유출, 데이터 변조, 일부 환경에서는 OS 명령 실행까지 가능하게 합니다.</p>
+<h2 id="가장-단순한-예시"><a href="#가장-단순한-예시" class="headerlink" title="가장 단순한 예시"></a>가장 단순한 예시</h2><p>다음과 같이 문자열을 그대로 합쳐 쿼리를 만드는 코드는 즉시 취약합니다.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">sql</span> <span class="operator">=</span> <span class="string">&quot;SELECT * FROM users WHERE id = &#x27;&quot;</span> + userId + <span class="string">&quot;&#x27; AND pw = &#x27;&quot;</span> + pw + <span class="string">&quot;&#x27;&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p><code>userId</code>에 <code>admin&#39; --</code> 를 넣으면 쿼리는 이렇게 변합니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="string">&#x27;admin&#x27;</span> <span class="comment">--&#x27; AND pw = &#x27;...&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>--</code> 이후가 주석 처리되어 비밀번호 검증이 사라지고, admin으로 로그인할 수 있습니다.</p>
+<h2 id="변종-Variants"><a href="#변종-Variants" class="headerlink" title="변종(Variants)"></a>변종(Variants)</h2><h3 id="Union-Based"><a href="#Union-Based" class="headerlink" title="Union-Based"></a>Union-Based</h3><p><code>UNION SELECT</code>로 다른 테이블의 데이터를 응답에 끼워 넣습니다.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id=1 UNION SELECT username, password FROM users--</span><br></pre></td></tr></table></figure>
+
+<h3 id="Error-Based"><a href="#Error-Based" class="headerlink" title="Error-Based"></a>Error-Based</h3><p>DB 에러 메시지가 그대로 노출되는 환경에서, 에러 안에 데이터를 담아 끄집어냅니다.</p>
+<h3 id="Blind-SQLi"><a href="#Blind-SQLi" class="headerlink" title="Blind SQLi"></a>Blind SQLi</h3><p>응답에 데이터가 보이지 않아도, <strong>참&#x2F;거짓에 따른 응답 차이</strong>나 <strong>시간 지연</strong>을 통해 한 비트씩 추출합니다.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">?id=1 AND SUBSTRING(password,1,1)=&#x27;a&#x27;</span><br><span class="line">?id=1 AND IF(SUBSTRING(password,1,1)=&#x27;a&#x27;, SLEEP(5), 0)</span><br></pre></td></tr></table></figure>
+
+<h3 id="Second-Order-SQLi"><a href="#Second-Order-SQLi" class="headerlink" title="Second-Order SQLi"></a>Second-Order SQLi</h3><p>악성 입력이 <strong>저장될 때는 무해</strong>하지만, 이후 다른 쿼리에서 그대로 합쳐질 때 발동되는 형태입니다. 단순 입력 검증만으로는 잡히지 않습니다.</p>
+<h2 id="근본-방어-매개변수-바인딩-Prepared-Statement"><a href="#근본-방어-매개변수-바인딩-Prepared-Statement" class="headerlink" title="근본 방어: 매개변수 바인딩(Prepared Statement)"></a>근본 방어: 매개변수 바인딩(Prepared Statement)</h2><p>SQL Injection을 완전히 막는 유일한 본질적 방어는 <strong>쿼리 구조와 데이터를 분리</strong>하는 것입니다. 매개변수 바인딩을 사용하면 입력값은 SQL 파서가 아니라 **데이터 자리(Placeholder)**로 처리됩니다.</p>
+<h3 id="Java-JDBC"><a href="#Java-JDBC" class="headerlink" title="Java JDBC"></a>Java JDBC</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">PreparedStatement</span> <span class="variable">ps</span> <span class="operator">=</span> conn.prepareStatement(</span><br><span class="line">    <span class="string">&quot;SELECT * FROM users WHERE id = ? AND pw = ?&quot;</span>);</span><br><span class="line">ps.setString(<span class="number">1</span>, userId);</span><br><span class="line">ps.setString(<span class="number">2</span>, pw);</span><br></pre></td></tr></table></figure>
+
+<h3 id="Python-psycopg2"><a href="#Python-psycopg2" class="headerlink" title="Python (psycopg2)"></a>Python (psycopg2)</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cur.execute(</span><br><span class="line">    <span class="string">&quot;SELECT * FROM users WHERE id = %s AND pw = %s&quot;</span>,</span><br><span class="line">    (user_id, pw),</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h3 id="Node-js-pg"><a href="#Node-js-pg" class="headerlink" title="Node.js (pg)"></a>Node.js (pg)</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">client.<span class="title function_">query</span>(</span><br><span class="line">  <span class="string">&#x27;SELECT * FROM users WHERE id = $1 AND pw = $2&#x27;</span>,</span><br><span class="line">  [userId, pw]</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p><strong>핵심</strong>: 어떤 언어든 절대로 사용자 입력을 문자열 연결로 SQL에 합치지 마세요.</p>
+<h2 id="ORM은-자동으로-안전한가"><a href="#ORM은-자동으로-안전한가" class="headerlink" title="ORM은 자동으로 안전한가?"></a>ORM은 자동으로 안전한가?</h2><p>대부분의 ORM은 내부적으로 매개변수 바인딩을 사용해 안전합니다. 그러나 다음과 같은 <strong>Raw Query</strong>나 <strong>동적 컬럼&#x2F;정렬</strong> 처리는 여전히 위험합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Django — 위험</span></span><br><span class="line">User.objects.raw(<span class="string">&quot;SELECT * FROM users WHERE id = &quot;</span> + uid)</span><br><span class="line"></span><br><span class="line"><span class="comment"># SQLAlchemy — 위험</span></span><br><span class="line">session.execute(text(<span class="string">f&quot;SELECT * FROM t ORDER BY <span class="subst">&#123;col&#125;</span>&quot;</span>))</span><br></pre></td></tr></table></figure>
+
+<p><strong>컬럼명, 정렬 방향, 테이블명은 매개변수로 바인딩되지 않습니다.</strong> 이 경우 반드시 **허용 목록(Whitelist)**으로 검증하세요.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ALLOWED = &#123;<span class="string">&quot;id&quot;</span>, <span class="string">&quot;name&quot;</span>, <span class="string">&quot;created_at&quot;</span>&#125;</span><br><span class="line"><span class="keyword">if</span> col <span class="keyword">not</span> <span class="keyword">in</span> ALLOWED:</span><br><span class="line">    <span class="keyword">raise</span> ValueError(<span class="string">&quot;invalid column&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="최소-권한-원칙"><a href="#최소-권한-원칙" class="headerlink" title="최소 권한 원칙"></a>최소 권한 원칙</h2><p>DB 계정에 <strong>필요 이상 권한을 주지 마세요</strong>. 애플리케이션 계정에는 <code>DROP</code>, <code>GRANT</code>, <code>FILE</code> 같은 권한이 없어야 합니다. 읽기 전용 기능은 별도 read-only 계정으로 운영하는 것이 이상적입니다.</p>
+<h2 id="에러-메시지-노출-방지"><a href="#에러-메시지-노출-방지" class="headerlink" title="에러 메시지 노출 방지"></a>에러 메시지 노출 방지</h2><p>상세 SQL 에러를 클라이언트에 노출하면 Error-Based 공격의 단서가 됩니다. 운영 환경에서는 사용자에게는 <strong>일반화된 에러</strong>를, 내부 로그에는 <strong>상세 정보</strong>를 분리해 남기세요.</p>
+<h2 id="WAF는-보조-방어"><a href="#WAF는-보조-방어" class="headerlink" title="WAF는 보조 방어"></a>WAF는 보조 방어</h2><p>Web Application Firewall이 SQLi 패턴을 어느 정도 차단할 수 있지만, 우회 기법이 무수히 많아 <strong>근본 방어를 대체할 수 없습니다</strong>. 깊이 있는 방어(Defense in Depth)의 한 층으로만 사용하세요.</p>
+<h2 id="Best-Practices"><a href="#Best-Practices" class="headerlink" title="Best Practices"></a>Best Practices</h2><ul>
+<li><strong>모든 쿼리</strong>에 매개변수 바인딩 사용</li>
+<li>컬럼&#x2F;정렬&#x2F;테이블명은 <strong>화이트리스트</strong> 검증</li>
+<li>DB 계정 <strong>최소 권한</strong> 부여</li>
+<li>에러 메시지 일반화 + 내부 로깅 분리</li>
+<li>정기적인 <strong>취약점 스캐닝</strong>(sqlmap 등) 및 코드 리뷰</li>
+<li>ORM의 raw query 사용 시 주의</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>SQL Injection은 오래된 만큼 방어법도 분명한 취약점입니다. <strong>쿼리 구조와 데이터를 절대 섞지 않는다</strong>는 단 하나의 원칙만 일관되게 지키면 거의 모든 변종이 차단됩니다. “내 코드에는 SQLi가 없다”가 아니라, “내 코드에는 문자열 SQL 결합이 없다”가 더 정확한 자신감입니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4/" rel="tag"># 데이터베이스</a>
+              <a href="/tags/%EC%9B%B9%EB%B3%B4%EC%95%88/" rel="tag"># 웹보안</a>
+              <a href="/tags/OWASP/" rel="tag"># OWASP</a>
+              <a href="/tags/SQLInjection/" rel="tag"># SQLInjection</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/xss-attack-defense/" rel="prev" title="XSS 공격 유형과 방어 패턴">
+      <i class="fa fa-chevron-left"></i> XSS 공격 유형과 방어 패턴
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/password-hashing-bcrypt-argon2/" rel="next" title="비밀번호 해싱 - bcrypt와 Argon2 비교">
+      비밀번호 해싱 - bcrypt와 Argon2 비교 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#SQL-Injection%EC%9D%B4%EB%9E%80"><span class="nav-number">1.</span> <span class="nav-text">SQL Injection이란?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B0%80%EC%9E%A5-%EB%8B%A8%EC%88%9C%ED%95%9C-%EC%98%88%EC%8B%9C"><span class="nav-number">2.</span> <span class="nav-text">가장 단순한 예시</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B3%80%EC%A2%85-Variants"><span class="nav-number">3.</span> <span class="nav-text">변종(Variants)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Union-Based"><span class="nav-number">3.1.</span> <span class="nav-text">Union-Based</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Error-Based"><span class="nav-number">3.2.</span> <span class="nav-text">Error-Based</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Blind-SQLi"><span class="nav-number">3.3.</span> <span class="nav-text">Blind SQLi</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Second-Order-SQLi"><span class="nav-number">3.4.</span> <span class="nav-text">Second-Order SQLi</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B7%BC%EB%B3%B8-%EB%B0%A9%EC%96%B4-%EB%A7%A4%EA%B0%9C%EB%B3%80%EC%88%98-%EB%B0%94%EC%9D%B8%EB%94%A9-Prepared-Statement"><span class="nav-number">4.</span> <span class="nav-text">근본 방어: 매개변수 바인딩(Prepared Statement)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Java-JDBC"><span class="nav-number">4.1.</span> <span class="nav-text">Java JDBC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Python-psycopg2"><span class="nav-number">4.2.</span> <span class="nav-text">Python (psycopg2)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Node-js-pg"><span class="nav-number">4.3.</span> <span class="nav-text">Node.js (pg)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ORM%EC%9D%80-%EC%9E%90%EB%8F%99%EC%9C%BC%EB%A1%9C-%EC%95%88%EC%A0%84%ED%95%9C%EA%B0%80"><span class="nav-number">5.</span> <span class="nav-text">ORM은 자동으로 안전한가?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%B5%9C%EC%86%8C-%EA%B6%8C%ED%95%9C-%EC%9B%90%EC%B9%99"><span class="nav-number">6.</span> <span class="nav-text">최소 권한 원칙</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%97%90%EB%9F%AC-%EB%A9%94%EC%8B%9C%EC%A7%80-%EB%85%B8%EC%B6%9C-%EB%B0%A9%EC%A7%80"><span class="nav-number">7.</span> <span class="nav-text">에러 메시지 노출 방지</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WAF%EB%8A%94-%EB%B3%B4%EC%A1%B0-%EB%B0%A9%EC%96%B4"><span class="nav-number">8.</span> <span class="nav-text">WAF는 보조 방어</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Best-Practices"><span class="nav-number">9.</span> <span class="nav-text">Best Practices</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">10.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">114</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">307</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

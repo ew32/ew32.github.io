@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="L4와 L7 로드 밸런서의 차이점과 트래픽 분산 알고리즘을 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="로드 밸런서 종류와 알고리즘">
+<meta property="og:url" content="https://ew32.github.io/posts/load-balancer-types/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="L4와 L7 로드 밸런서의 차이점과 트래픽 분산 알고리즘을 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-24T00:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-12T01:49:24.839Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="로드밸런서">
+<meta property="article:tag" content="L4">
+<meta property="article:tag" content="L7">
+<meta property="article:tag" content="분산">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/load-balancer-types/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>로드 밸런서 종류와 알고리즘 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/load-balancer-types/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          로드 밸런서 종류와 알고리즘
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-24 09:00:00" itemprop="dateCreated datePublished" datetime="2026-05-24T09:00:00+09:00">2026-05-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-12 10:49:24" itemprop="dateModified" datetime="2026-05-12T10:49:24+09:00">2026-05-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/Theory/" itemprop="url" rel="index"><span itemprop="name">Theory</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">L4와 L7 로드 밸런서의 차이점과 트래픽 분산 알고리즘을 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="로드-밸런서란"><a href="#로드-밸런서란" class="headerlink" title="로드 밸런서란?"></a>로드 밸런서란?</h2><p>**로드 밸런서(Load Balancer)**는 들어오는 네트워크 트래픽을 여러 백엔드 서버에 분산시켜 단일 서버의 부하를 줄이고 가용성을 높이는 장치 또는 소프트웨어입니다. 현대 웹 서비스의 사실상 모든 구간에 배치되어, 확장성과 장애 격리의 핵심 역할을 합니다.</p>
+<p>로드 밸런서가 제공하는 주요 가치는 다음과 같습니다.</p>
+<ul>
+<li><strong>가용성</strong>: 일부 서버 장애 시 정상 서버로만 라우팅</li>
+<li><strong>확장성</strong>: 수평 확장(scale-out) 용이</li>
+<li><strong>성능</strong>: 트래픽 분산으로 응답 시간 단축</li>
+<li><strong>보안</strong>: SSL 종료, WAF, DDoS 방어 통합 가능</li>
+</ul>
+<h2 id="OSI-계층별-로드-밸런서"><a href="#OSI-계층별-로드-밸런서" class="headerlink" title="OSI 계층별 로드 밸런서"></a>OSI 계층별 로드 밸런서</h2><p>로드 밸런서는 동작 계층에 따라 크게 두 가지로 분류됩니다.</p>
+<h3 id="L4-로드-밸런서"><a href="#L4-로드-밸런서" class="headerlink" title="L4 로드 밸런서"></a>L4 로드 밸런서</h3><p>전송 계층(TCP&#x2F;UDP)에서 동작. <strong>IP 주소와 포트</strong>를 기반으로 분산합니다.</p>
+<ul>
+<li>페이로드를 들여다보지 않음</li>
+<li>매우 빠르고 처리량이 큼</li>
+<li>TLS 종료 불가능 (TCP passthrough)</li>
+<li>예: AWS NLB, HAProxy(TCP 모드), LVS</li>
+</ul>
+<h3 id="L7-로드-밸런서"><a href="#L7-로드-밸런서" class="headerlink" title="L7 로드 밸런서"></a>L7 로드 밸런서</h3><p>응용 계층(HTTP&#x2F;HTTPS)에서 동작. <strong>URL, 헤더, 쿠키</strong> 등 메시지 내용을 기반으로 분산합니다.</p>
+<ul>
+<li>콘텐츠 기반 라우팅 가능 (<code>/api</code> -&gt; API 서버, <code>/static</code> -&gt; 정적 서버)</li>
+<li>TLS 종료, 압축, 캐싱 등 부가 기능</li>
+<li>약간 느림 (페이로드 파싱 필요)</li>
+<li>예: AWS ALB, Nginx, HAProxy(HTTP 모드), Envoy</li>
+</ul>
+<h2 id="L4-vs-L7-비교"><a href="#L4-vs-L7-비교" class="headerlink" title="L4 vs L7 비교"></a>L4 vs L7 비교</h2><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>L4</th>
+<th>L7</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>동작 계층</td>
+<td>TCP&#x2F;UDP</td>
+<td>HTTP&#x2F;HTTPS</td>
+</tr>
+<tr>
+<td>라우팅 기준</td>
+<td>IP, 포트</td>
+<td>URL, 헤더, 쿠키</td>
+</tr>
+<tr>
+<td>처리량</td>
+<td>매우 높음</td>
+<td>높음</td>
+</tr>
+<tr>
+<td>부가 기능</td>
+<td>제한적</td>
+<td>풍부</td>
+</tr>
+<tr>
+<td>TLS 처리</td>
+<td>패스스루</td>
+<td>종료 가능</td>
+</tr>
+<tr>
+<td>사용 예</td>
+<td>게임, DB, gRPC</td>
+<td>웹, REST API</td>
+</tr>
+</tbody></table>
+<h2 id="분산-알고리즘"><a href="#분산-알고리즘" class="headerlink" title="분산 알고리즘"></a>분산 알고리즘</h2><h3 id="1-라운드-로빈-Round-Robin"><a href="#1-라운드-로빈-Round-Robin" class="headerlink" title="1. 라운드 로빈 (Round Robin)"></a>1. 라운드 로빈 (Round Robin)</h3><p>요청을 순서대로 서버에 분배합니다. 가장 단순하지만 서버 성능 차이를 반영하지 못합니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">요청1 -&gt; 서버A</span><br><span class="line">요청2 -&gt; 서버B</span><br><span class="line">요청3 -&gt; 서버C</span><br><span class="line">요청4 -&gt; 서버A</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-가중-라운드-로빈-Weighted-Round-Robin"><a href="#2-가중-라운드-로빈-Weighted-Round-Robin" class="headerlink" title="2. 가중 라운드 로빈 (Weighted Round Robin)"></a>2. 가중 라운드 로빈 (Weighted Round Robin)</h3><p>각 서버에 가중치를 부여하여 분배 비율을 조정합니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">서버A(weight=3), 서버B(weight=1)</span><br><span class="line">요청1,2,3 -&gt; A, 요청4 -&gt; B, 요청5,6,7 -&gt; A, ...</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-최소-연결-Least-Connections"><a href="#3-최소-연결-Least-Connections" class="headerlink" title="3. 최소 연결 (Least Connections)"></a>3. 최소 연결 (Least Connections)</h3><p>현재 활성 연결 수가 가장 적은 서버로 라우팅합니다. 요청 처리 시간이 가변적인 환경에 적합합니다.</p>
+<h3 id="4-최소-응답-시간-Least-Response-Time"><a href="#4-최소-응답-시간-Least-Response-Time" class="headerlink" title="4. 최소 응답 시간 (Least Response Time)"></a>4. 최소 응답 시간 (Least Response Time)</h3><p>응답 시간이 가장 빠른 서버를 선택합니다. 헬스체크와 결합해 동적으로 적응합니다.</p>
+<h3 id="5-IP-해시-IP-Hash"><a href="#5-IP-해시-IP-Hash" class="headerlink" title="5. IP 해시 (IP Hash)"></a>5. IP 해시 (IP Hash)</h3><p>클라이언트 IP를 해시하여 동일 IP는 항상 같은 서버로 라우팅합니다. **세션 어피니티(Sticky Session)**가 필요할 때 유용합니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hash(client_ip) % server_count -&gt; 서버 인덱스</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-Consistent-Hashing"><a href="#6-Consistent-Hashing" class="headerlink" title="6. Consistent Hashing"></a>6. Consistent Hashing</h3><p>서버 추가&#x2F;제거 시 영향을 최소화하는 해시 기법. 캐시 서버 클러스터에 자주 사용됩니다.</p>
+<table>
+<thead>
+<tr>
+<th>알고리즘</th>
+<th>균등성</th>
+<th>세션 유지</th>
+<th>적합한 환경</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Round Robin</td>
+<td>좋음</td>
+<td>불가</td>
+<td>동일 사양 서버</td>
+</tr>
+<tr>
+<td>Weighted RR</td>
+<td>좋음</td>
+<td>불가</td>
+<td>서로 다른 사양</td>
+</tr>
+<tr>
+<td>Least Conn</td>
+<td>매우 좋음</td>
+<td>불가</td>
+<td>가변 처리 시간</td>
+</tr>
+<tr>
+<td>IP Hash</td>
+<td>보통</td>
+<td>가능</td>
+<td>세션 필요 시</td>
+</tr>
+<tr>
+<td>Consistent Hash</td>
+<td>좋음</td>
+<td>가능</td>
+<td>캐시 분산</td>
+</tr>
+</tbody></table>
+<h2 id="Nginx-설정-예제"><a href="#Nginx-설정-예제" class="headerlink" title="Nginx 설정 예제"></a>Nginx 설정 예제</h2><h3 id="기본-업스트림"><a href="#기본-업스트림" class="headerlink" title="기본 업스트림"></a>기본 업스트림</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> backend &#123;</span><br><span class="line">    <span class="attribute">server</span> backend1.example.com:<span class="number">8080</span> weight=<span class="number">3</span>;</span><br><span class="line">    <span class="attribute">server</span> backend2.example.com:<span class="number">8080</span> weight=<span class="number">1</span>;</span><br><span class="line">    <span class="attribute">server</span> backend3.example.com:<span class="number">8080</span> backup;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">proxy_pass</span> http://backend;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> Host <span class="variable">$host</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> X-Real-IP <span class="variable">$remote_addr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="최소-연결-헬스체크"><a href="#최소-연결-헬스체크" class="headerlink" title="최소 연결 + 헬스체크"></a>최소 연결 + 헬스체크</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> backend &#123;</span><br><span class="line">    least_conn;</span><br><span class="line">    <span class="attribute">server</span> backend1.example.com:<span class="number">8080</span> max_fails=<span class="number">3</span> fail_timeout=<span class="number">30s</span>;</span><br><span class="line">    <span class="attribute">server</span> backend2.example.com:<span class="number">8080</span> max_fails=<span class="number">3</span> fail_timeout=<span class="number">30s</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="경로-기반-라우팅-L7"><a href="#경로-기반-라우팅-L7" class="headerlink" title="경로 기반 라우팅 (L7)"></a>경로 기반 라우팅 (L7)</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /api/ &#123;</span><br><span class="line">        <span class="attribute">proxy_pass</span> http://api_backend;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /static/ &#123;</span><br><span class="line">        <span class="attribute">proxy_pass</span> http://static_backend;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="헬스-체크"><a href="#헬스-체크" class="headerlink" title="헬스 체크"></a>헬스 체크</h2><p>로드 밸런서는 주기적으로 백엔드 상태를 확인하여 문제가 있는 서버를 풀에서 제외합니다.</p>
+<ul>
+<li><strong>Active Health Check</strong>: 별도 요청으로 명시적 확인</li>
+<li><strong>Passive Health Check</strong>: 실제 트래픽 응답으로 판단</li>
+</ul>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /health &#123;</span><br><span class="line">    <span class="attribute">access_log</span> <span class="literal">off</span>;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;OK&#x27;</span>;</span><br><span class="line">    <span class="attribute">add_header</span> Content-Type text/plain;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="세션-유지-Sticky-Session"><a href="#세션-유지-Sticky-Session" class="headerlink" title="세션 유지 (Sticky Session)"></a>세션 유지 (Sticky Session)</h2><p>상태 저장이 필요한 애플리케이션은 동일 사용자를 같은 서버로 라우팅해야 합니다.</p>
+<ul>
+<li><strong>IP Hash</strong>: IP 기반 (NAT 환경에서 한계)</li>
+<li><strong>쿠키 기반</strong>: 로드 밸런서가 쿠키 발급</li>
+<li><strong>JWT&#x2F;공유 세션 스토어</strong>: 무상태로 설계 (권장)</li>
+</ul>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> backend &#123;</span><br><span class="line">    ip_hash;</span><br><span class="line">    <span class="attribute">server</span> backend1:<span class="number">8080</span>;</span><br><span class="line">    <span class="attribute">server</span> backend2:<span class="number">8080</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="글로벌-로드-밸런싱"><a href="#글로벌-로드-밸런싱" class="headerlink" title="글로벌 로드 밸런싱"></a>글로벌 로드 밸런싱</h2><p>여러 리전에 분산된 사용자를 적절한 데이터 센터로 라우팅합니다.</p>
+<ul>
+<li><strong>GeoDNS</strong>: 지리적 위치 기반 DNS 응답</li>
+<li><strong>Anycast</strong>: 같은 IP를 여러 위치에서 광고 (Cloudflare, AWS Global Accelerator)</li>
+<li><strong>CDN 통합</strong>: Edge 서버에서 분기</li>
+</ul>
+<h2 id="베스트-프랙티스"><a href="#베스트-프랙티스" class="headerlink" title="베스트 프랙티스"></a>베스트 프랙티스</h2><ul>
+<li>헬스 체크 엔드포인트는 가볍게 유지</li>
+<li>무상태 설계로 세션 어피니티 의존 최소화</li>
+<li>TLS는 로드 밸런서에서 종료 (백엔드는 평문 또는 mTLS)</li>
+<li>충분한 타임아웃 설정 (느린 백엔드 격리)</li>
+<li>메트릭과 로그 수집 (P99 지연 시간 모니터링)</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>로드 밸런서는 단순한 트래픽 분배 장치가 아니라 <strong>가용성, 확장성, 보안의 교차점</strong>입니다. L4와 L7 중 어떤 계층이 필요한지, 어떤 분산 알고리즘이 워크로드에 맞는지, 세션 유지를 어떻게 처리할지를 종합적으로 설계하면 안정적이고 확장 가능한 서비스를 구축할 수 있습니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%EB%A1%9C%EB%93%9C%EB%B0%B8%EB%9F%B0%EC%84%9C/" rel="tag"># 로드밸런서</a>
+              <a href="/tags/L4/" rel="tag"># L4</a>
+              <a href="/tags/L7/" rel="tag"># L7</a>
+              <a href="/tags/%EB%B6%84%EC%82%B0/" rel="tag"># 분산</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/dns-how-it-works/" rel="prev" title="DNS 동작 원리 한 번에 이해하기">
+      <i class="fa fa-chevron-left"></i> DNS 동작 원리 한 번에 이해하기
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/cdn-how-it-works/" rel="next" title="CDN 동작 원리와 활용">
+      CDN 동작 원리와 활용 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A1%9C%EB%93%9C-%EB%B0%B8%EB%9F%B0%EC%84%9C%EB%9E%80"><span class="nav-number">1.</span> <span class="nav-text">로드 밸런서란?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OSI-%EA%B3%84%EC%B8%B5%EB%B3%84-%EB%A1%9C%EB%93%9C-%EB%B0%B8%EB%9F%B0%EC%84%9C"><span class="nav-number">2.</span> <span class="nav-text">OSI 계층별 로드 밸런서</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#L4-%EB%A1%9C%EB%93%9C-%EB%B0%B8%EB%9F%B0%EC%84%9C"><span class="nav-number">2.1.</span> <span class="nav-text">L4 로드 밸런서</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#L7-%EB%A1%9C%EB%93%9C-%EB%B0%B8%EB%9F%B0%EC%84%9C"><span class="nav-number">2.2.</span> <span class="nav-text">L7 로드 밸런서</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#L4-vs-L7-%EB%B9%84%EA%B5%90"><span class="nav-number">3.</span> <span class="nav-text">L4 vs L7 비교</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B6%84%EC%82%B0-%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98"><span class="nav-number">4.</span> <span class="nav-text">분산 알고리즘</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%EB%9D%BC%EC%9A%B4%EB%93%9C-%EB%A1%9C%EB%B9%88-Round-Robin"><span class="nav-number">4.1.</span> <span class="nav-text">1. 라운드 로빈 (Round Robin)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%EA%B0%80%EC%A4%91-%EB%9D%BC%EC%9A%B4%EB%93%9C-%EB%A1%9C%EB%B9%88-Weighted-Round-Robin"><span class="nav-number">4.2.</span> <span class="nav-text">2. 가중 라운드 로빈 (Weighted Round Robin)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%EC%B5%9C%EC%86%8C-%EC%97%B0%EA%B2%B0-Least-Connections"><span class="nav-number">4.3.</span> <span class="nav-text">3. 최소 연결 (Least Connections)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%EC%B5%9C%EC%86%8C-%EC%9D%91%EB%8B%B5-%EC%8B%9C%EA%B0%84-Least-Response-Time"><span class="nav-number">4.4.</span> <span class="nav-text">4. 최소 응답 시간 (Least Response Time)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-IP-%ED%95%B4%EC%8B%9C-IP-Hash"><span class="nav-number">4.5.</span> <span class="nav-text">5. IP 해시 (IP Hash)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-Consistent-Hashing"><span class="nav-number">4.6.</span> <span class="nav-text">6. Consistent Hashing</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Nginx-%EC%84%A4%EC%A0%95-%EC%98%88%EC%A0%9C"><span class="nav-number">5.</span> <span class="nav-text">Nginx 설정 예제</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EA%B8%B0%EB%B3%B8-%EC%97%85%EC%8A%A4%ED%8A%B8%EB%A6%BC"><span class="nav-number">5.1.</span> <span class="nav-text">기본 업스트림</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%B5%9C%EC%86%8C-%EC%97%B0%EA%B2%B0-%ED%97%AC%EC%8A%A4%EC%B2%B4%ED%81%AC"><span class="nav-number">5.2.</span> <span class="nav-text">최소 연결 + 헬스체크</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EA%B2%BD%EB%A1%9C-%EA%B8%B0%EB%B0%98-%EB%9D%BC%EC%9A%B0%ED%8C%85-L7"><span class="nav-number">5.3.</span> <span class="nav-text">경로 기반 라우팅 (L7)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%97%AC%EC%8A%A4-%EC%B2%B4%ED%81%AC"><span class="nav-number">6.</span> <span class="nav-text">헬스 체크</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%84%B8%EC%85%98-%EC%9C%A0%EC%A7%80-Sticky-Session"><span class="nav-number">7.</span> <span class="nav-text">세션 유지 (Sticky Session)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B8%80%EB%A1%9C%EB%B2%8C-%EB%A1%9C%EB%93%9C-%EB%B0%B8%EB%9F%B0%EC%8B%B1"><span class="nav-number">8.</span> <span class="nav-text">글로벌 로드 밸런싱</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B2%A0%EC%8A%A4%ED%8A%B8-%ED%94%84%EB%9E%99%ED%8B%B0%EC%8A%A4"><span class="nav-number">9.</span> <span class="nav-text">베스트 프랙티스</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">10.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">114</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">307</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

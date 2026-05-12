@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Disallow: /css/
+Disallow: /js/
+Disallow: /fonts/
+Disallow: /lib/
+
+Sitemap: https://ew32.github.io/sitemap.xml
+Sitemap: https://ew32.github.io/baidusitemap.xml

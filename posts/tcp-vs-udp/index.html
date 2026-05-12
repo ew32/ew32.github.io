@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="전송 계층의 양대 프로토콜인 TCP와 UDP의 차이점과 사용 시나리오를 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP와 UDP 프로토콜 비교">
+<meta property="og:url" content="https://ew32.github.io/posts/tcp-vs-udp/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="전송 계층의 양대 프로토콜인 TCP와 UDP의 차이점과 사용 시나리오를 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-23T00:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-12T01:49:24.841Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="네트워크">
+<meta property="article:tag" content="프로토콜">
+<meta property="article:tag" content="TCP">
+<meta property="article:tag" content="UDP">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/tcp-vs-udp/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>TCP와 UDP 프로토콜 비교 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/tcp-vs-udp/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          TCP와 UDP 프로토콜 비교
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-23 09:00:00" itemprop="dateCreated datePublished" datetime="2026-05-23T09:00:00+09:00">2026-05-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-12 10:49:24" itemprop="dateModified" datetime="2026-05-12T10:49:24+09:00">2026-05-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/Theory/" itemprop="url" rel="index"><span itemprop="name">Theory</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">전송 계층의 양대 프로토콜인 TCP와 UDP의 차이점과 사용 시나리오를 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="전송-계층의-두-프로토콜"><a href="#전송-계층의-두-프로토콜" class="headerlink" title="전송 계층의 두 프로토콜"></a>전송 계층의 두 프로토콜</h2><p>**TCP(Transmission Control Protocol)**와 **UDP(User Datagram Protocol)**는 OSI 7계층 모델에서 **전송 계층(Layer 4)**에 속하는 가장 대표적인 프로토콜입니다. 두 프로토콜은 IP 위에서 동작하며, 응용 계층 데이터를 어떻게 전송할지에 대한 서로 다른 접근 방식을 제공합니다.</p>
+<ul>
+<li><strong>TCP</strong>: 신뢰성, 순서 보장, 연결 지향</li>
+<li><strong>UDP</strong>: 빠른 속도, 단순함, 비연결성</li>
+</ul>
+<h2 id="TCP의-특징"><a href="#TCP의-특징" class="headerlink" title="TCP의 특징"></a>TCP의 특징</h2><p>TCP는 <strong>신뢰성 있는 통신</strong>을 위해 설계된 연결 지향 프로토콜입니다. 모든 패킷이 순서대로, 누락 없이 전달되도록 보장합니다.</p>
+<h3 id="3-Way-Handshake"><a href="#3-Way-Handshake" class="headerlink" title="3-Way Handshake"></a>3-Way Handshake</h3><p>TCP 연결은 다음 3단계로 시작됩니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">클라이언트 -&gt; SYN -&gt; 서버</span><br><span class="line">클라이언트 &lt;- SYN+ACK &lt;- 서버</span><br><span class="line">클라이언트 -&gt; ACK -&gt; 서버</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><strong>SYN</strong>: 클라이언트가 연결 요청과 초기 시퀀스 번호 전송</li>
+<li><strong>SYN-ACK</strong>: 서버가 응답과 자신의 시퀀스 번호 전송</li>
+<li><strong>ACK</strong>: 클라이언트가 최종 확인</li>
+</ol>
+<h3 id="4-Way-Handshake-연결-종료"><a href="#4-Way-Handshake-연결-종료" class="headerlink" title="4-Way Handshake (연결 종료)"></a>4-Way Handshake (연결 종료)</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">클라이언트 -&gt; FIN -&gt; 서버</span><br><span class="line">클라이언트 &lt;- ACK &lt;- 서버</span><br><span class="line">클라이언트 &lt;- FIN &lt;- 서버</span><br><span class="line">클라이언트 -&gt; ACK -&gt; 서버</span><br></pre></td></tr></table></figure>
+
+<h3 id="신뢰성-보장-메커니즘"><a href="#신뢰성-보장-메커니즘" class="headerlink" title="신뢰성 보장 메커니즘"></a>신뢰성 보장 메커니즘</h3><ul>
+<li><strong>시퀀스 번호</strong>: 패킷 순서 보장</li>
+<li><strong>확인 응답(ACK)</strong>: 수신 확인</li>
+<li><strong>재전송</strong>: 일정 시간 내 ACK이 없으면 재전송</li>
+<li><strong>흐름 제어</strong>: 수신자의 윈도우 크기에 맞춰 전송량 조절</li>
+<li><strong>혼잡 제어</strong>: 네트워크 상태에 따라 전송 속도 조절 (Slow Start, Congestion Avoidance)</li>
+</ul>
+<h3 id="TCP-헤더-구조"><a href="#TCP-헤더-구조" class="headerlink" title="TCP 헤더 구조"></a>TCP 헤더 구조</h3><table>
+<thead>
+<tr>
+<th>필드</th>
+<th>크기</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Source Port</td>
+<td>16 bit</td>
+<td>출발지 포트</td>
+</tr>
+<tr>
+<td>Dest. Port</td>
+<td>16 bit</td>
+<td>목적지 포트</td>
+</tr>
+<tr>
+<td>Sequence Number</td>
+<td>32 bit</td>
+<td>시퀀스 번호</td>
+</tr>
+<tr>
+<td>Ack Number</td>
+<td>32 bit</td>
+<td>확인 응답 번호</td>
+</tr>
+<tr>
+<td>Flags</td>
+<td>9 bit</td>
+<td>SYN, ACK, FIN 등</td>
+</tr>
+<tr>
+<td>Window</td>
+<td>16 bit</td>
+<td>윈도우 크기</td>
+</tr>
+<tr>
+<td>Checksum</td>
+<td>16 bit</td>
+<td>오류 검출</td>
+</tr>
+</tbody></table>
+<p>총 헤더 크기는 최소 20바이트입니다.</p>
+<h2 id="UDP의-특징"><a href="#UDP의-특징" class="headerlink" title="UDP의 특징"></a>UDP의 특징</h2><p>UDP는 <strong>단순함과 속도</strong>에 집중한 비연결 지향 프로토콜입니다. 핸드셰이크 없이 즉시 데이터를 전송합니다.</p>
+<h3 id="UDP-헤더-구조"><a href="#UDP-헤더-구조" class="headerlink" title="UDP 헤더 구조"></a>UDP 헤더 구조</h3><table>
+<thead>
+<tr>
+<th>필드</th>
+<th>크기</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Source Port</td>
+<td>16 bit</td>
+<td>출발지 포트</td>
+</tr>
+<tr>
+<td>Dest. Port</td>
+<td>16 bit</td>
+<td>목적지 포트</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>16 bit</td>
+<td>전체 길이</td>
+</tr>
+<tr>
+<td>Checksum</td>
+<td>16 bit</td>
+<td>오류 검출</td>
+</tr>
+</tbody></table>
+<p>총 헤더 크기는 8바이트로, TCP에 비해 매우 작습니다.</p>
+<h3 id="UDP의-특성"><a href="#UDP의-특성" class="headerlink" title="UDP의 특성"></a>UDP의 특성</h3><ul>
+<li><strong>연결 설정 없음</strong>: 즉시 전송 시작</li>
+<li><strong>순서 보장 없음</strong>: 패킷이 뒤바뀌어 도착 가능</li>
+<li><strong>재전송 없음</strong>: 손실되어도 신경 쓰지 않음</li>
+<li><strong>흐름 제어 없음</strong>: 수신자 상태와 무관하게 전송</li>
+<li><strong>브로드캐스트&#x2F;멀티캐스트 지원</strong></li>
+</ul>
+<h2 id="TCP-vs-UDP-비교표"><a href="#TCP-vs-UDP-비교표" class="headerlink" title="TCP vs UDP 비교표"></a>TCP vs UDP 비교표</h2><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>TCP</th>
+<th>UDP</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>연결 방식</td>
+<td>연결 지향</td>
+<td>비연결 지향</td>
+</tr>
+<tr>
+<td>신뢰성</td>
+<td>보장</td>
+<td>미보장</td>
+</tr>
+<tr>
+<td>순서 보장</td>
+<td>보장</td>
+<td>미보장</td>
+</tr>
+<tr>
+<td>속도</td>
+<td>느림</td>
+<td>빠름</td>
+</tr>
+<tr>
+<td>헤더 크기</td>
+<td>20바이트 이상</td>
+<td>8바이트</td>
+</tr>
+<tr>
+<td>흐름 제어</td>
+<td>있음</td>
+<td>없음</td>
+</tr>
+<tr>
+<td>혼잡 제어</td>
+<td>있음</td>
+<td>없음</td>
+</tr>
+<tr>
+<td>브로드캐스트</td>
+<td>미지원</td>
+<td>지원</td>
+</tr>
+</tbody></table>
+<h2 id="사용-시나리오"><a href="#사용-시나리오" class="headerlink" title="사용 시나리오"></a>사용 시나리오</h2><h3 id="TCP가-적합한-경우"><a href="#TCP가-적합한-경우" class="headerlink" title="TCP가 적합한 경우"></a>TCP가 적합한 경우</h3><ul>
+<li><strong>HTTP&#x2F;HTTPS</strong>: 웹 브라우징</li>
+<li><strong>이메일 (SMTP, IMAP, POP3)</strong></li>
+<li><strong>파일 전송 (FTP, SFTP)</strong></li>
+<li><strong>데이터베이스 연결</strong></li>
+<li><strong>SSH 원격 접속</strong></li>
+</ul>
+<p>데이터의 정확성이 속도보다 중요한 모든 경우에 TCP를 선택합니다.</p>
+<h3 id="UDP가-적합한-경우"><a href="#UDP가-적합한-경우" class="headerlink" title="UDP가 적합한 경우"></a>UDP가 적합한 경우</h3><ul>
+<li><strong>실시간 스트리밍</strong>: 비디오&#x2F;오디오 (일부 손실 허용)</li>
+<li><strong>온라인 게임</strong>: 낮은 지연 시간 우선</li>
+<li><strong>DNS 질의</strong>: 단발성 짧은 요청</li>
+<li><strong>VoIP</strong>: 음성 통화</li>
+<li><strong>DHCP</strong>: IP 주소 할당</li>
+<li><strong>QUIC&#x2F;HTTP&#x2F;3 기반</strong>: 신뢰성은 응용 계층에서 구현</li>
+</ul>
+<h2 id="코드-예제"><a href="#코드-예제" class="headerlink" title="코드 예제"></a>코드 예제</h2><h3 id="Python-TCP-서버"><a href="#Python-TCP-서버" class="headerlink" title="Python TCP 서버"></a>Python TCP 서버</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"></span><br><span class="line">server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</span><br><span class="line">server.bind((<span class="string">&#x27;0.0.0.0&#x27;</span>, <span class="number">9000</span>))</span><br><span class="line">server.listen(<span class="number">5</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    conn, addr = server.accept()</span><br><span class="line">    data = conn.recv(<span class="number">1024</span>)</span><br><span class="line">    conn.sendall(<span class="string">b&#x27;Echo: &#x27;</span> + data)</span><br><span class="line">    conn.close()</span><br></pre></td></tr></table></figure>
+
+<h3 id="Python-UDP-서버"><a href="#Python-UDP-서버" class="headerlink" title="Python UDP 서버"></a>Python UDP 서버</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"></span><br><span class="line">server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)</span><br><span class="line">server.bind((<span class="string">&#x27;0.0.0.0&#x27;</span>, <span class="number">9000</span>))</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    data, addr = server.recvfrom(<span class="number">1024</span>)</span><br><span class="line">    server.sendto(<span class="string">b&#x27;Echo: &#x27;</span> + data, addr)</span><br></pre></td></tr></table></figure>
+
+<h2 id="QUIC와-미래"><a href="#QUIC와-미래" class="headerlink" title="QUIC와 미래"></a>QUIC와 미래</h2><p>최근에는 UDP 위에서 신뢰성을 보장하는 <strong>QUIC</strong> 프로토콜이 등장했습니다. HTTP&#x2F;3의 기반이며, TCP의 신뢰성과 UDP의 빠른 연결 설정을 결합한 형태입니다. 이는 “TCP는 느리니까 UDP를 쓰자”라는 단순 비교가 점차 무의미해지고 있음을 의미합니다.</p>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>TCP와 UDP는 단순히 빠르고 느린 것이 아니라, <strong>목적에 따라 적합한 도구가 다릅니다</strong>. 데이터 정확성이 핵심이라면 TCP, 실시간성과 단순함이 핵심이라면 UDP를 선택하면 됩니다. 최근에는 QUIC처럼 두 장점을 모두 취하는 하이브리드 접근도 늘어나고 있습니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC/" rel="tag"># 네트워크</a>
+              <a href="/tags/%ED%94%84%EB%A1%9C%ED%86%A0%EC%BD%9C/" rel="tag"># 프로토콜</a>
+              <a href="/tags/TCP/" rel="tag"># TCP</a>
+              <a href="/tags/UDP/" rel="tag"># UDP</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/browser-rendering-process/" rel="prev" title="브라우저 렌더링 과정 - Critical Rendering Path">
+      <i class="fa fa-chevron-left"></i> 브라우저 렌더링 과정 - Critical Rendering Path
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/http2-vs-http3/" rel="next" title="HTTP/2와 HTTP/3 차이점 정리">
+      HTTP/2와 HTTP/3 차이점 정리 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%84%EC%86%A1-%EA%B3%84%EC%B8%B5%EC%9D%98-%EB%91%90-%ED%94%84%EB%A1%9C%ED%86%A0%EC%BD%9C"><span class="nav-number">1.</span> <span class="nav-text">전송 계층의 두 프로토콜</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP%EC%9D%98-%ED%8A%B9%EC%A7%95"><span class="nav-number">2.</span> <span class="nav-text">TCP의 특징</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Way-Handshake"><span class="nav-number">2.1.</span> <span class="nav-text">3-Way Handshake</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-Way-Handshake-%EC%97%B0%EA%B2%B0-%EC%A2%85%EB%A3%8C"><span class="nav-number">2.2.</span> <span class="nav-text">4-Way Handshake (연결 종료)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%8B%A0%EB%A2%B0%EC%84%B1-%EB%B3%B4%EC%9E%A5-%EB%A9%94%EC%BB%A4%EB%8B%88%EC%A6%98"><span class="nav-number">2.3.</span> <span class="nav-text">신뢰성 보장 메커니즘</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP-%ED%97%A4%EB%8D%94-%EA%B5%AC%EC%A1%B0"><span class="nav-number">2.4.</span> <span class="nav-text">TCP 헤더 구조</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UDP%EC%9D%98-%ED%8A%B9%EC%A7%95"><span class="nav-number">3.</span> <span class="nav-text">UDP의 특징</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#UDP-%ED%97%A4%EB%8D%94-%EA%B5%AC%EC%A1%B0"><span class="nav-number">3.1.</span> <span class="nav-text">UDP 헤더 구조</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UDP%EC%9D%98-%ED%8A%B9%EC%84%B1"><span class="nav-number">3.2.</span> <span class="nav-text">UDP의 특성</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP-vs-UDP-%EB%B9%84%EA%B5%90%ED%91%9C"><span class="nav-number">4.</span> <span class="nav-text">TCP vs UDP 비교표</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%82%AC%EC%9A%A9-%EC%8B%9C%EB%82%98%EB%A6%AC%EC%98%A4"><span class="nav-number">5.</span> <span class="nav-text">사용 시나리오</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP%EA%B0%80-%EC%A0%81%ED%95%A9%ED%95%9C-%EA%B2%BD%EC%9A%B0"><span class="nav-number">5.1.</span> <span class="nav-text">TCP가 적합한 경우</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UDP%EA%B0%80-%EC%A0%81%ED%95%A9%ED%95%9C-%EA%B2%BD%EC%9A%B0"><span class="nav-number">5.2.</span> <span class="nav-text">UDP가 적합한 경우</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%BD%94%EB%93%9C-%EC%98%88%EC%A0%9C"><span class="nav-number">6.</span> <span class="nav-text">코드 예제</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Python-TCP-%EC%84%9C%EB%B2%84"><span class="nav-number">6.1.</span> <span class="nav-text">Python TCP 서버</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Python-UDP-%EC%84%9C%EB%B2%84"><span class="nav-number">6.2.</span> <span class="nav-text">Python UDP 서버</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#QUIC%EC%99%80-%EB%AF%B8%EB%9E%98"><span class="nav-number">7.</span> <span class="nav-text">QUIC와 미래</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">8.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">114</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">307</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

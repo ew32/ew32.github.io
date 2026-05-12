@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="안전한 비밀번호 저장을 위한 해싱의 원칙을 살펴보고, bcrypt와 Argon2의 차이와 선택 기준을 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="비밀번호 해싱 - bcrypt와 Argon2 비교">
+<meta property="og:url" content="https://ew32.github.io/posts/password-hashing-bcrypt-argon2/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="안전한 비밀번호 저장을 위한 해싱의 원칙을 살펴보고, bcrypt와 Argon2의 차이와 선택 기준을 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-13T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-12T01:49:24.840Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="bcrypt">
+<meta property="article:tag" content="Argon2">
+<meta property="article:tag" content="해싱">
+<meta property="article:tag" content="비밀번호">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/password-hashing-bcrypt-argon2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>비밀번호 해싱 - bcrypt와 Argon2 비교 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/password-hashing-bcrypt-argon2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          비밀번호 해싱 - bcrypt와 Argon2 비교
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-13 11:00:00" itemprop="dateCreated datePublished" datetime="2026-05-13T11:00:00+09:00">2026-05-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-12 10:49:24" itemprop="dateModified" datetime="2026-05-12T10:49:24+09:00">2026-05-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Security/" itemprop="url" rel="index"><span itemprop="name">Security</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Security/Cryptography/" itemprop="url" rel="index"><span itemprop="name">Cryptography</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">안전한 비밀번호 저장을 위한 해싱의 원칙을 살펴보고, bcrypt와 Argon2의 차이와 선택 기준을 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="비밀번호를-평문이나-단순-해시로-저장하면-안-되는-이유"><a href="#비밀번호를-평문이나-단순-해시로-저장하면-안-되는-이유" class="headerlink" title="비밀번호를 평문이나 단순 해시로 저장하면 안 되는 이유"></a>비밀번호를 평문이나 단순 해시로 저장하면 안 되는 이유</h2><p>비밀번호를 평문으로 저장하면 DB가 유출되는 순간 모든 계정이 즉시 탈취됩니다. 그렇다고 <code>MD5</code>, <code>SHA-256</code> 같은 일반 해시도 해법이 될 수 없습니다. 이런 해시는 <strong>너무 빠르도록 설계</strong>되어 있어, 현대 GPU로 초당 수십억 번의 시도가 가능합니다. <strong>레인보우 테이블</strong>과 결합하면 8자리 이하 비밀번호는 분 단위로 깨집니다.</p>
+<p>비밀번호 해시는 <strong>느려야 하며</strong>, <strong>각 사용자별로 달라야</strong> 합니다. 이를 위해 등장한 것이 <strong>Salt + Slow Hash</strong> 방식이고, 그 대표가 bcrypt와 Argon2입니다.</p>
+<h2 id="비밀번호-해싱의-3대-원칙"><a href="#비밀번호-해싱의-3대-원칙" class="headerlink" title="비밀번호 해싱의 3대 원칙"></a>비밀번호 해싱의 3대 원칙</h2><ol>
+<li><strong>Salt</strong>: 같은 비밀번호라도 사용자마다 다른 해시가 나오도록 무작위 값을 추가</li>
+<li><strong>Slow</strong>: 의도적으로 계산을 느리게 해 brute-force 비용 증가</li>
+<li><strong>Parameterized</strong>: 하드웨어 발전에 맞춰 비용 파라미터를 조절 가능</li>
+</ol>
+<h2 id="bcrypt"><a href="#bcrypt" class="headerlink" title="bcrypt"></a>bcrypt</h2><p>1999년에 발표된 <strong>Blowfish 기반</strong> 해시 알고리즘으로, 가장 오랫동안 검증된 비밀번호 해싱 함수입니다.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$2b$12$N9qo8uLOickgx2ZMRZoMye...</span><br><span class="line"> │  │   └── salt + hash (22 + 31 chars)</span><br><span class="line"> │  └── cost factor (2^12 라운드)</span><br><span class="line"> └── 알고리즘 식별자</span><br></pre></td></tr></table></figure>
+
+<p>특징:</p>
+<ul>
+<li><strong>cost factor</strong> 하나로 계산량 조절</li>
+<li>자체 salt 생성 및 인코딩</li>
+<li>입력이 <strong>72바이트로 잘림</strong>(긴 비밀번호의 뒷부분이 무시됨)</li>
+<li>메모리 사용량이 작아 GPU&#x2F;ASIC 공격에 비교적 약함</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">hash</span> <span class="operator">=</span> BCrypt.hashpw(password, BCrypt.gensalt(<span class="number">12</span>));</span><br><span class="line"><span class="type">boolean</span> <span class="variable">ok</span>  <span class="operator">=</span> BCrypt.checkpw(password, hash);</span><br></pre></td></tr></table></figure>
+
+<h2 id="Argon2"><a href="#Argon2" class="headerlink" title="Argon2"></a>Argon2</h2><p>2015년 <strong>Password Hashing Competition</strong> 우승작으로, 현재 OWASP가 신규 시스템에 가장 권장하는 알고리즘입니다. 세 가지 변종이 있습니다.</p>
+<table>
+<thead>
+<tr>
+<th>변종</th>
+<th>특징</th>
+<th>용도</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Argon2d</td>
+<td>GPU 저항 강함, 사이드 채널 약함</td>
+<td>암호화폐 채굴</td>
+</tr>
+<tr>
+<td>Argon2i</td>
+<td>사이드 채널 저항 강함</td>
+<td>사이드 채널 우려 환경</td>
+</tr>
+<tr>
+<td><strong>Argon2id</strong></td>
+<td>i + d의 장점을 결합</td>
+<td><strong>비밀번호 해싱 권장</strong></td>
+</tr>
+</tbody></table>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$argon2id$v=19$m=65536,t=3,p=4$salt$hash</span><br><span class="line">                │       │  │</span><br><span class="line">                │       │  └── 병렬도(parallelism)</span><br><span class="line">                │       └── 반복 횟수(iterations)</span><br><span class="line">                └── 메모리(KB)</span><br></pre></td></tr></table></figure>
+
+<p>특징:</p>
+<ul>
+<li><strong>메모리 하드(Memory-Hard)</strong> — 대량의 RAM을 요구해 GPU&#x2F;ASIC 공격을 무력화</li>
+<li>메모리, 반복, 병렬도를 <strong>독립적으로 튜닝</strong> 가능</li>
+<li>입력 길이 제한 없음</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> argon2 <span class="keyword">import</span> PasswordHasher</span><br><span class="line">ph = PasswordHasher(memory_cost=<span class="number">65536</span>, time_cost=<span class="number">3</span>, parallelism=<span class="number">4</span>)</span><br><span class="line"><span class="built_in">hash</span> = ph.<span class="built_in">hash</span>(password)</span><br><span class="line">ph.verify(<span class="built_in">hash</span>, password)</span><br></pre></td></tr></table></figure>
+
+<h2 id="bcrypt-vs-Argon2-비교"><a href="#bcrypt-vs-Argon2-비교" class="headerlink" title="bcrypt vs Argon2 비교"></a>bcrypt vs Argon2 비교</h2><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>bcrypt</th>
+<th>Argon2id</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>발표</td>
+<td>1999</td>
+<td>2015</td>
+</tr>
+<tr>
+<td>튜닝 파라미터</td>
+<td>cost(시간)</td>
+<td>memory + time + parallelism</td>
+</tr>
+<tr>
+<td>메모리 하드</td>
+<td>아니오</td>
+<td>예</td>
+</tr>
+<tr>
+<td>GPU 저항</td>
+<td>보통</td>
+<td>강함</td>
+</tr>
+<tr>
+<td>입력 길이</td>
+<td>72바이트 제한</td>
+<td>무제한</td>
+</tr>
+<tr>
+<td>표준화</td>
+<td>사실상 표준</td>
+<td>RFC 9106</td>
+</tr>
+<tr>
+<td>라이브러리 성숙도</td>
+<td>매우 높음</td>
+<td>점점 성숙</td>
+</tr>
+</tbody></table>
+<h2 id="어떤-것을-선택해야-할까"><a href="#어떤-것을-선택해야-할까" class="headerlink" title="어떤 것을 선택해야 할까?"></a>어떤 것을 선택해야 할까?</h2><ul>
+<li><strong>신규 시스템</strong>: Argon2id 권장 (OWASP 가이드라인)</li>
+<li><strong>레거시 시스템</strong>: bcrypt를 유지하되 cost 12 이상</li>
+<li>환경에 Argon2 라이브러리가 부족하다면 bcrypt(cost ≥ 12) 또는 scrypt도 무리는 없습니다.</li>
+</ul>
+<h2 id="파라미터-가이드-2026-기준"><a href="#파라미터-가이드-2026-기준" class="headerlink" title="파라미터 가이드(2026 기준)"></a>파라미터 가이드(2026 기준)</h2><p>OWASP Password Storage Cheat Sheet 기준의 일반 권고치입니다.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Argon2id : m=19 MiB, t=2, p=1  (최소)</span><br><span class="line">           m=64 MiB, t=3, p=4  (권장)</span><br><span class="line">bcrypt   : cost = 12 이상</span><br><span class="line">scrypt   : N=2^17, r=8, p=1</span><br></pre></td></tr></table></figure>
+
+<p>운영 환경에서는 <strong>로그인 응답 시간이 250~500ms 정도</strong> 되도록 튜닝하는 것이 일반적인 균형점입니다.</p>
+<h2 id="절대-하지-말아야-할-것"><a href="#절대-하지-말아야-할-것" class="headerlink" title="절대 하지 말아야 할 것"></a>절대 하지 말아야 할 것</h2><ul>
+<li>비밀번호를 평문&#x2F;MD5&#x2F;SHA-256&#x2F;SHA-512만으로 저장</li>
+<li>모든 사용자에게 <strong>동일한 Salt</strong> 사용</li>
+<li>비밀번호와 함께 **Pepper(서버 비밀)**를 같은 DB에 저장 (Pepper는 별도 KMS에)</li>
+<li>직접 만든 자작 해싱 알고리즘 사용</li>
+</ul>
+<h2 id="비밀번호-외-추가-방어"><a href="#비밀번호-외-추가-방어" class="headerlink" title="비밀번호 외 추가 방어"></a>비밀번호 외 추가 방어</h2><p>해시만으로는 부족합니다. 다음과 같은 정책을 함께 운영하세요.</p>
+<ul>
+<li><strong>로그인 Rate Limit</strong> + 계정 잠금</li>
+<li><strong>MFA(다중 요소 인증)</strong> 도입</li>
+<li><strong>유출된 비밀번호 차단</strong>(haveibeenpwned API)</li>
+<li>정기적 <strong>해시 알고리즘 재해싱(Rehash on Login)</strong></li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>비밀번호 해싱은 “DB가 유출됐다고 가정했을 때 얼마나 시간을 벌어줄 수 있느냐”의 게임입니다. bcrypt는 여전히 안전한 선택이고, Argon2id는 더 나은 기본값입니다. 중요한 것은 알고리즘 이름이 아니라, <strong>충분한 비용 파라미터</strong>와 <strong>정기적인 재평가</strong> 그리고 <strong>다층 방어</strong>라는 점을 기억하세요.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/bcrypt/" rel="tag"># bcrypt</a>
+              <a href="/tags/Argon2/" rel="tag"># Argon2</a>
+              <a href="/tags/%ED%95%B4%EC%8B%B1/" rel="tag"># 해싱</a>
+              <a href="/tags/%EB%B9%84%EB%B0%80%EB%B2%88%ED%98%B8/" rel="tag"># 비밀번호</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/sql-injection-defense/" rel="prev" title="SQL Injection 원리와 방어">
+      <i class="fa fa-chevron-left"></i> SQL Injection 원리와 방어
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/symmetric-vs-asymmetric-encryption/" rel="next" title="대칭키와 비대칭키 암호화 비교">
+      대칭키와 비대칭키 암호화 비교 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B9%84%EB%B0%80%EB%B2%88%ED%98%B8%EB%A5%BC-%ED%8F%89%EB%AC%B8%EC%9D%B4%EB%82%98-%EB%8B%A8%EC%88%9C-%ED%95%B4%EC%8B%9C%EB%A1%9C-%EC%A0%80%EC%9E%A5%ED%95%98%EB%A9%B4-%EC%95%88-%EB%90%98%EB%8A%94-%EC%9D%B4%EC%9C%A0"><span class="nav-number">1.</span> <span class="nav-text">비밀번호를 평문이나 단순 해시로 저장하면 안 되는 이유</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B9%84%EB%B0%80%EB%B2%88%ED%98%B8-%ED%95%B4%EC%8B%B1%EC%9D%98-3%EB%8C%80-%EC%9B%90%EC%B9%99"><span class="nav-number">2.</span> <span class="nav-text">비밀번호 해싱의 3대 원칙</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bcrypt"><span class="nav-number">3.</span> <span class="nav-text">bcrypt</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Argon2"><span class="nav-number">4.</span> <span class="nav-text">Argon2</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bcrypt-vs-Argon2-%EB%B9%84%EA%B5%90"><span class="nav-number">5.</span> <span class="nav-text">bcrypt vs Argon2 비교</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%96%B4%EB%96%A4-%EA%B2%83%EC%9D%84-%EC%84%A0%ED%83%9D%ED%95%B4%EC%95%BC-%ED%95%A0%EA%B9%8C"><span class="nav-number">6.</span> <span class="nav-text">어떤 것을 선택해야 할까?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%8C%8C%EB%9D%BC%EB%AF%B8%ED%84%B0-%EA%B0%80%EC%9D%B4%EB%93%9C-2026-%EA%B8%B0%EC%A4%80"><span class="nav-number">7.</span> <span class="nav-text">파라미터 가이드(2026 기준)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%88%EB%8C%80-%ED%95%98%EC%A7%80-%EB%A7%90%EC%95%84%EC%95%BC-%ED%95%A0-%EA%B2%83"><span class="nav-number">8.</span> <span class="nav-text">절대 하지 말아야 할 것</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B9%84%EB%B0%80%EB%B2%88%ED%98%B8-%EC%99%B8-%EC%B6%94%EA%B0%80-%EB%B0%A9%EC%96%B4"><span class="nav-number">9.</span> <span class="nav-text">비밀번호 외 추가 방어</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">10.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">114</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">307</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

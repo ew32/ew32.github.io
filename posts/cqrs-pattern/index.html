@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="명령과 조회를 분리하는 CQRS 패턴의 구조, 구현 방법, Event Sourcing과의 관계를 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CQRS 패턴과 적용 시나리오">
+<meta property="og:url" content="https://ew32.github.io/posts/cqrs-pattern/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="명령과 조회를 분리하는 CQRS 패턴의 구조, 구현 방법, Event Sourcing과의 관계를 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-15T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-12T01:49:24.838Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="아키텍처">
+<meta property="article:tag" content="CQRS">
+<meta property="article:tag" content="EventSourcing">
+<meta property="article:tag" content="패턴">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/cqrs-pattern/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>CQRS 패턴과 적용 시나리오 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/cqrs-pattern/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CQRS 패턴과 적용 시나리오
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-15 11:00:00" itemprop="dateCreated datePublished" datetime="2026-05-15T11:00:00+09:00">2026-05-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-12 10:49:24" itemprop="dateModified" datetime="2026-05-12T10:49:24+09:00">2026-05-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Infrastructure/" itemprop="url" rel="index"><span itemprop="name">Infrastructure</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">명령과 조회를 분리하는 CQRS 패턴의 구조, 구현 방법, Event Sourcing과의 관계를 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="CQRS란"><a href="#CQRS란" class="headerlink" title="CQRS란?"></a>CQRS란?</h2><p><strong>CQRS(Command Query Responsibility Segregation)</strong> 는 <em>“명령(Command)과 조회(Query)의 책임을 분리한다”</em> 는 단순한 원칙에서 출발한 아키텍처 패턴입니다. Greg Young이 정립한 이 패턴은 읽기와 쓰기의 모델·저장소·코드 경로를 분리함으로써, 각각을 독립적으로 최적화할 수 있게 합니다.</p>
+<p>전통적인 CRUD 모델은 동일한 데이터 모델로 읽기와 쓰기를 모두 처리하지만, 복잡한 도메인에서는 두 요구사항이 본질적으로 다릅니다.</p>
+<h2 id="왜-분리하는가"><a href="#왜-분리하는가" class="headerlink" title="왜 분리하는가?"></a>왜 분리하는가?</h2><table>
+<thead>
+<tr>
+<th>관점</th>
+<th>명령 (Command)</th>
+<th>조회 (Query)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>목적</td>
+<td>상태 변경</td>
+<td>데이터 반환</td>
+</tr>
+<tr>
+<td>모델</td>
+<td>도메인 규칙 중심</td>
+<td>UI&#x2F;리포트 친화</td>
+</tr>
+<tr>
+<td>정규화</td>
+<td>정규화된 구조</td>
+<td>비정규화된 뷰</td>
+</tr>
+<tr>
+<td>일관성</td>
+<td>강한 일관성</td>
+<td>결과적 일관성 허용</td>
+</tr>
+<tr>
+<td>확장</td>
+<td>쓰기 위주</td>
+<td>읽기 위주 (캐시&#x2F;리플리카)</td>
+</tr>
+</tbody></table>
+<h2 id="기본-구조"><a href="#기본-구조" class="headerlink" title="기본 구조"></a>기본 구조</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[Client]</span><br><span class="line">   │ Command           │ Query</span><br><span class="line">   ▼                   ▼</span><br><span class="line">[Command Handler]   [Query Handler]</span><br><span class="line">   │                   │</span><br><span class="line">[Write Model/DB]    [Read Model/DB]</span><br><span class="line">        ▲               ▲</span><br><span class="line">        └──── Event ────┘</span><br></pre></td></tr></table></figure>
+
+<p>쓰기 모델이 변경될 때 발생한 이벤트를 통해 읽기 모델을 갱신하는 구조가 일반적입니다.</p>
+<h2 id="Spring-기반-구현-예시"><a href="#Spring-기반-구현-예시" class="headerlink" title="Spring 기반 구현 예시"></a>Spring 기반 구현 예시</h2><h3 id="Command-쪽"><a href="#Command-쪽" class="headerlink" title="Command 쪽"></a>Command 쪽</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">record</span> <span class="title class_">PlaceOrderCommand</span><span class="params">(Long userId, List&lt;OrderItem&gt; items)</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="meta">@RequiredArgsConstructor</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">OrderCommandService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> OrderRepository orderRepository;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ApplicationEventPublisher publisher;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Transactional</span></span><br><span class="line">    <span class="keyword">public</span> Long <span class="title function_">handle</span><span class="params">(PlaceOrderCommand cmd)</span> &#123;</span><br><span class="line">        <span class="type">Order</span> <span class="variable">order</span> <span class="operator">=</span> Order.place(cmd.userId(), cmd.items());</span><br><span class="line">        orderRepository.save(order);</span><br><span class="line">        publisher.publishEvent(<span class="keyword">new</span> <span class="title class_">OrderPlacedEvent</span>(order.getId()));</span><br><span class="line">        <span class="keyword">return</span> order.getId();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Query-쪽"><a href="#Query-쪽" class="headerlink" title="Query 쪽"></a>Query 쪽</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">record</span> <span class="title class_">OrderSummaryView</span><span class="params">(Long id, String userName, <span class="type">int</span> totalAmount, String status)</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="meta">@RequiredArgsConstructor</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">OrderQueryService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> JdbcTemplate jdbc;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> List&lt;OrderSummaryView&gt; <span class="title function_">findRecentOrders</span><span class="params">(Long userId)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> jdbc.query(<span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">            SELECT o.id, u.name, o.total_amount, o.status</span></span><br><span class="line"><span class="string">            FROM order_summary o</span></span><br><span class="line"><span class="string">            JOIN user_view u ON u.id = o.user_id</span></span><br><span class="line"><span class="string">            WHERE o.user_id = ?</span></span><br><span class="line"><span class="string">            ORDER BY o.created_at DESC</span></span><br><span class="line"><span class="string">            LIMIT 20</span></span><br><span class="line"><span class="string">            &quot;&quot;&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;userId&#125;, (rs, i) -&gt; <span class="keyword">new</span> <span class="title class_">OrderSummaryView</span>(</span><br><span class="line">                rs.getLong(<span class="number">1</span>), rs.getString(<span class="number">2</span>), rs.getInt(<span class="number">3</span>), rs.getString(<span class="number">4</span>)));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>읽기 모델은 JOIN을 제거한 비정규화 뷰 테이블을 사용해 빠른 응답을 제공합니다.</p>
+<h2 id="Event-Sourcing과의-결합"><a href="#Event-Sourcing과의-결합" class="headerlink" title="Event Sourcing과의 결합"></a>Event Sourcing과의 결합</h2><p>CQRS는 종종 <strong>Event Sourcing</strong>과 함께 사용됩니다. 쓰기 모델이 상태가 아닌 이벤트 스트림을 저장하면, 다양한 형태의 읽기 모델을 자유롭게 도출할 수 있습니다.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 이벤트 저장</span></span><br><span class="line">eventStore.append(orderId, <span class="keyword">new</span> <span class="title class_">OrderPlaced</span>(...));</span><br><span class="line">eventStore.append(orderId, <span class="keyword">new</span> <span class="title class_">OrderPaid</span>(...));</span><br><span class="line">eventStore.append(orderId, <span class="keyword">new</span> <span class="title class_">OrderShipped</span>(...));</span><br><span class="line"></span><br><span class="line"><span class="comment">// 읽기 모델 프로젝터</span></span><br><span class="line"><span class="meta">@EventListener</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">on</span><span class="params">(OrderShipped e)</span> &#123;</span><br><span class="line">    jdbc.update(<span class="string">&quot;UPDATE order_summary SET status=&#x27;SHIPPED&#x27; WHERE id=?&quot;</span>, e.orderId());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="적용-시나리오"><a href="#적용-시나리오" class="headerlink" title="적용 시나리오"></a>적용 시나리오</h2><p>CQRS가 유효한 상황은 다음과 같습니다.</p>
+<ul>
+<li><strong>읽기&#x2F;쓰기 부하 비대칭</strong> - 읽기 트래픽이 압도적으로 큰 경우</li>
+<li><strong>복잡한 도메인 로직</strong> - 쓰기 모델이 풍부한 비즈니스 규칙 보유</li>
+<li><strong>다양한 조회 요구</strong> - 동일 데이터를 다양한 관점에서 조회</li>
+<li><strong>감사·이력 추적</strong> 필요 (Event Sourcing 결합)</li>
+</ul>
+<h2 id="도입-시-단점"><a href="#도입-시-단점" class="headerlink" title="도입 시 단점"></a>도입 시 단점</h2><ul>
+<li>시스템 복잡도 증가, 인프라 구성요소가 많아짐</li>
+<li>읽기 모델은 보통 <strong>결과적 일관성</strong> - UI 즉시성 요구와 충돌 가능</li>
+<li>이벤트 스키마 진화 관리가 까다로움</li>
+<li>단순 CRUD에는 과한 설계</li>
+</ul>
+<h2 id="부분-적용"><a href="#부분-적용" class="headerlink" title="부분 적용"></a>부분 적용</h2><p>전체 시스템에 CQRS를 적용할 필요는 없습니다. <strong>읽기 부담이 큰 일부 도메인</strong>(대시보드, 검색, 리포트)에만 부분적으로 적용하는 것이 현실적인 출발점입니다.</p>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>CQRS는 명령과 조회의 비대칭을 인정하고, 각각에 최적화된 모델을 갖춤으로써 복잡한 시스템의 성능과 유지보수성을 끌어올립니다. 다만 모든 시스템에 필요한 패턴은 아니며, <em>도메인의 복잡도와 부하 패턴</em>을 정확히 파악한 뒤 도입을 결정해야 합니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98/" rel="tag"># 아키텍처</a>
+              <a href="/tags/CQRS/" rel="tag"># CQRS</a>
+              <a href="/tags/EventSourcing/" rel="tag"># EventSourcing</a>
+              <a href="/tags/%ED%8C%A8%ED%84%B4/" rel="tag"># 패턴</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/event-driven-architecture/" rel="prev" title="이벤트 기반 아키텍처(EDA) 이해">
+      <i class="fa fa-chevron-left"></i> 이벤트 기반 아키텍처(EDA) 이해
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/ddd-basics/" rel="next" title="도메인 주도 설계(DDD) 기초">
+      도메인 주도 설계(DDD) 기초 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#CQRS%EB%9E%80"><span class="nav-number">1.</span> <span class="nav-text">CQRS란?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%99%9C-%EB%B6%84%EB%A6%AC%ED%95%98%EB%8A%94%EA%B0%80"><span class="nav-number">2.</span> <span class="nav-text">왜 분리하는가?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B8%B0%EB%B3%B8-%EA%B5%AC%EC%A1%B0"><span class="nav-number">3.</span> <span class="nav-text">기본 구조</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spring-%EA%B8%B0%EB%B0%98-%EA%B5%AC%ED%98%84-%EC%98%88%EC%8B%9C"><span class="nav-number">4.</span> <span class="nav-text">Spring 기반 구현 예시</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Command-%EC%AA%BD"><span class="nav-number">4.1.</span> <span class="nav-text">Command 쪽</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Query-%EC%AA%BD"><span class="nav-number">4.2.</span> <span class="nav-text">Query 쪽</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Event-Sourcing%EA%B3%BC%EC%9D%98-%EA%B2%B0%ED%95%A9"><span class="nav-number">5.</span> <span class="nav-text">Event Sourcing과의 결합</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%81%EC%9A%A9-%EC%8B%9C%EB%82%98%EB%A6%AC%EC%98%A4"><span class="nav-number">6.</span> <span class="nav-text">적용 시나리오</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%8F%84%EC%9E%85-%EC%8B%9C-%EB%8B%A8%EC%A0%90"><span class="nav-number">7.</span> <span class="nav-text">도입 시 단점</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B6%80%EB%B6%84-%EC%A0%81%EC%9A%A9"><span class="nav-number">8.</span> <span class="nav-text">부분 적용</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">9.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">114</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">307</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

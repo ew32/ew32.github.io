@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="CSRF 공격이 성립하는 조건을 이해하고, SameSite 쿠키와 CSRF 토큰 등 현대적인 방어 기법을 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CSRF 공격 원리와 방어 방법">
+<meta property="og:url" content="https://ew32.github.io/posts/csrf-attack-defense/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="CSRF 공격이 성립하는 조건을 이해하고, SameSite 쿠키와 CSRF 토큰 등 현대적인 방어 기법을 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-12T05:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-12T01:49:24.838Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="웹보안">
+<meta property="article:tag" content="CSRF">
+<meta property="article:tag" content="공격방어">
+<meta property="article:tag" content="OWASP">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/csrf-attack-defense/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>CSRF 공격 원리와 방어 방법 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/csrf-attack-defense/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CSRF 공격 원리와 방어 방법
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+              
+
+              <time title="Post created: 2026-05-12 14:00:00 / Updated at: 10:49:24" itemprop="dateCreated datePublished" datetime="2026-05-12T14:00:00+09:00">2026-05-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Security/" itemprop="url" rel="index"><span itemprop="name">Security</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">CSRF 공격이 성립하는 조건을 이해하고, SameSite 쿠키와 CSRF 토큰 등 현대적인 방어 기법을 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="CSRF란"><a href="#CSRF란" class="headerlink" title="CSRF란?"></a>CSRF란?</h2><p>**CSRF(Cross-Site Request Forgery)**는 인증된 사용자의 <strong>브라우저를 속여</strong>, 사용자가 의도하지 않은 요청을 신뢰받는 사이트로 보내게 만드는 공격입니다. 사용자가 이미 로그인한 상태이고, 브라우저가 자동으로 쿠키를 첨부한다는 사실을 악용합니다.</p>
+<p>핵심은 “공격자가 사용자의 세션 쿠키를 <strong>읽지는 못하지만</strong>, 사용자가 그 쿠키와 함께 요청을 보내도록 <strong>유도</strong>할 수 있다”는 점입니다.</p>
+<h2 id="공격이-성립하는-조건"><a href="#공격이-성립하는-조건" class="headerlink" title="공격이 성립하는 조건"></a>공격이 성립하는 조건</h2><p>CSRF가 성공하려면 다음 세 조건이 동시에 충족되어야 합니다.</p>
+<ol>
+<li>피해자가 대상 사이트에 <strong>이미 로그인</strong>되어 있다(쿠키 보유).</li>
+<li>인증 정보가 <strong>자동으로</strong> 전송된다(쿠키, Basic Auth 등).</li>
+<li>서버가 <strong>요청의 출처(Origin)를 검증하지 않는다</strong>.</li>
+</ol>
+<h2 id="단순한-공격-시나리오"><a href="#단순한-공격-시나리오" class="headerlink" title="단순한 공격 시나리오"></a>단순한 공격 시나리오</h2><p>은행 송금 API가 다음과 같이 GET으로 작동한다고 가정합시다.</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET /transfer?to=attacker&amp;amount=1000000</span><br></pre></td></tr></table></figure>
+
+<p>공격자는 자신의 사이트에 다음 HTML을 심어둡니다.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">&quot;https://bank.example.com/transfer?to=attacker&amp;amount=1000000&quot;</span></span></span><br><span class="line"><span class="tag">     <span class="attr">width</span>=<span class="string">&quot;0&quot;</span> <span class="attr">height</span>=<span class="string">&quot;0&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>로그인한 사용자가 이 페이지를 방문하기만 해도 송금이 실행됩니다. 사용자의 브라우저가 자동으로 쿠키를 첨부했기 때문입니다.</p>
+<h2 id="방어-1-SameSite-쿠키"><a href="#방어-1-SameSite-쿠키" class="headerlink" title="방어 1: SameSite 쿠키"></a>방어 1: SameSite 쿠키</h2><p>현대 브라우저는 쿠키의 <code>SameSite</code> 속성으로 <strong>크로스 사이트 요청 시 쿠키 자동 전송</strong>을 제한할 수 있습니다.</p>
+<table>
+<thead>
+<tr>
+<th>값</th>
+<th>동작</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Strict</code></td>
+<td>크로스 사이트 요청에 쿠키 미전송. 외부 링크 클릭도 차단</td>
+</tr>
+<tr>
+<td><code>Lax</code></td>
+<td>안전한 Top-Level GET만 허용 (기본값)</td>
+</tr>
+<tr>
+<td><code>None</code></td>
+<td>모든 요청에 전송, 단 <code>Secure</code> 필수</td>
+</tr>
+</tbody></table>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Set-Cookie</span><span class="punctuation">: </span>session=abc123; HttpOnly; Secure; SameSite=Lax</span><br></pre></td></tr></table></figure>
+
+<p><strong>Lax</strong>가 현재 대부분의 브라우저 기본값이며, 일반적인 웹 앱에서는 이것만으로도 상당수의 CSRF를 차단합니다.</p>
+<h2 id="방어-2-CSRF-토큰-Synchronizer-Token"><a href="#방어-2-CSRF-토큰-Synchronizer-Token" class="headerlink" title="방어 2: CSRF 토큰(Synchronizer Token)"></a>방어 2: CSRF 토큰(Synchronizer Token)</h2><p>서버가 세션마다 <strong>예측 불가능한 랜덤 토큰</strong>을 발급하고, 폼&#x2F;요청에 포함시키도록 강제합니다. 쿠키만으로는 요청을 위조할 수 없게 됩니다.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">method</span>=<span class="string">&quot;POST&quot;</span> <span class="attr">action</span>=<span class="string">&quot;/transfer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> <span class="attr">name</span>=<span class="string">&quot;_csrf&quot;</span> <span class="attr">value</span>=<span class="string">&quot;b91a7f...&quot;</span>&gt;</span></span><br><span class="line">  ...</span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>서버 검증:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">verify_csrf</span>(<span class="params">request</span>):</span><br><span class="line">    token = request.form.get(<span class="string">&quot;_csrf&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> token <span class="keyword">or</span> token != request.session.get(<span class="string">&quot;csrf_token&quot;</span>):</span><br><span class="line">        abort(<span class="number">403</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="방어-3-Double-Submit-Cookie"><a href="#방어-3-Double-Submit-Cookie" class="headerlink" title="방어 3: Double Submit Cookie"></a>방어 3: Double Submit Cookie</h2><p>세션 저장소가 부담스러운 경우, 쿠키와 헤더에 <strong>동일한 값</strong>을 넣고 비교하는 방식이 있습니다.</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Cookie</span><span class="punctuation">: </span>csrf_token=abc123</span><br><span class="line"><span class="attribute">X-CSRF-TOKEN</span><span class="punctuation">: </span>abc123</span><br></pre></td></tr></table></figure>
+
+<p>공격자는 다른 도메인에서 쿠키를 <strong>읽거나 헤더를 직접 설정할 수 없으므로</strong>, 두 값이 일치한다는 사실로 합법 요청을 확인할 수 있습니다. 다만 서브도메인 인젝션 공격을 막기 위해 토큰을 <strong>HMAC 서명</strong>하는 변형이 권장됩니다.</p>
+<h2 id="방어-4-Origin-Referer-헤더-검증"><a href="#방어-4-Origin-Referer-헤더-검증" class="headerlink" title="방어 4: Origin&#x2F;Referer 헤더 검증"></a>방어 4: Origin&#x2F;Referer 헤더 검증</h2><p>상태 변경 요청에 대해 <code>Origin</code> 또는 <code>Referer</code> 헤더가 자기 도메인과 일치하는지 확인합니다.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">origin</span> <span class="operator">=</span> request.getHeader(<span class="string">&quot;Origin&quot;</span>);</span><br><span class="line"><span class="keyword">if</span> (!<span class="string">&quot;https://app.example.com&quot;</span>.equals(origin)) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ForbiddenException</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>브라우저가 자동으로 설정하는 헤더이므로 JS로 위조할 수 없습니다. 단, 일부 프록시나 구형 브라우저에서 헤더가 누락될 수 있어 <strong>보조적 방어</strong>로 활용합니다.</p>
+<h2 id="API-서버는-어떨까"><a href="#API-서버는-어떨까" class="headerlink" title="API 서버는 어떨까?"></a>API 서버는 어떨까?</h2><p>JWT를 Authorization 헤더로 전송하는 SPA의 경우, <strong>자동 전송되는 인증 수단이 아니므로</strong> CSRF에 본질적으로 강합니다. 하지만 인증을 <strong>쿠키 기반</strong>으로 운영한다면 SPA여도 CSRF 방어가 필요합니다.</p>
+<h2 id="REST-메서드-규약-지키기"><a href="#REST-메서드-규약-지키기" class="headerlink" title="REST 메서드 규약 지키기"></a>REST 메서드 규약 지키기</h2><p>GET 요청은 <strong>부수 효과(Side Effect)가 없어야</strong> 한다는 HTTP 시맨틱을 지키는 것 자체가 CSRF 방어의 출발점입니다. 상태를 변경하는 작업은 반드시 POST&#x2F;PUT&#x2F;DELETE를 사용하세요.</p>
+<h2 id="Best-Practices"><a href="#Best-Practices" class="headerlink" title="Best Practices"></a>Best Practices</h2><ul>
+<li><strong>SameSite&#x3D;Lax</strong> 이상을 기본값으로 적용</li>
+<li>상태 변경 엔드포인트에 <strong>CSRF 토큰</strong> 도입</li>
+<li><strong>Origin&#x2F;Referer</strong> 헤더 검증을 보조 방어로 사용</li>
+<li>인증 쿠키에 <strong>HttpOnly, Secure</strong> 플래그 필수</li>
+<li>HTTP 메서드 시맨틱(GET은 안전) 준수</li>
+<li>민감 작업에는 <strong>재인증(Step-up Auth)</strong> 요구</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>CSRF는 사용자의 브라우저가 가진 <strong>자동 인증 권한</strong>을 악용하는 공격입니다. 그래서 방어 역시 “쿠키의 자동 전송을 어떻게 제어할 것인가”라는 관점에서 출발해야 합니다. SameSite, CSRF 토큰, Origin 검증을 다층적으로 결합하면 견고한 방어선을 만들 수 있습니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%EC%9B%B9%EB%B3%B4%EC%95%88/" rel="tag"># 웹보안</a>
+              <a href="/tags/CSRF/" rel="tag"># CSRF</a>
+              <a href="/tags/%EA%B3%B5%EA%B2%A9%EB%B0%A9%EC%96%B4/" rel="tag"># 공격방어</a>
+              <a href="/tags/OWASP/" rel="tag"># OWASP</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/jwt-advanced-usage/" rel="prev" title="JWT 심화 활용과 보안 주의사항">
+      <i class="fa fa-chevron-left"></i> JWT 심화 활용과 보안 주의사항
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/xss-attack-defense/" rel="next" title="XSS 공격 유형과 방어 패턴">
+      XSS 공격 유형과 방어 패턴 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#CSRF%EB%9E%80"><span class="nav-number">1.</span> <span class="nav-text">CSRF란?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B3%B5%EA%B2%A9%EC%9D%B4-%EC%84%B1%EB%A6%BD%ED%95%98%EB%8A%94-%EC%A1%B0%EA%B1%B4"><span class="nav-number">2.</span> <span class="nav-text">공격이 성립하는 조건</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%8B%A8%EC%88%9C%ED%95%9C-%EA%B3%B5%EA%B2%A9-%EC%8B%9C%EB%82%98%EB%A6%AC%EC%98%A4"><span class="nav-number">3.</span> <span class="nav-text">단순한 공격 시나리오</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B0%A9%EC%96%B4-1-SameSite-%EC%BF%A0%ED%82%A4"><span class="nav-number">4.</span> <span class="nav-text">방어 1: SameSite 쿠키</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B0%A9%EC%96%B4-2-CSRF-%ED%86%A0%ED%81%B0-Synchronizer-Token"><span class="nav-number">5.</span> <span class="nav-text">방어 2: CSRF 토큰(Synchronizer Token)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B0%A9%EC%96%B4-3-Double-Submit-Cookie"><span class="nav-number">6.</span> <span class="nav-text">방어 3: Double Submit Cookie</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B0%A9%EC%96%B4-4-Origin-Referer-%ED%97%A4%EB%8D%94-%EA%B2%80%EC%A6%9D"><span class="nav-number">7.</span> <span class="nav-text">방어 4: Origin&#x2F;Referer 헤더 검증</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#API-%EC%84%9C%EB%B2%84%EB%8A%94-%EC%96%B4%EB%96%A8%EA%B9%8C"><span class="nav-number">8.</span> <span class="nav-text">API 서버는 어떨까?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#REST-%EB%A9%94%EC%84%9C%EB%93%9C-%EA%B7%9C%EC%95%BD-%EC%A7%80%ED%82%A4%EA%B8%B0"><span class="nav-number">9.</span> <span class="nav-text">REST 메서드 규약 지키기</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Best-Practices"><span class="nav-number">10.</span> <span class="nav-text">Best Practices</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">11.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">114</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">307</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

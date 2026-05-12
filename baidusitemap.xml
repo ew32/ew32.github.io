@@ -1,99 +1,459 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>http://ew32.github.io/posts/windows-package-manager-chocolatey/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/vscode-shortcuts-extensions/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/windows-subsystem-for-linux-guide/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/vue3-composition-api/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/wsl-ubuntu-dev-environment/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/web-accessibility-basics/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/aws-lambda-serverless-intro/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/websocket-explained/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/cloud-computing-overview-md/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/windows-package-manager-chocolatey/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/css-flexbox-and-grid/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/windows-subsystem-for-linux-guide/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/difference-between-get-and-post-md/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/wsl-ubuntu-dev-environment/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/docker-container-basics/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/xss-attack-defense/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/git-branch-strategy/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/shell-scripting-basics/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/hello-world/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/spa-ssr-ssg-comparison/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/https-ssl-tls-explained/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/spring-aop-explained/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/jpa-repository-vs-mapper-comparison/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/spring-bean-lifecycle/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/moneyprinter-installation/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/spring-boot-getting-started/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/network-and-disk-based-file-systems-md/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/spring-boot-testing-strategy/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/os-scheduling-algorithms-md/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/spring-data-jpa-advanced/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/osi-7-layer-model-md/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/spring-security-basics/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/react-hooks-complete-guide/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/sql-index-optimization/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/redis-caching-strategies/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/sql-injection-defense/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/restful-api-design-principles/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/svelte-introduction/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/semantic-html-tags-overview/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/symmetric-vs-asymmetric-encryption/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/session-cookie-jwt-comparison-md/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/sync-async-blocking-nonblocking/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/sql-index-optimization/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/tailwind-css-getting-started/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/typescript-getting-started/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/tcp-vs-udp/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
   <url>
-    <loc>http://ew32.github.io/posts/understanding-public-private-key-encryption/</loc>
-    <lastmod>2026-05-11</lastmod>
+    <loc>https://ew32.github.io/posts/terraform-basics/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/tmux-guide/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/transactions-and-acid/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/typescript-getting-started/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/understanding-public-private-key-encryption/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/vim-basics/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/network-and-disk-based-file-systems-md/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/nextjs-app-router/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/nosql-vs-sql/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/oauth2-flows-explained/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/orm-vs-query-builder/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/os-scheduling-algorithms-md/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/osi-7-layer-model-md/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/owasp-top-10-overview/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/password-hashing-bcrypt-argon2/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/process-vs-thread/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/rag-explained/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/rate-limiting-strategies/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/react-hooks-complete-guide/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/react-router-guide/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/react-state-management-comparison/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/redis-caching-strategies/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/regex-complete-guide/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/restful-api-design-principles/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/saga-pattern/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/semantic-html-tags-overview/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/session-cookie-jwt-comparison-md/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/sharding-and-partitioning/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/java-stream-api/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-async-promise-await/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-closures/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-debounce-throttle/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-deep-shallow-copy/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-destructuring-spread/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-event-loop/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-module-systems/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-prototype-chain/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-this-binding/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/jpa-repository-vs-mapper-comparison/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/jwt-advanced-usage/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/kubernetes-introduction/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/langchain-basics/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/linux-file-permissions/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/load-balancer-types/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/memory-management-paging-segmentation/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/microservices-architecture/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/moneyprinter-installation/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/mongodb-basics/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/monolithic-vs-msa/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/mysql-vs-postgresql/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/api-gateway-pattern/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/aws-ec2-ecs-eks-comparison/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/aws-lambda-serverless-intro/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/aws-s3-guide/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/browser-rendering-process/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/cdn-how-it-works/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/chatgpt-prompt-engineering/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/circuit-breaker-pattern/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/claude-effective-usage/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/clean-architecture-overview/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/cloud-computing-overview-md/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/code-splitting-guide/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/concurrency-control-locks/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/core-web-vitals-optimization/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/cors-explained/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/cqrs-pattern/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/csrf-attack-defense/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/css-animations-basics/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/css-flexbox-and-grid/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/css-variables-guide/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/database-connection-pool/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/database-migration-strategy/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/database-normalization/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/ddd-basics/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/design-patterns-singleton/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/difference-between-get-and-post-md/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/dns-how-it-works/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/docker-container-basics/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/es6-essential-syntax/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/event-driven-architecture/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/git-branch-strategy/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/github-actions-getting-started/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/github-copilot-usage/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/hello-world/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/hexagonal-architecture/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/http2-vs-http3/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/https-ssl-tls-explained/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/image-optimization-strategies/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/java-garbage-collection/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/java-multithreading-basics/</loc>
+    <lastmod>2026-05-12</lastmod>
+  </url>
+  <url>
+    <loc>https://ew32.github.io/posts/java-optional-guide/</loc>
+    <lastmod>2026-05-12</lastmod>
   </url>
 </urlset> 

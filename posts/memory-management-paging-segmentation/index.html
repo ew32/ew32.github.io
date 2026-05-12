@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="운영체제가 메모리를 효율적으로 관리하는 두 가지 핵심 기법인 페이징과 세그멘테이션을 비교 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="메모리 관리 - 페이징과 세그멘테이션">
+<meta property="og:url" content="https://ew32.github.io/posts/memory-management-paging-segmentation/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="운영체제가 메모리를 효율적으로 관리하는 두 가지 핵심 기법인 페이징과 세그멘테이션을 비교 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-25T00:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-12T01:49:24.839Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="메모리관리">
+<meta property="article:tag" content="페이징">
+<meta property="article:tag" content="세그멘테이션">
+<meta property="article:tag" content="OS">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/memory-management-paging-segmentation/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>메모리 관리 - 페이징과 세그멘테이션 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/memory-management-paging-segmentation/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          메모리 관리 - 페이징과 세그멘테이션
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-25 09:00:00" itemprop="dateCreated datePublished" datetime="2026-05-25T09:00:00+09:00">2026-05-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-12 10:49:24" itemprop="dateModified" datetime="2026-05-12T10:49:24+09:00">2026-05-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/System/" itemprop="url" rel="index"><span itemprop="name">System</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/System/OS/" itemprop="url" rel="index"><span itemprop="name">OS</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">운영체제가 메모리를 효율적으로 관리하는 두 가지 핵심 기법인 페이징과 세그멘테이션을 비교 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="들어가며"><a href="#들어가며" class="headerlink" title="들어가며"></a>들어가며</h2><p>현대 운영체제에서 메모리는 물리적인 RAM 그대로 사용되지 않습니다. 운영체제는 <strong>가상 메모리(Virtual Memory)</strong> 라는 추상화를 통해 각 프로세스에게 독립된 메모리 공간을 제공합니다. 이 가상 메모리를 실제 물리 메모리에 매핑하는 대표적인 두 가지 기법이 <strong>페이징(Paging)</strong> 과 <strong>세그멘테이션(Segmentation)</strong> 입니다.</p>
+<h2 id="메모리-단편화-문제"><a href="#메모리-단편화-문제" class="headerlink" title="메모리 단편화 문제"></a>메모리 단편화 문제</h2><p>연속 할당 방식(Contiguous Allocation)은 프로세스에게 메모리를 연속된 한 덩어리로 할당합니다. 시간이 지나면 다음 두 가지 문제가 발생합니다.</p>
+<ul>
+<li><strong>외부 단편화(External Fragmentation)</strong>: 사용 가능한 메모리는 충분하지만, 연속된 공간이 없어 할당하지 못함</li>
+<li><strong>내부 단편화(Internal Fragmentation)</strong>: 할당받은 공간 중 사용하지 않는 부분</li>
+</ul>
+<p>이 문제를 해결하기 위해 비연속 할당 방식인 페이징과 세그멘테이션이 등장했습니다.</p>
+<h2 id="페이징-Paging"><a href="#페이징-Paging" class="headerlink" title="페이징(Paging)"></a>페이징(Paging)</h2><p>페이징은 메모리를 <strong>고정 크기</strong>의 블록으로 나누어 관리합니다.</p>
+<ul>
+<li><strong>페이지(Page)</strong>: 가상 메모리의 고정 크기 블록 (보통 4KB)</li>
+<li><strong>프레임(Frame)</strong>: 물리 메모리의 고정 크기 블록 (페이지와 동일 크기)</li>
+<li><strong>페이지 테이블(Page Table)</strong>: 가상 페이지 → 물리 프레임 매핑 정보</li>
+</ul>
+<p>가상 주소는 <code>[페이지 번호 | 오프셋]</code> 형태로 구성되며, MMU(Memory Management Unit)가 페이지 테이블을 조회해 물리 주소로 변환합니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">가상 주소: [페이지 번호 5 | 오프셋 100]</span><br><span class="line">페이지 테이블[5] = 프레임 12</span><br><span class="line">물리 주소: 프레임 12 시작 주소 + 100</span><br></pre></td></tr></table></figure>
+
+<h3 id="페이징의-장단점"><a href="#페이징의-장단점" class="headerlink" title="페이징의 장단점"></a>페이징의 장단점</h3><table>
+<thead>
+<tr>
+<th>장점</th>
+<th>단점</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>외부 단편화 없음</td>
+<td>내부 단편화 발생 (마지막 페이지)</td>
+</tr>
+<tr>
+<td>메모리 할당 단순</td>
+<td>페이지 테이블 자체가 메모리 차지</td>
+</tr>
+<tr>
+<td>가상 메모리 구현에 적합</td>
+<td>주소 변환 오버헤드 (TLB로 완화)</td>
+</tr>
+</tbody></table>
+<h2 id="세그멘테이션-Segmentation"><a href="#세그멘테이션-Segmentation" class="headerlink" title="세그멘테이션(Segmentation)"></a>세그멘테이션(Segmentation)</h2><p>세그멘테이션은 메모리를 <strong>논리적인 단위</strong>(Code, Data, Stack, Heap)로 나누어 관리합니다. 각 세그먼트의 크기는 가변적입니다.</p>
+<ul>
+<li><strong>세그먼트 테이블(Segment Table)</strong>: 각 세그먼트의 시작 주소(Base)와 크기(Limit) 저장</li>
+<li>가상 주소는 <code>[세그먼트 번호 | 오프셋]</code> 형태</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">가상 주소: [세그먼트 2 | 오프셋 500]</span><br><span class="line">세그먼트 테이블[2] = (Base: 0x4000, Limit: 1000)</span><br><span class="line">오프셋 500 &lt; Limit 1000 → 유효</span><br><span class="line">물리 주소: 0x4000 + 500</span><br></pre></td></tr></table></figure>
+
+<h3 id="세그멘테이션의-장단점"><a href="#세그멘테이션의-장단점" class="headerlink" title="세그멘테이션의 장단점"></a>세그멘테이션의 장단점</h3><table>
+<thead>
+<tr>
+<th>장점</th>
+<th>단점</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>프로그램 구조에 맞춤(코드, 데이터 등)</td>
+<td>외부 단편화 발생</td>
+</tr>
+<tr>
+<td>보호 및 공유 단위 명확</td>
+<td>가변 크기로 관리 복잡</td>
+</tr>
+<tr>
+<td>내부 단편화 없음</td>
+<td>메모리 할당 비효율적일 수 있음</td>
+</tr>
+</tbody></table>
+<h2 id="페이징-vs-세그멘테이션"><a href="#페이징-vs-세그멘테이션" class="headerlink" title="페이징 vs 세그멘테이션"></a>페이징 vs 세그멘테이션</h2><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>페이징</th>
+<th>세그멘테이션</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>분할 단위</td>
+<td>고정 크기 페이지</td>
+<td>가변 크기 세그먼트</td>
+</tr>
+<tr>
+<td>단편화</td>
+<td>내부 단편화</td>
+<td>외부 단편화</td>
+</tr>
+<tr>
+<td>분할 기준</td>
+<td>물리적 크기</td>
+<td>논리적 의미</td>
+</tr>
+<tr>
+<td>주소 형태</td>
+<td>(페이지 번호, 오프셋)</td>
+<td>(세그먼트 번호, 오프셋)</td>
+</tr>
+</tbody></table>
+<h2 id="Segmented-Paging-혼합-방식"><a href="#Segmented-Paging-혼합-방식" class="headerlink" title="Segmented Paging (혼합 방식)"></a>Segmented Paging (혼합 방식)</h2><p>실제 x86 아키텍처는 <strong>세그멘테이션 + 페이징</strong>을 모두 사용해 왔습니다. 세그먼트로 논리적 분리를 하고, 각 세그먼트 내부를 페이지로 관리합니다. 다만 현대 x86-64에서는 세그멘테이션이 거의 사용되지 않고, 페이징 중심으로 동작합니다.</p>
+<h2 id="TLB와-성능-최적화"><a href="#TLB와-성능-최적화" class="headerlink" title="TLB와 성능 최적화"></a>TLB와 성능 최적화</h2><p>페이징의 주소 변환은 페이지 테이블을 메모리에서 읽어와야 해 느립니다. 이를 해결하기 위해 <strong>TLB(Translation Lookaside Buffer)</strong> 라는 CPU 내부 캐시를 사용합니다.</p>
+<ul>
+<li>TLB 히트(Hit): 빠르게 주소 변환 완료</li>
+<li>TLB 미스(Miss): 메모리에서 페이지 테이블 읽어옴</li>
+</ul>
+<p>다단계 페이지 테이블(Multi-level Page Table)은 페이지 테이블 자체의 메모리 사용을 줄여 줍니다.</p>
+<h2 id="페이지-폴트-Page-Fault"><a href="#페이지-폴트-Page-Fault" class="headerlink" title="페이지 폴트(Page Fault)"></a>페이지 폴트(Page Fault)</h2><p>가상 메모리에서는 모든 페이지가 항상 메모리에 있는 것이 아닙니다. 접근하려는 페이지가 디스크(스왑 영역)에 있을 때 <strong>페이지 폴트</strong>가 발생합니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1. 페이지 폴트 인터럽트 발생</span><br><span class="line">2. OS가 디스크에서 페이지 로드</span><br><span class="line">3. 페이지 테이블 갱신</span><br><span class="line">4. 명령어 재실행</span><br></pre></td></tr></table></figure>
+
+<p>페이지 교체 알고리즘(FIFO, LRU, LFU 등)은 어떤 페이지를 디스크로 내보낼지 결정합니다.</p>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>페이징은 고정 크기로 메모리를 분할해 단순하고 효율적인 관리를 제공하며, 세그멘테이션은 프로그램의 논리 구조에 맞춰 메모리를 보호하고 공유하는 데 유리합니다. 현대 운영체제는 주로 페이징을 사용하며, TLB와 다단계 페이지 테이블, 페이지 교체 알고리즘 등으로 성능을 최적화합니다. 메모리 관리 기법을 이해하면 가상 메모리, 캐시, 시스템 성능 튜닝의 기반을 확실하게 다질 수 있습니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%EB%A9%94%EB%AA%A8%EB%A6%AC%EA%B4%80%EB%A6%AC/" rel="tag"># 메모리관리</a>
+              <a href="/tags/%ED%8E%98%EC%9D%B4%EC%A7%95/" rel="tag"># 페이징</a>
+              <a href="/tags/%EC%84%B8%EA%B7%B8%EB%A9%98%ED%85%8C%EC%9D%B4%EC%85%98/" rel="tag"># 세그멘테이션</a>
+              <a href="/tags/OS/" rel="tag"># OS</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/sync-async-blocking-nonblocking/" rel="prev" title="동기/비동기 vs 블로킹/논블로킹 차이">
+      <i class="fa fa-chevron-left"></i> 동기/비동기 vs 블로킹/논블로킹 차이
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/linux-file-permissions/" rel="next" title="리눅스 파일 권한 완벽 이해">
+      리눅스 파일 권한 완벽 이해 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%93%A4%EC%96%B4%EA%B0%80%EB%A9%B0"><span class="nav-number">1.</span> <span class="nav-text">들어가며</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A9%94%EB%AA%A8%EB%A6%AC-%EB%8B%A8%ED%8E%B8%ED%99%94-%EB%AC%B8%EC%A0%9C"><span class="nav-number">2.</span> <span class="nav-text">메모리 단편화 문제</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%8E%98%EC%9D%B4%EC%A7%95-Paging"><span class="nav-number">3.</span> <span class="nav-text">페이징(Paging)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%ED%8E%98%EC%9D%B4%EC%A7%95%EC%9D%98-%EC%9E%A5%EB%8B%A8%EC%A0%90"><span class="nav-number">3.1.</span> <span class="nav-text">페이징의 장단점</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%84%B8%EA%B7%B8%EB%A9%98%ED%85%8C%EC%9D%B4%EC%85%98-Segmentation"><span class="nav-number">4.</span> <span class="nav-text">세그멘테이션(Segmentation)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%84%B8%EA%B7%B8%EB%A9%98%ED%85%8C%EC%9D%B4%EC%85%98%EC%9D%98-%EC%9E%A5%EB%8B%A8%EC%A0%90"><span class="nav-number">4.1.</span> <span class="nav-text">세그멘테이션의 장단점</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%8E%98%EC%9D%B4%EC%A7%95-vs-%EC%84%B8%EA%B7%B8%EB%A9%98%ED%85%8C%EC%9D%B4%EC%85%98"><span class="nav-number">5.</span> <span class="nav-text">페이징 vs 세그멘테이션</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Segmented-Paging-%ED%98%BC%ED%95%A9-%EB%B0%A9%EC%8B%9D"><span class="nav-number">6.</span> <span class="nav-text">Segmented Paging (혼합 방식)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TLB%EC%99%80-%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94"><span class="nav-number">7.</span> <span class="nav-text">TLB와 성능 최적화</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%8E%98%EC%9D%B4%EC%A7%80-%ED%8F%B4%ED%8A%B8-Page-Fault"><span class="nav-number">8.</span> <span class="nav-text">페이지 폴트(Page Fault)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">9.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">114</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">307</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

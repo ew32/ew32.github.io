@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="AWS의 컴퓨팅 서비스인 EC2, ECS, EKS의 차이와 선택 기준을 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AWS EC2, ECS, EKS 비교">
+<meta property="og:url" content="https://ew32.github.io/posts/aws-ec2-ecs-eks-comparison/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="AWS의 컴퓨팅 서비스인 EC2, ECS, EKS의 차이와 선택 기준을 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-26T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-12T01:49:24.838Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="AWS">
+<meta property="article:tag" content="EC2">
+<meta property="article:tag" content="ECS">
+<meta property="article:tag" content="EKS">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/aws-ec2-ecs-eks-comparison/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>AWS EC2, ECS, EKS 비교 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/aws-ec2-ecs-eks-comparison/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          AWS EC2, ECS, EKS 비교
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-26 11:00:00" itemprop="dateCreated datePublished" datetime="2026-05-26T11:00:00+09:00">2026-05-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-12 10:49:24" itemprop="dateModified" datetime="2026-05-12T10:49:24+09:00">2026-05-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Cloud/" itemprop="url" rel="index"><span itemprop="name">Cloud</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Cloud/Infrastructure/" itemprop="url" rel="index"><span itemprop="name">Infrastructure</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">AWS의 컴퓨팅 서비스인 EC2, ECS, EKS의 차이와 선택 기준을 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="들어가며"><a href="#들어가며" class="headerlink" title="들어가며"></a>들어가며</h2><p>AWS에는 애플리케이션을 실행할 수 있는 여러 컴퓨팅 서비스가 있습니다. 그중에서도 <strong>EC2</strong>, <strong>ECS</strong>, <strong>EKS</strong>는 가장 자주 비교되는 세 가지입니다. 비슷해 보이지만 추상화 수준과 운영 책임의 범위가 다릅니다. 이 글에서는 각 서비스의 특징과 선택 기준을 정리합니다.</p>
+<h2 id="EC2-가상-서버"><a href="#EC2-가상-서버" class="headerlink" title="EC2: 가상 서버"></a>EC2: 가상 서버</h2><p><strong>Amazon EC2(Elastic Compute Cloud)</strong> 는 AWS에서 가장 기본적이고 오래된 컴퓨팅 서비스입니다. 가상 머신을 직접 실행하고 운영체제, 미들웨어, 애플리케이션을 자유롭게 구성할 수 있습니다.</p>
+<p>특징:</p>
+<ul>
+<li>인스턴스 타입 선택(t-시리즈, m-시리즈, c-시리즈 등)</li>
+<li>AMI(Amazon Machine Image)로 부팅</li>
+<li>EBS, S3, EFS 등 스토리지 연결</li>
+<li>보안 그룹과 VPC로 네트워크 구성</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># EC2 인스턴스 실행 (AWS CLI)</span></span><br><span class="line">aws ec2 run-instances \</span><br><span class="line">    --image-id ami-0abcdef1234567890 \</span><br><span class="line">    --count 1 \</span><br><span class="line">    --instance-type t3.micro \</span><br><span class="line">    --key-name my-key \</span><br><span class="line">    --security-group-ids sg-0123456789abcdef0</span><br></pre></td></tr></table></figure>
+
+<h3 id="사용-시나리오"><a href="#사용-시나리오" class="headerlink" title="사용 시나리오"></a>사용 시나리오</h3><ul>
+<li>레거시 애플리케이션 마이그레이션</li>
+<li>컨테이너화하기 어려운 워크로드</li>
+<li>운영체제 수준 제어가 필요한 경우</li>
+<li>특정 GPU&#x2F;메모리 인스턴스가 필요한 경우</li>
+</ul>
+<h2 id="ECS-AWS-네이티브-컨테이너-오케스트레이션"><a href="#ECS-AWS-네이티브-컨테이너-오케스트레이션" class="headerlink" title="ECS: AWS 네이티브 컨테이너 오케스트레이션"></a>ECS: AWS 네이티브 컨테이너 오케스트레이션</h2><p><strong>Amazon ECS(Elastic Container Service)</strong> 는 AWS가 자체 개발한 컨테이너 오케스트레이션 플랫폼입니다. Kubernetes보다 단순하며 AWS 서비스와 깊게 통합되어 있습니다.</p>
+<p>핵심 개념:</p>
+<ul>
+<li><strong>Task Definition</strong>: 컨테이너의 명세 (이미지, CPU, 메모리, 환경 변수)</li>
+<li><strong>Task</strong>: Task Definition의 실행 인스턴스</li>
+<li><strong>Service</strong>: 일정 수의 Task를 유지하는 컨트롤러</li>
+<li><strong>Cluster</strong>: Task가 실행되는 논리 그룹</li>
+</ul>
+<p>실행 모드는 두 가지입니다.</p>
+<table>
+<thead>
+<tr>
+<th>모드</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>EC2 Launch Type</td>
+<td>EC2 인스턴스 위에서 컨테이너 실행, 인프라 관리 필요</td>
+</tr>
+<tr>
+<td>Fargate</td>
+<td>서버리스, 컨테이너만 신경 쓰면 됨</td>
+</tr>
+</tbody></table>
+<h3 id="Task-Definition-예시"><a href="#Task-Definition-예시" class="headerlink" title="Task Definition 예시"></a>Task Definition 예시</h3><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;family&quot;</span><span class="punctuation">:</span> <span class="string">&quot;web-app&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;networkMode&quot;</span><span class="punctuation">:</span> <span class="string">&quot;awsvpc&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;requiresCompatibilities&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;FARGATE&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;cpu&quot;</span><span class="punctuation">:</span> <span class="string">&quot;256&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;memory&quot;</span><span class="punctuation">:</span> <span class="string">&quot;512&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;containerDefinitions&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;nginx&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;image&quot;</span><span class="punctuation">:</span> <span class="string">&quot;nginx:1.25&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;portMappings&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">&#123;</span> <span class="attr">&quot;containerPort&quot;</span><span class="punctuation">:</span> <span class="number">80</span> <span class="punctuation">&#125;</span><span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="사용-시나리오-1"><a href="#사용-시나리오-1" class="headerlink" title="사용 시나리오"></a>사용 시나리오</h3><ul>
+<li>AWS 중심의 컨테이너 운영</li>
+<li>Kubernetes 학습 부담을 피하고 싶을 때</li>
+<li>Fargate로 서버리스 운영 원할 때</li>
+<li>IAM, ALB, CloudWatch와 빠르게 통합하려 할 때</li>
+</ul>
+<h2 id="EKS-매니지드-Kubernetes"><a href="#EKS-매니지드-Kubernetes" class="headerlink" title="EKS: 매니지드 Kubernetes"></a>EKS: 매니지드 Kubernetes</h2><p><strong>Amazon EKS(Elastic Kubernetes Service)</strong> 는 AWS가 운영하는 매니지드 Kubernetes 서비스입니다. 컨트롤 플레인은 AWS가 관리하고, 사용자는 워커 노드와 워크로드만 관리합니다.</p>
+<p>특징:</p>
+<ul>
+<li>표준 Kubernetes API와 100% 호환</li>
+<li>EC2, Fargate 모두 워커 노드로 사용 가능</li>
+<li>AWS IAM과 RBAC 통합</li>
+<li>클라우드 간 이식성 우수</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># eksctl로 클러스터 생성</span></span><br><span class="line">eksctl create cluster \</span><br><span class="line">    --name my-cluster \</span><br><span class="line">    --region ap-northeast-2 \</span><br><span class="line">    --nodegroup-name workers \</span><br><span class="line">    --node-type t3.medium \</span><br><span class="line">    --nodes 3</span><br></pre></td></tr></table></figure>
+
+<h3 id="사용-시나리오-2"><a href="#사용-시나리오-2" class="headerlink" title="사용 시나리오"></a>사용 시나리오</h3><ul>
+<li>멀티 클라우드&#x2F;하이브리드 전략</li>
+<li>Kubernetes 생태계 도구를 적극 활용할 때 (Helm, Istio, ArgoCD 등)</li>
+<li>대규모 마이크로서비스 운영</li>
+<li>표준 K8s 경험 보유</li>
+</ul>
+<h2 id="세-서비스-비교"><a href="#세-서비스-비교" class="headerlink" title="세 서비스 비교"></a>세 서비스 비교</h2><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>EC2</th>
+<th>ECS</th>
+<th>EKS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>추상화 수준</td>
+<td>VM</td>
+<td>컨테이너</td>
+<td>컨테이너(K8s)</td>
+</tr>
+<tr>
+<td>학습 곡선</td>
+<td>낮음</td>
+<td>중간</td>
+<td>높음</td>
+</tr>
+<tr>
+<td>AWS 종속성</td>
+<td>중간</td>
+<td>높음</td>
+<td>낮음</td>
+</tr>
+<tr>
+<td>운영 부담</td>
+<td>높음</td>
+<td>낮음(Fargate 시 최소)</td>
+<td>중간</td>
+</tr>
+<tr>
+<td>가격(컨트롤 플레인)</td>
+<td>없음</td>
+<td>없음</td>
+<td>시간당 $0.10</td>
+</tr>
+<tr>
+<td>이식성</td>
+<td>낮음</td>
+<td>낮음</td>
+<td>높음</td>
+</tr>
+<tr>
+<td>생태계</td>
+<td>모든 OS&#x2F;소프트웨어</td>
+<td>AWS 중심</td>
+<td>CNCF 표준</td>
+</tr>
+</tbody></table>
+<h2 id="선택-기준"><a href="#선택-기준" class="headerlink" title="선택 기준"></a>선택 기준</h2><p><strong>EC2를 선택해야 할 때</strong></p>
+<ul>
+<li>컨테이너화가 어려운 레거시 애플리케이션</li>
+<li>운영체제와 커널 수준 제어가 필요할 때</li>
+<li>특정 하드웨어(GPU, 고메모리)가 필요한 경우</li>
+</ul>
+<p><strong>ECS를 선택해야 할 때</strong></p>
+<ul>
+<li>AWS 중심으로 운영하며 단순함을 원할 때</li>
+<li>Fargate로 서버리스 컨테이너 운영</li>
+<li>Kubernetes의 복잡도를 피하고 싶을 때</li>
+</ul>
+<p><strong>EKS를 선택해야 할 때</strong></p>
+<ul>
+<li>Kubernetes 표준 API 필요</li>
+<li>멀티 클라우드 또는 온프레미스 호환성 필요</li>
+<li>복잡한 마이크로서비스 아키텍처</li>
+<li>CNCF 생태계 도구 적극 활용</li>
+</ul>
+<h2 id="Fargate-공통-서버리스-옵션"><a href="#Fargate-공통-서버리스-옵션" class="headerlink" title="Fargate: 공통 서버리스 옵션"></a>Fargate: 공통 서버리스 옵션</h2><p>ECS와 EKS 모두 Fargate를 통해 <strong>서버리스 컨테이너</strong>를 실행할 수 있습니다. 노드 관리, OS 패치, 스케일링을 AWS가 자동 처리합니다.</p>
+<p>장점:</p>
+<ul>
+<li>인프라 관리 불필요</li>
+<li>컨테이너 단위 과금</li>
+<li>자동 격리와 보안 강화</li>
+</ul>
+<p>단점:</p>
+<ul>
+<li>인스턴스 직접 사용 대비 비용 높음</li>
+<li>일부 고급 기능 제한</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>EC2는 가장 유연하고 익숙한 가상 서버, ECS는 AWS 네이티브의 단순한 컨테이너 플랫폼, EKS는 표준 Kubernetes 기반의 강력한 오케스트레이션을 제공합니다. 정답은 없습니다. 팀의 Kubernetes 역량, AWS 의존도, 이식성 요구사항, 운영 부담 등을 종합해 결정해야 합니다. 시작이 어렵다면 <strong>ECS + Fargate</strong> 조합으로 단순하게 출발해, 필요 시 EKS로 확장하는 전략도 좋은 선택입니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/AWS/" rel="tag"># AWS</a>
+              <a href="/tags/EC2/" rel="tag"># EC2</a>
+              <a href="/tags/ECS/" rel="tag"># ECS</a>
+              <a href="/tags/EKS/" rel="tag"># EKS</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/aws-s3-guide/" rel="prev" title="AWS S3 활용 가이드">
+      <i class="fa fa-chevron-left"></i> AWS S3 활용 가이드
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/terraform-basics/" rel="next" title="Terraform 기초 - IaC로 인프라 관리하기">
+      Terraform 기초 - IaC로 인프라 관리하기 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%93%A4%EC%96%B4%EA%B0%80%EB%A9%B0"><span class="nav-number">1.</span> <span class="nav-text">들어가며</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EC2-%EA%B0%80%EC%83%81-%EC%84%9C%EB%B2%84"><span class="nav-number">2.</span> <span class="nav-text">EC2: 가상 서버</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%82%AC%EC%9A%A9-%EC%8B%9C%EB%82%98%EB%A6%AC%EC%98%A4"><span class="nav-number">2.1.</span> <span class="nav-text">사용 시나리오</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ECS-AWS-%EB%84%A4%EC%9D%B4%ED%8B%B0%EB%B8%8C-%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88-%EC%98%A4%EC%BC%80%EC%8A%A4%ED%8A%B8%EB%A0%88%EC%9D%B4%EC%85%98"><span class="nav-number">3.</span> <span class="nav-text">ECS: AWS 네이티브 컨테이너 오케스트레이션</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Task-Definition-%EC%98%88%EC%8B%9C"><span class="nav-number">3.1.</span> <span class="nav-text">Task Definition 예시</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%82%AC%EC%9A%A9-%EC%8B%9C%EB%82%98%EB%A6%AC%EC%98%A4-1"><span class="nav-number">3.2.</span> <span class="nav-text">사용 시나리오</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EKS-%EB%A7%A4%EB%8B%88%EC%A7%80%EB%93%9C-Kubernetes"><span class="nav-number">4.</span> <span class="nav-text">EKS: 매니지드 Kubernetes</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%82%AC%EC%9A%A9-%EC%8B%9C%EB%82%98%EB%A6%AC%EC%98%A4-2"><span class="nav-number">4.1.</span> <span class="nav-text">사용 시나리오</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%84%B8-%EC%84%9C%EB%B9%84%EC%8A%A4-%EB%B9%84%EA%B5%90"><span class="nav-number">5.</span> <span class="nav-text">세 서비스 비교</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%84%A0%ED%83%9D-%EA%B8%B0%EC%A4%80"><span class="nav-number">6.</span> <span class="nav-text">선택 기준</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fargate-%EA%B3%B5%ED%86%B5-%EC%84%9C%EB%B2%84%EB%A6%AC%EC%8A%A4-%EC%98%B5%EC%85%98"><span class="nav-number">7.</span> <span class="nav-text">Fargate: 공통 서버리스 옵션</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">8.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">114</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">307</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>
