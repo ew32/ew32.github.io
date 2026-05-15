@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="HTTP 캐싱의 핵심인 Cache-Control, ETag, Last-Modified 헤더의 동작 원리와 실전 설정법을 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTP 캐싱 헤더 완벽 가이드 - Cache-Control, ETag, Last-Modified">
+<meta property="og:url" content="https://ew32.github.io/posts/http-caching-headers/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="HTTP 캐싱의 핵심인 Cache-Control, ETag, Last-Modified 헤더의 동작 원리와 실전 설정법을 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-06-16T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-15T07:07:06.936Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="HTTP">
+<meta property="article:tag" content="Performance">
+<meta property="article:tag" content="캐싱">
+<meta property="article:tag" content="웹 최적화">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/http-caching-headers/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>HTTP 캐싱 헤더 완벽 가이드 - Cache-Control, ETag, Last-Modified | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/http-caching-headers/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          HTTP 캐싱 헤더 완벽 가이드 - Cache-Control, ETag, Last-Modified
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-06-16 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-16T10:00:00+09:00">2026-06-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-15 16:07:06" itemprop="dateModified" datetime="2026-05-15T16:07:06+09:00">2026-05-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/HTTP/" itemprop="url" rel="index"><span itemprop="name">HTTP</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">HTTP 캐싱의 핵심인 Cache-Control, ETag, Last-Modified 헤더의 동작 원리와 실전 설정법을 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="HTTP-캐싱이-중요한-이유"><a href="#HTTP-캐싱이-중요한-이유" class="headerlink" title="HTTP 캐싱이 중요한 이유"></a>HTTP 캐싱이 중요한 이유</h2><p>같은 리소스를 매번 네트워크로 가져온다면 트래픽 비용과 응답 시간이 모두 늘어납니다. HTTP 캐싱은 브라우저, 프록시, CDN이 응답을 저장해 두었다가 재사용함으로써 “가장 빠른 요청은 보내지 않은 요청”이라는 격언을 실현합니다. 핵심 헤더 세 가지를 차근차근 정리해 봅시다.</p>
+<h2 id="Cache-Control-캐싱의-정책을-정의한다"><a href="#Cache-Control-캐싱의-정책을-정의한다" class="headerlink" title="Cache-Control: 캐싱의 정책을 정의한다"></a>Cache-Control: 캐싱의 정책을 정의한다</h2><p><code>Cache-Control</code>은 응답이 어떻게, 얼마나 오래 캐시될 수 있는지를 지정하는 가장 중요한 헤더입니다.</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Cache-Control</span><span class="punctuation">: </span>public, max-age=31536000, immutable</span><br><span class="line"><span class="attribute">Cache-Control</span><span class="punctuation">: </span>private, no-cache</span><br><span class="line"><span class="attribute">Cache-Control</span><span class="punctuation">: </span>no-store</span><br></pre></td></tr></table></figure>
+
+<p>자주 쓰이는 디렉티브를 정리하면 다음과 같습니다.</p>
+<ul>
+<li><code>public</code> &#x2F; <code>private</code>: CDN처럼 중간 캐시도 저장 가능한지(&#x3D;public) 또는 최종 사용자만(&#x3D;private) 저장할 수 있는지.</li>
+<li><code>max-age=N</code>: N초 동안은 캐시를 그대로 사용해도 좋다(fresh).</li>
+<li><code>s-maxage=N</code>: 공유 캐시(CDN) 전용 max-age. <code>max-age</code>를 덮어씁니다.</li>
+<li><code>no-cache</code>: 캐시는 하되, 사용 전에 반드시 서버에 재검증 요청을 보낸다.</li>
+<li><code>no-store</code>: 어떤 캐시에도 저장하지 않는다(민감 데이터에 사용).</li>
+<li><code>immutable</code>: 만료 전에는 절대 변하지 않으니 재검증조차 하지 말라.</li>
+</ul>
+<h2 id="ETag-콘텐츠-지문으로-재검증"><a href="#ETag-콘텐츠-지문으로-재검증" class="headerlink" title="ETag: 콘텐츠 지문으로 재검증"></a>ETag: 콘텐츠 지문으로 재검증</h2><p><code>ETag</code>는 리소스의 내용에 대한 고유 식별자(해시 또는 버전)입니다. 클라이언트는 이전 응답에서 받은 ETag를 다음 요청에 <code>If-None-Match</code>로 실어 보냅니다.</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/style.css</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">If-None-Match</span><span class="punctuation">: </span>&quot;v2-9c1e3f&quot;</span><br><span class="line"></span><br><span class="line"><span class="language-http"><span class="meta">HTTP/1.1</span> <span class="number">304</span> Not Modified</span></span><br><span class="line"><span class="language-http"><span class="attribute">ETag</span><span class="punctuation">: </span>&quot;v2-9c1e3f&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>서버는 ETag가 같으면 본문 없이 <code>304 Not Modified</code>로 응답하여 대역폭을 크게 절약합니다. 동적으로 생성된 페이지나 API 응답에 특히 유용합니다.</p>
+<h2 id="Last-Modified-시간-기반-재검증"><a href="#Last-Modified-시간-기반-재검증" class="headerlink" title="Last-Modified: 시간 기반 재검증"></a>Last-Modified: 시간 기반 재검증</h2><p>ETag보다 단순하게, 마지막 수정 시각을 기준으로 검증할 수도 있습니다. 클라이언트는 <code>If-Modified-Since</code>에 이전에 받은 시각을 그대로 실어 보냅니다.</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/report.pdf</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">If-Modified-Since</span><span class="punctuation">: </span>Wed, 10 Jun 2026 09:00:00 GMT</span><br><span class="line"></span><br><span class="line"><span class="language-apache"><span class="attribute">HTTP</span>/<span class="number">1</span>.<span class="number">1</span> <span class="number">304</span> Not Modified</span></span><br></pre></td></tr></table></figure>
+
+<p>ETag와 Last-Modified가 모두 있으면 클라이언트는 둘 다 함께 보내며, 서버는 ETag를 우선적으로 사용합니다.</p>
+<h2 id="실전-캐시-전략"><a href="#실전-캐시-전략" class="headerlink" title="실전 캐시 전략"></a>실전 캐시 전략</h2><p>리소스의 성격에 따라 정책을 다르게 가져가는 것이 핵심입니다.</p>
+<table>
+<thead>
+<tr>
+<th>리소스 종류</th>
+<th>권장 Cache-Control</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>해시 파일명 정적 자산 (<code>app.9f3a.js</code>)</td>
+<td><code>public, max-age=31536000, immutable</code></td>
+</tr>
+<tr>
+<td>HTML 진입 페이지</td>
+<td><code>no-cache</code> (또는 <code>max-age=0, must-revalidate</code>)</td>
+</tr>
+<tr>
+<td>인증된 사용자 API 응답</td>
+<td><code>private, no-cache</code></td>
+</tr>
+<tr>
+<td>로그인 후 민감 정보</td>
+<td><code>no-store</code></td>
+</tr>
+<tr>
+<td>자주 바뀌는 공개 리스트</td>
+<td><code>public, max-age=60, s-maxage=300</code></td>
+</tr>
+</tbody></table>
+<h2 id="Nginx-설정-예시"><a href="#Nginx-설정-예시" class="headerlink" title="Nginx 설정 예시"></a>Nginx 설정 예시</h2><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> <span class="regexp">~* \.(?:css|js)$</span> &#123;</span><br><span class="line">    <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;public, max-age=31536000, immutable&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">location</span> = /index.html &#123;</span><br><span class="line">    <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;no-cache&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">location</span> /api/ &#123;</span><br><span class="line">    <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;private, no-cache&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Stale-While-Revalidate로-체감-속도-끌어올리기"><a href="#Stale-While-Revalidate로-체감-속도-끌어올리기" class="headerlink" title="Stale-While-Revalidate로 체감 속도 끌어올리기"></a>Stale-While-Revalidate로 체감 속도 끌어올리기</h2><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Cache-Control</span><span class="punctuation">: </span>max-age=60, stale-while-revalidate=600</span><br></pre></td></tr></table></figure>
+
+<p>이 설정은 “60초 동안은 신선한 캐시, 이후 600초 동안은 일단 stale 응답을 즉시 돌려주고 백그라운드에서 다시 가져와라”는 의미입니다. SWR은 사용자 체감 성능을 매우 효과적으로 끌어올리며, CDN 단에서도 점차 표준이 되고 있습니다.</p>
+<h2 id="디버깅-팁"><a href="#디버깅-팁" class="headerlink" title="디버깅 팁"></a>디버깅 팁</h2><ul>
+<li>브라우저 DevTools의 Network 탭에서 <code>Size</code> 컬럼이 “(disk cache)” 또는 “(memory cache)”로 표시되는지 확인하세요.</li>
+<li><code>curl -I https://example.com/asset.js</code>로 실제로 내려오는 헤더를 보세요.</li>
+<li>CDN(Cloudflare 등)을 사용한다면 <code>CF-Cache-Status: HIT|MISS|REVALIDATED</code> 같은 자체 헤더도 함께 보면 도움이 됩니다.</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>캐싱 헤더는 보이지 않는 곳에서 성능을 결정짓는 중요한 레버입니다. 정적 자산은 길게, HTML은 짧게, API는 정책적으로—이 세 가지 원칙만 지켜도 사이트 성능은 눈에 띄게 좋아집니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/HTTP/" rel="tag"># HTTP</a>
+              <a href="/tags/Performance/" rel="tag"># Performance</a>
+              <a href="/tags/%EC%BA%90%EC%8B%B1/" rel="tag"># 캐싱</a>
+              <a href="/tags/%EC%9B%B9-%EC%B5%9C%EC%A0%81%ED%99%94/" rel="tag"># 웹 최적화</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/tls-handshake-explained/" rel="prev" title="TLS 1.3 핸드셰이크 완벽 이해">
+      <i class="fa fa-chevron-left"></i> TLS 1.3 핸드셰이크 완벽 이해
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/webhook-vs-polling/" rel="next" title="Webhook vs Polling - 무엇을 언제 써야 할까">
+      Webhook vs Polling - 무엇을 언제 써야 할까 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP-%EC%BA%90%EC%8B%B1%EC%9D%B4-%EC%A4%91%EC%9A%94%ED%95%9C-%EC%9D%B4%EC%9C%A0"><span class="nav-number">1.</span> <span class="nav-text">HTTP 캐싱이 중요한 이유</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cache-Control-%EC%BA%90%EC%8B%B1%EC%9D%98-%EC%A0%95%EC%B1%85%EC%9D%84-%EC%A0%95%EC%9D%98%ED%95%9C%EB%8B%A4"><span class="nav-number">2.</span> <span class="nav-text">Cache-Control: 캐싱의 정책을 정의한다</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ETag-%EC%BD%98%ED%85%90%EC%B8%A0-%EC%A7%80%EB%AC%B8%EC%9C%BC%EB%A1%9C-%EC%9E%AC%EA%B2%80%EC%A6%9D"><span class="nav-number">3.</span> <span class="nav-text">ETag: 콘텐츠 지문으로 재검증</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Last-Modified-%EC%8B%9C%EA%B0%84-%EA%B8%B0%EB%B0%98-%EC%9E%AC%EA%B2%80%EC%A6%9D"><span class="nav-number">4.</span> <span class="nav-text">Last-Modified: 시간 기반 재검증</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%8B%A4%EC%A0%84-%EC%BA%90%EC%8B%9C-%EC%A0%84%EB%9E%B5"><span class="nav-number">5.</span> <span class="nav-text">실전 캐시 전략</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Nginx-%EC%84%A4%EC%A0%95-%EC%98%88%EC%8B%9C"><span class="nav-number">6.</span> <span class="nav-text">Nginx 설정 예시</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Stale-While-Revalidate%EB%A1%9C-%EC%B2%B4%EA%B0%90-%EC%86%8D%EB%8F%84-%EB%81%8C%EC%96%B4%EC%98%AC%EB%A6%AC%EA%B8%B0"><span class="nav-number">7.</span> <span class="nav-text">Stale-While-Revalidate로 체감 속도 끌어올리기</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%94%94%EB%B2%84%EA%B9%85-%ED%8C%81"><span class="nav-number">8.</span> <span class="nav-text">디버깅 팁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">9.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">214</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">506</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

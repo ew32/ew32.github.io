@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="데이터베이스 데드락이 발생하는 원리와 잠금 순서, 타임아웃, 재시도 등 실무에서 사용하는 데드락 예방 및 해결 방법을 자세히 설명합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="데이터베이스 데드락 발생 원인과 해결 전략">
+<meta property="og:url" content="https://ew32.github.io/posts/database-deadlock-resolution/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="데이터베이스 데드락이 발생하는 원리와 잠금 순서, 타임아웃, 재시도 등 실무에서 사용하는 데드락 예방 및 해결 방법을 자세히 설명합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-04-16T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-15T07:07:06.935Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Database">
+<meta property="article:tag" content="Lock">
+<meta property="article:tag" content="Deadlock">
+<meta property="article:tag" content="Transaction">
+<meta property="article:tag" content="MySQL">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/database-deadlock-resolution/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>데이터베이스 데드락 발생 원인과 해결 전략 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/database-deadlock-resolution/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          데이터베이스 데드락 발생 원인과 해결 전략
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-04-16 10:00:00" itemprop="dateCreated datePublished" datetime="2026-04-16T10:00:00+09:00">2026-04-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-15 16:07:06" itemprop="dateModified" datetime="2026-05-15T16:07:06+09:00">2026-05-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">데이터베이스 데드락이 발생하는 원리와 잠금 순서, 타임아웃, 재시도 등 실무에서 사용하는 데드락 예방 및 해결 방법을 자세히 설명합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="데드락이란"><a href="#데드락이란" class="headerlink" title="데드락이란?"></a>데드락이란?</h2><p>데드락(Deadlock)은 두 개 이상의 트랜잭션이 서로가 보유한 자원의 해제를 기다리면서 영원히 진행되지 않는 상태를 말합니다. 데이터베이스에서는 행 락, 갭 락, 테이블 락 등 다양한 락이 얽혀 발생합니다.</p>
+<h2 id="데드락-발생-조건-Coffman-조건"><a href="#데드락-발생-조건-Coffman-조건" class="headerlink" title="데드락 발생 조건 (Coffman 조건)"></a>데드락 발생 조건 (Coffman 조건)</h2><p>데드락은 다음 네 가지 조건이 동시에 만족될 때 발생합니다.</p>
+<ol>
+<li><strong>상호 배제(Mutual Exclusion)</strong>: 자원은 한 번에 한 트랜잭션만 점유</li>
+<li><strong>점유와 대기(Hold and Wait)</strong>: 자원을 점유한 상태에서 다른 자원을 기다림</li>
+<li><strong>비선점(No Preemption)</strong>: 자원을 강제로 빼앗을 수 없음</li>
+<li><strong>순환 대기(Circular Wait)</strong>: 자원 점유와 대기 관계가 순환을 이룸</li>
+</ol>
+<p>이 중 하나라도 깨면 데드락은 발생하지 않습니다. 실무에서는 주로 <strong>순환 대기</strong> 를 막는 전략을 사용합니다.</p>
+<h2 id="전형적인-데드락-시나리오"><a href="#전형적인-데드락-시나리오" class="headerlink" title="전형적인 데드락 시나리오"></a>전형적인 데드락 시나리오</h2><h3 id="잠금-순서-차이로-인한-데드락"><a href="#잠금-순서-차이로-인한-데드락" class="headerlink" title="잠금 순서 차이로 인한 데드락"></a>잠금 순서 차이로 인한 데드락</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- T1</span></span><br><span class="line"><span class="keyword">BEGIN</span>;</span><br><span class="line"><span class="keyword">UPDATE</span> accounts <span class="keyword">SET</span> balance <span class="operator">=</span> balance <span class="operator">-</span> <span class="number">100</span> <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"><span class="comment">-- T1이 id=1 락 보유</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- T2</span></span><br><span class="line"><span class="keyword">BEGIN</span>;</span><br><span class="line"><span class="keyword">UPDATE</span> accounts <span class="keyword">SET</span> balance <span class="operator">=</span> balance <span class="operator">-</span> <span class="number">50</span> <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">2</span>;</span><br><span class="line"><span class="comment">-- T2가 id=2 락 보유</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- T1</span></span><br><span class="line"><span class="keyword">UPDATE</span> accounts <span class="keyword">SET</span> balance <span class="operator">=</span> balance <span class="operator">+</span> <span class="number">100</span> <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">2</span>; <span class="comment">-- 대기</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- T2</span></span><br><span class="line"><span class="keyword">UPDATE</span> accounts <span class="keyword">SET</span> balance <span class="operator">=</span> balance <span class="operator">+</span> <span class="number">50</span> <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">1</span>; <span class="comment">-- 대기</span></span><br><span class="line"><span class="comment">-- 데드락 발생!</span></span><br></pre></td></tr></table></figure>
+
+<p>T1은 id&#x3D;1, id&#x3D;2 순서로 락을 잡으려 했고, T2는 id&#x3D;2, id&#x3D;1 순서로 잡으려 했기 때문에 순환 대기가 만들어졌습니다.</p>
+<h3 id="인덱스-갭-락에-의한-데드락-MySQL"><a href="#인덱스-갭-락에-의한-데드락-MySQL" class="headerlink" title="인덱스 갭 락에 의한 데드락 (MySQL)"></a>인덱스 갭 락에 의한 데드락 (MySQL)</h3><p>InnoDB의 REPEATABLE READ에서는 갭 락이 추가로 잡혀 의외의 데드락이 발생합니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- T1, T2가 동시에 다음을 실행</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> orders(user_id, amount) <span class="keyword">VALUES</span> (<span class="number">100</span>, <span class="number">1000</span>);</span><br><span class="line"><span class="comment">-- 인덱스 갭 락 충돌로 데드락 가능</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="데드락-감지와-처리"><a href="#데드락-감지와-처리" class="headerlink" title="데드락 감지와 처리"></a>데드락 감지와 처리</h2><p>대부분의 DBMS는 데드락을 자동으로 감지하고, 비용이 적은 트랜잭션을 victim으로 선택해 롤백시킵니다.</p>
+<h3 id="MySQL-데드락-로그-확인"><a href="#MySQL-데드락-로그-확인" class="headerlink" title="MySQL 데드락 로그 확인"></a>MySQL 데드락 로그 확인</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SHOW</span> ENGINE INNODB STATUS\G</span><br><span class="line"><span class="comment">-- LATEST DETECTED DEADLOCK 섹션 확인</span></span><br></pre></td></tr></table></figure>
+
+<p>PostgreSQL은 <code>deadlock_timeout</code>(기본 1초) 이상 락 대기 시 데드락 검사를 수행하고, 발견되면 에러를 반환합니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ERROR: deadlock detected</span><br><span class="line">DETAIL: Process 12345 waits for ShareLock on transaction 678; ...</span><br></pre></td></tr></table></figure>
+
+<h2 id="데드락-예방-전략"><a href="#데드락-예방-전략" class="headerlink" title="데드락 예방 전략"></a>데드락 예방 전략</h2><h3 id="1-잠금-순서-통일"><a href="#1-잠금-순서-통일" class="headerlink" title="1. 잠금 순서 통일"></a>1. 잠금 순서 통일</h3><p>가장 효과적인 방법입니다. 여러 행을 갱신할 때 항상 동일한 순서(예: id 오름차순)로 락을 잡도록 규약을 만듭니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 항상 더 작은 id를 먼저 락</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> accounts</span><br><span class="line"><span class="keyword">WHERE</span> id <span class="keyword">IN</span> (<span class="number">1</span>, <span class="number">2</span>)</span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span> id</span><br><span class="line"><span class="keyword">FOR</span> <span class="keyword">UPDATE</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-트랜잭션을-짧게-유지"><a href="#2-트랜잭션을-짧게-유지" class="headerlink" title="2. 트랜잭션을 짧게 유지"></a>2. 트랜잭션을 짧게 유지</h3><p>트랜잭션 길이가 길수록 락 보유 시간이 길어져 충돌 확률이 올라갑니다. 외부 API 호출이나 무거운 계산을 트랜잭션 안에 두지 않습니다.</p>
+<h3 id="3-적절한-인덱스-설계"><a href="#3-적절한-인덱스-설계" class="headerlink" title="3. 적절한 인덱스 설계"></a>3. 적절한 인덱스 설계</h3><p>인덱스가 없으면 풀 스캔이 발생해 더 많은 행에 락이 걸립니다. 핵심 갱신 쿼리에는 반드시 인덱스를 만듭니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 인덱스 없으면 모든 행 락 가능</span></span><br><span class="line"><span class="keyword">UPDATE</span> orders <span class="keyword">SET</span> status <span class="operator">=</span> <span class="string">&#x27;paid&#x27;</span> <span class="keyword">WHERE</span> user_id <span class="operator">=</span> <span class="number">100</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-격리-수준-조정"><a href="#4-격리-수준-조정" class="headerlink" title="4. 격리 수준 조정"></a>4. 격리 수준 조정</h3><p>REPEATABLE READ의 갭 락이 자주 문제를 일으킨다면 READ COMMITTED로 낮추는 것을 고려할 수 있습니다. 단, 비즈니스 요구사항을 충분히 검토해야 합니다.</p>
+<h3 id="5-락-타임아웃-설정"><a href="#5-락-타임아웃-설정" class="headerlink" title="5. 락 타임아웃 설정"></a>5. 락 타임아웃 설정</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- MySQL</span></span><br><span class="line"><span class="keyword">SET</span> innodb_lock_wait_timeout <span class="operator">=</span> <span class="number">5</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- PostgreSQL</span></span><br><span class="line"><span class="keyword">SET</span> lock_timeout <span class="operator">=</span> <span class="string">&#x27;3s&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>영원히 대기하지 않도록 타임아웃을 두는 것이 중요합니다.</p>
+<h2 id="재시도-로직-구현"><a href="#재시도-로직-구현" class="headerlink" title="재시도 로직 구현"></a>재시도 로직 구현</h2><p>데드락은 완전히 없앨 수 없으므로, 애플리케이션에서 <strong>자동 재시도</strong> 를 구현하는 것이 표준 패턴입니다.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; T <span class="title function_">executeWithRetry</span><span class="params">(Supplier&lt;T&gt; action)</span> &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">maxAttempts</span> <span class="operator">=</span> <span class="number">3</span>;</span><br><span class="line">    <span class="type">long</span> <span class="variable">backoffMs</span> <span class="operator">=</span> <span class="number">50</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">attempt</span> <span class="operator">=</span> <span class="number">1</span>; attempt &lt;= maxAttempts; attempt++) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> action.get();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (DeadlockLoserDataAccessException e) &#123;</span><br><span class="line">            <span class="keyword">if</span> (attempt == maxAttempts) <span class="keyword">throw</span> e;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                Thread.sleep(backoffMs * attempt);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException ie) &#123;</span><br><span class="line">                Thread.currentThread().interrupt();</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(ie);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(<span class="string">&quot;unreachable&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Spring의 <code>@Retryable</code>이나 Resilience4j 같은 도구를 사용해도 됩니다.</p>
+<h2 id="락-정보-모니터링"><a href="#락-정보-모니터링" class="headerlink" title="락 정보 모니터링"></a>락 정보 모니터링</h2><h3 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 현재 락과 대기 정보</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> performance_schema.data_locks;</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> performance_schema.data_lock_waits;</span><br></pre></td></tr></table></figure>
+
+<h3 id="PostgreSQL"><a href="#PostgreSQL" class="headerlink" title="PostgreSQL"></a>PostgreSQL</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">  blocked_locks.pid <span class="keyword">AS</span> blocked_pid,</span><br><span class="line">  blocking_locks.pid <span class="keyword">AS</span> blocking_pid,</span><br><span class="line">  blocked_activity.query <span class="keyword">AS</span> blocked_query,</span><br><span class="line">  blocking_activity.query <span class="keyword">AS</span> blocking_query</span><br><span class="line"><span class="keyword">FROM</span> pg_locks blocked_locks</span><br><span class="line"><span class="keyword">JOIN</span> pg_stat_activity blocked_activity <span class="keyword">ON</span> blocked_activity.pid <span class="operator">=</span> blocked_locks.pid</span><br><span class="line"><span class="keyword">JOIN</span> pg_locks blocking_locks</span><br><span class="line">  <span class="keyword">ON</span> blocking_locks.locktype <span class="operator">=</span> blocked_locks.locktype</span><br><span class="line">  <span class="keyword">AND</span> blocking_locks.granted <span class="operator">=</span> <span class="literal">TRUE</span></span><br><span class="line">  <span class="keyword">AND</span> blocking_locks.pid <span class="operator">&lt;&gt;</span> blocked_locks.pid</span><br><span class="line"><span class="keyword">JOIN</span> pg_stat_activity blocking_activity <span class="keyword">ON</span> blocking_activity.pid <span class="operator">=</span> blocking_locks.pid</span><br><span class="line"><span class="keyword">WHERE</span> <span class="keyword">NOT</span> blocked_locks.granted;</span><br></pre></td></tr></table></figure>
+
+<h2 id="데드락-해결-체크리스트"><a href="#데드락-해결-체크리스트" class="headerlink" title="데드락 해결 체크리스트"></a>데드락 해결 체크리스트</h2><ol>
+<li>데드락 로그를 수집하고 패턴 분석</li>
+<li>관련 쿼리의 실행 계획과 잠금 동작 확인</li>
+<li>잠금 순서 표준화</li>
+<li>트랜잭션 범위 축소</li>
+<li>인덱스 보강</li>
+<li>재시도 로직 도입</li>
+<li>필요 시 격리 수준 조정</li>
+</ol>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>데드락은 다중 트랜잭션 환경에서 피할 수 없는 현상이지만, 일관된 잠금 순서·짧은 트랜잭션·적절한 인덱스·재시도 로직을 통해 충분히 관리할 수 있습니다. 발생 시에는 로그를 분석해 원인을 파악하고 구조적 개선을 적용하는 습관이 안정적인 서비스를 만듭니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Database/" rel="tag"># Database</a>
+              <a href="/tags/Lock/" rel="tag"># Lock</a>
+              <a href="/tags/Deadlock/" rel="tag"># Deadlock</a>
+              <a href="/tags/Transaction/" rel="tag"># Transaction</a>
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/elasticsearch-basics/" rel="prev" title="Elasticsearch 기초 - 역색인부터 쿼리 DSL까지">
+      <i class="fa fa-chevron-left"></i> Elasticsearch 기초 - 역색인부터 쿼리 DSL까지
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/cap-theorem-explained/" rel="next" title="CAP 정리와 PACELC - 분산 데이터베이스의 트레이드오프">
+      CAP 정리와 PACELC - 분산 데이터베이스의 트레이드오프 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%8D%B0%EB%93%9C%EB%9D%BD%EC%9D%B4%EB%9E%80"><span class="nav-number">1.</span> <span class="nav-text">데드락이란?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%8D%B0%EB%93%9C%EB%9D%BD-%EB%B0%9C%EC%83%9D-%EC%A1%B0%EA%B1%B4-Coffman-%EC%A1%B0%EA%B1%B4"><span class="nav-number">2.</span> <span class="nav-text">데드락 발생 조건 (Coffman 조건)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%84%ED%98%95%EC%A0%81%EC%9D%B8-%EB%8D%B0%EB%93%9C%EB%9D%BD-%EC%8B%9C%EB%82%98%EB%A6%AC%EC%98%A4"><span class="nav-number">3.</span> <span class="nav-text">전형적인 데드락 시나리오</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%9E%A0%EA%B8%88-%EC%88%9C%EC%84%9C-%EC%B0%A8%EC%9D%B4%EB%A1%9C-%EC%9D%B8%ED%95%9C-%EB%8D%B0%EB%93%9C%EB%9D%BD"><span class="nav-number">3.1.</span> <span class="nav-text">잠금 순서 차이로 인한 데드락</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%9D%B8%EB%8D%B1%EC%8A%A4-%EA%B0%AD-%EB%9D%BD%EC%97%90-%EC%9D%98%ED%95%9C-%EB%8D%B0%EB%93%9C%EB%9D%BD-MySQL"><span class="nav-number">3.2.</span> <span class="nav-text">인덱스 갭 락에 의한 데드락 (MySQL)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%8D%B0%EB%93%9C%EB%9D%BD-%EA%B0%90%EC%A7%80%EC%99%80-%EC%B2%98%EB%A6%AC"><span class="nav-number">4.</span> <span class="nav-text">데드락 감지와 처리</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MySQL-%EB%8D%B0%EB%93%9C%EB%9D%BD-%EB%A1%9C%EA%B7%B8-%ED%99%95%EC%9D%B8"><span class="nav-number">4.1.</span> <span class="nav-text">MySQL 데드락 로그 확인</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%8D%B0%EB%93%9C%EB%9D%BD-%EC%98%88%EB%B0%A9-%EC%A0%84%EB%9E%B5"><span class="nav-number">5.</span> <span class="nav-text">데드락 예방 전략</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%EC%9E%A0%EA%B8%88-%EC%88%9C%EC%84%9C-%ED%86%B5%EC%9D%BC"><span class="nav-number">5.1.</span> <span class="nav-text">1. 잠금 순서 통일</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%ED%8A%B8%EB%9E%9C%EC%9E%AD%EC%85%98%EC%9D%84-%EC%A7%A7%EA%B2%8C-%EC%9C%A0%EC%A7%80"><span class="nav-number">5.2.</span> <span class="nav-text">2. 트랜잭션을 짧게 유지</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%EC%A0%81%EC%A0%88%ED%95%9C-%EC%9D%B8%EB%8D%B1%EC%8A%A4-%EC%84%A4%EA%B3%84"><span class="nav-number">5.3.</span> <span class="nav-text">3. 적절한 인덱스 설계</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%EA%B2%A9%EB%A6%AC-%EC%88%98%EC%A4%80-%EC%A1%B0%EC%A0%95"><span class="nav-number">5.4.</span> <span class="nav-text">4. 격리 수준 조정</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%EB%9D%BD-%ED%83%80%EC%9E%84%EC%95%84%EC%9B%83-%EC%84%A4%EC%A0%95"><span class="nav-number">5.5.</span> <span class="nav-text">5. 락 타임아웃 설정</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9E%AC%EC%8B%9C%EB%8F%84-%EB%A1%9C%EC%A7%81-%EA%B5%AC%ED%98%84"><span class="nav-number">6.</span> <span class="nav-text">재시도 로직 구현</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%9D%BD-%EC%A0%95%EB%B3%B4-%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81"><span class="nav-number">7.</span> <span class="nav-text">락 정보 모니터링</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MySQL"><span class="nav-number">7.1.</span> <span class="nav-text">MySQL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PostgreSQL"><span class="nav-number">7.2.</span> <span class="nav-text">PostgreSQL</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%8D%B0%EB%93%9C%EB%9D%BD-%ED%95%B4%EA%B2%B0-%EC%B2%B4%ED%81%AC%EB%A6%AC%EC%8A%A4%ED%8A%B8"><span class="nav-number">8.</span> <span class="nav-text">데드락 해결 체크리스트</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">9.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">214</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">506</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

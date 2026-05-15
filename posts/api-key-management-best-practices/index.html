@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="API 키의 안전한 생성과 저장, 로테이션 전략, 코드&#x2F;저장소 누출 대응까지 운영 관점에서 필요한 모범 사례를 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="API 키 관리 모범 사례 - 발급, 저장, 로테이션">
+<meta property="og:url" content="https://ew32.github.io/posts/api-key-management-best-practices/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="API 키의 안전한 생성과 저장, 로테이션 전략, 코드&#x2F;저장소 누출 대응까지 운영 관점에서 필요한 모범 사례를 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-05-02T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-15T07:07:06.933Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="API Key">
+<meta property="article:tag" content="Secrets">
+<meta property="article:tag" content="DevSecOps">
+<meta property="article:tag" content="Authentication">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/api-key-management-best-practices/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>API 키 관리 모범 사례 - 발급, 저장, 로테이션 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/api-key-management-best-practices/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          API 키 관리 모범 사례 - 발급, 저장, 로테이션
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-05-02 10:00:00" itemprop="dateCreated datePublished" datetime="2026-05-02T10:00:00+09:00">2026-05-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-15 16:07:06" itemprop="dateModified" datetime="2026-05-15T16:07:06+09:00">2026-05-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Authentication/" itemprop="url" rel="index"><span itemprop="name">Authentication</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">API 키의 안전한 생성과 저장, 로테이션 전략, 코드/저장소 누출 대응까지 운영 관점에서 필요한 모범 사례를 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="API-키의-한계와-책임"><a href="#API-키의-한계와-책임" class="headerlink" title="API 키의 한계와 책임"></a>API 키의 한계와 책임</h2><p>API 키는 가장 단순한 인증 수단이지만, 그만큼 위험도 큽니다. JWT처럼 만료 시간이 내장되어 있지 않고, 한 번 유출되면 즉시 폐기 처리가 필요합니다. 이 글은 API 키를 운영하는 백엔드 관점에서 발급, 저장, 로테이션, 모니터링의 모범 사례를 정리합니다.</p>
+<h2 id="안전한-생성"><a href="#안전한-생성" class="headerlink" title="안전한 생성"></a>안전한 생성</h2><p>API 키는 충분한 엔트로피를 가진 난수여야 합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> secrets</span><br><span class="line"><span class="keyword">def</span> <span class="title function_">generate_api_key</span>():</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&#x27;sk_live_&#x27;</span> + secrets.token_urlsafe(<span class="number">32</span>)  <span class="comment"># 약 256bit</span></span><br></pre></td></tr></table></figure>
+
+<p>식별 가능한 접두사(<code>sk_live_</code>, <code>pk_test_</code>)를 붙이면 다음 장점이 있습니다.</p>
+<ul>
+<li>깃허브 시크릿 스캐닝이 패턴을 인식해 누출을 빠르게 감지</li>
+<li>로그에서 키 종류를 구분 가능</li>
+<li>실수로 운영&#x2F;테스트 키를 혼동하는 사고 감소</li>
+</ul>
+<p>Stripe, GitHub, OpenAI 등 주요 서비스가 모두 이 패턴을 사용합니다.</p>
+<h2 id="저장-해시만-보관하라"><a href="#저장-해시만-보관하라" class="headerlink" title="저장 - 해시만 보관하라"></a>저장 - 해시만 보관하라</h2><p>DB에 평문으로 키를 저장하면 DB 유출 시 전체 키가 노출됩니다. 비밀번호처럼 해시만 저장하고, 발급 시점에만 평문을 사용자에게 보여줍니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> hashlib</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">store_api_key</span>(<span class="params">user_id, plaintext_key</span>):</span><br><span class="line">    key_hash = hashlib.sha256(plaintext_key.encode()).hexdigest()</span><br><span class="line">    db.execute(</span><br><span class="line">        <span class="string">&#x27;INSERT INTO api_keys (user_id, key_hash, prefix, created_at) VALUES (?, ?, ?, ?)&#x27;</span>,</span><br><span class="line">        (user_id, key_hash, plaintext_key[:<span class="number">12</span>], datetime.utcnow())</span><br><span class="line">    )</span><br></pre></td></tr></table></figure>
+
+<p>검증 시에는 들어온 키를 같은 방식으로 해시한 뒤 비교합니다. 비밀번호와 달리 엔트로피가 충분하므로 bcrypt 같은 느린 해시는 필요 없지만, 사이드 채널을 막기 위해 <code>hmac.compare_digest</code>로 비교하세요.</p>
+<p>prefix(앞 8~12자) 컬럼을 두면 사용자 콘솔에서 “어떤 키였는지” 표시할 수 있습니다.</p>
+<h2 id="전송-헤더만-사용"><a href="#전송-헤더만-사용" class="headerlink" title="전송 - 헤더만 사용"></a>전송 - 헤더만 사용</h2><p>API 키는 항상 HTTPS와 Authorization 헤더로 전송해야 합니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Authorization: Bearer sk_live_abc123...</span><br></pre></td></tr></table></figure>
+
+<p>URL 쿼리스트링에 키를 넣으면 다음 위치에 평문으로 남습니다.</p>
+<ul>
+<li>웹 서버 access log</li>
+<li>프록시&#x2F;CDN 로그</li>
+<li>브라우저 히스토리, Referer 헤더</li>
+</ul>
+<p><code>?api_key=xxx</code>는 가장 흔한 누출 경로 중 하나입니다.</p>
+<h2 id="로테이션-전략"><a href="#로테이션-전략" class="headerlink" title="로테이션 전략"></a>로테이션 전략</h2><p>키는 정기적으로 교체해야 합니다. 그러나 즉시 교체는 다운타임을 야기하므로, <strong>두 키 공존(dual key)</strong> 패턴이 표준입니다.</p>
+<ol>
+<li>새 키 발급 (기존 키도 활성 상태 유지)</li>
+<li>클라이언트 측에서 새 키로 전환 배포</li>
+<li>모니터링: 기존 키 호출량이 0에 가까워졌는지 확인</li>
+<li>기존 키 폐기</li>
+</ol>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> api_keys <span class="keyword">ADD</span> <span class="keyword">COLUMN</span> status <span class="type">VARCHAR</span>(<span class="number">20</span>) <span class="keyword">DEFAULT</span> <span class="string">&#x27;active&#x27;</span>;</span><br><span class="line"><span class="comment">-- 폐기 시 status=&#x27;revoked&#x27;로 변경, 즉시 401 반환</span></span><br></pre></td></tr></table></figure>
+
+<p>자동화된 로테이션 주기는 환경에 따라 90일 또는 180일이 일반적입니다.</p>
+<h2 id="권한-최소화와-범위-지정"><a href="#권한-최소화와-범위-지정" class="headerlink" title="권한 최소화와 범위 지정"></a>권한 최소화와 범위 지정</h2><p>키 하나에 모든 권한을 부여하지 말고 scope을 분리합니다.</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;key_id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;key_abc&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;scopes&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;orders:read&quot;</span><span class="punctuation">,</span> <span class="string">&quot;products:write&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;ip_allowlist&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;203.0.113.0/24&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;rate_limit&quot;</span><span class="punctuation">:</span> <span class="number">100</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>읽기 전용 키, IP 제한, rate limit을 키 단위로 적용하면 유출 시 피해 범위를 줄일 수 있습니다.</p>
+<h2 id="누출-대응"><a href="#누출-대응" class="headerlink" title="누출 대응"></a>누출 대응</h2><p>누출이 감지되면 다음 절차를 따릅니다.</p>
+<ol>
+<li>즉시 키 폐기(<code>status=&#39;revoked&#39;</code>)</li>
+<li>영향 범위 분석: 해당 키의 최근 호출 로그 확인</li>
+<li>사용자에게 통지하고 새 키 발급</li>
+<li>사후 분석: 어떻게 유출되었는지 원인 분석</li>
+</ol>
+<p>GitHub Secret Scanning, GitLeaks, TruffleHog 같은 도구를 CI에 통합해 사전 차단을 강화하세요.</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># .gitlab-ci.yml</span></span><br><span class="line"><span class="attr">secret-scan:</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">zricethezav/gitleaks:latest</span></span><br><span class="line">  <span class="attr">script:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">gitleaks</span> <span class="string">detect</span> <span class="string">--source</span> <span class="string">.</span> <span class="string">--verbose</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="클라이언트-측-키는-사용-금지"><a href="#클라이언트-측-키는-사용-금지" class="headerlink" title="클라이언트 측 키는 사용 금지"></a>클라이언트 측 키는 사용 금지</h2><p>브라우저나 모바일 앱에 직접 임베드된 API 키는 누구나 추출할 수 있습니다. 이런 경우는 다음 중 하나를 선택해야 합니다.</p>
+<ul>
+<li>공개 키(public&#x2F;anon key)로 권한 자체를 제한</li>
+<li>백엔드 프록시를 두고 서버에서 시크릿 키 사용</li>
+<li>단기 토큰 발급(STS, OIDC token exchange)</li>
+</ul>
+<h2 id="모니터링"><a href="#모니터링" class="headerlink" title="모니터링"></a>모니터링</h2><p>운영 환경에서는 다음 지표를 추적합니다.</p>
+<ul>
+<li>키별 호출 수, 에러율</li>
+<li>비정상적 호출 패턴(지리적 위치, 사용 시간)</li>
+<li>폐기된 키로의 호출 시도(공격 시그널)</li>
+<li>로테이션 이행률</li>
+</ul>
+<h2 id="점검-체크리스트"><a href="#점검-체크리스트" class="headerlink" title="점검 체크리스트"></a>점검 체크리스트</h2><ul>
+<li>키는 충분히 긴 난수이며 인지 가능한 접두사를 가지는가</li>
+<li>저장소에 해시만 저장되며 평문은 발급 시점에만 노출되는가</li>
+<li>모든 호출이 HTTPS + Authorization 헤더로 이루어지는가</li>
+<li>두 키 공존 패턴으로 무중단 로테이션이 가능한가</li>
+<li>키별 scope, IP, rate limit이 적용되는가</li>
+<li>CI에서 시크릿 스캐닝이 작동하는가</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>API 키는 단순함이 장점이자 약점입니다. 발급부터 폐기까지 라이프사이클을 명확히 설계하고, 코드&#x2F;로그&#x2F;URL 어디에도 평문이 남지 않도록 운영 습관을 만드는 것이 핵심입니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/API-Key/" rel="tag"># API Key</a>
+              <a href="/tags/Secrets/" rel="tag"># Secrets</a>
+              <a href="/tags/DevSecOps/" rel="tag"># DevSecOps</a>
+              <a href="/tags/Authentication/" rel="tag"># Authentication</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/content-security-policy-guide/" rel="prev" title="Content Security Policy(CSP) 헤더 작성 가이드">
+      <i class="fa fa-chevron-left"></i> Content Security Policy(CSP) 헤더 작성 가이드
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/react-hooks-complete-guide/" rel="next" title="React Hooks 완벽 가이드">
+      React Hooks 완벽 가이드 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#API-%ED%82%A4%EC%9D%98-%ED%95%9C%EA%B3%84%EC%99%80-%EC%B1%85%EC%9E%84"><span class="nav-number">1.</span> <span class="nav-text">API 키의 한계와 책임</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%95%88%EC%A0%84%ED%95%9C-%EC%83%9D%EC%84%B1"><span class="nav-number">2.</span> <span class="nav-text">안전한 생성</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%80%EC%9E%A5-%ED%95%B4%EC%8B%9C%EB%A7%8C-%EB%B3%B4%EA%B4%80%ED%95%98%EB%9D%BC"><span class="nav-number">3.</span> <span class="nav-text">저장 - 해시만 보관하라</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%84%EC%86%A1-%ED%97%A4%EB%8D%94%EB%A7%8C-%EC%82%AC%EC%9A%A9"><span class="nav-number">4.</span> <span class="nav-text">전송 - 헤더만 사용</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A1%9C%ED%85%8C%EC%9D%B4%EC%85%98-%EC%A0%84%EB%9E%B5"><span class="nav-number">5.</span> <span class="nav-text">로테이션 전략</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B6%8C%ED%95%9C-%EC%B5%9C%EC%86%8C%ED%99%94%EC%99%80-%EB%B2%94%EC%9C%84-%EC%A7%80%EC%A0%95"><span class="nav-number">6.</span> <span class="nav-text">권한 최소화와 범위 지정</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%88%84%EC%B6%9C-%EB%8C%80%EC%9D%91"><span class="nav-number">7.</span> <span class="nav-text">누출 대응</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%81%B4%EB%9D%BC%EC%9D%B4%EC%96%B8%ED%8A%B8-%EC%B8%A1-%ED%82%A4%EB%8A%94-%EC%82%AC%EC%9A%A9-%EA%B8%88%EC%A7%80"><span class="nav-number">8.</span> <span class="nav-text">클라이언트 측 키는 사용 금지</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81"><span class="nav-number">9.</span> <span class="nav-text">모니터링</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%90%EA%B2%80-%EC%B2%B4%ED%81%AC%EB%A6%AC%EC%8A%A4%ED%8A%B8"><span class="nav-number">10.</span> <span class="nav-text">점검 체크리스트</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">11.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">214</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">506</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

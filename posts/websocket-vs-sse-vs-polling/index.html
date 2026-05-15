@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="폴링, 롱폴링, SSE, WebSocket의 동작 원리와 선택 기준을 실전 관점에서 비교합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WebSocket vs SSE vs Polling - 실시간 전송 기법 비교">
+<meta property="og:url" content="https://ew32.github.io/posts/websocket-vs-sse-vs-polling/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="폴링, 롱폴링, SSE, WebSocket의 동작 원리와 선택 기준을 실전 관점에서 비교합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-06-24T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-15T07:07:06.943Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="HTTP">
+<meta property="article:tag" content="SSE">
+<meta property="article:tag" content="실시간">
+<meta property="article:tag" content="WebSocket">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/websocket-vs-sse-vs-polling/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>WebSocket vs SSE vs Polling - 실시간 전송 기법 비교 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/websocket-vs-sse-vs-polling/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          WebSocket vs SSE vs Polling - 실시간 전송 기법 비교
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-06-24 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-24T10:00:00+09:00">2026-06-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-15 16:07:06" itemprop="dateModified" datetime="2026-05-15T16:07:06+09:00">2026-05-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/HTTP/" itemprop="url" rel="index"><span itemprop="name">HTTP</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">폴링, 롱폴링, SSE, WebSocket의 동작 원리와 선택 기준을 실전 관점에서 비교합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="실시간-통신-무엇으로-구현할까"><a href="#실시간-통신-무엇으로-구현할까" class="headerlink" title="실시간 통신, 무엇으로 구현할까"></a>실시간 통신, 무엇으로 구현할까</h2><p>웹에서 “실시간”을 만들 수 있는 길은 사실 네 가지뿐입니다. 폴링(Polling), 롱폴링(Long Polling), Server-Sent Events(SSE), WebSocket. 각각 등장한 시기와 동작 원리가 다르며, 어떤 것을 고르느냐에 따라 인프라 비용과 사용자 경험이 모두 달라집니다.</p>
+<h2 id="네-가지-방식의-동작"><a href="#네-가지-방식의-동작" class="headerlink" title="네 가지 방식의 동작"></a>네 가지 방식의 동작</h2><h3 id="1-Polling"><a href="#1-Polling" class="headerlink" title="1. Polling"></a>1. Polling</h3><p>클라이언트가 일정 주기로 요청을 보냅니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">setInterval</span>(<span class="function">() =&gt;</span> <span class="title function_">fetch</span>(<span class="string">&#x27;/api/notifications&#x27;</span>).<span class="title function_">then</span>(...), <span class="number">5000</span>);</span><br></pre></td></tr></table></figure>
+
+<p>가장 단순하지만 사건이 없어도 요청이 계속 나갑니다. 평균 지연은 폴링 주기의 절반입니다.</p>
+<h3 id="2-Long-Polling"><a href="#2-Long-Polling" class="headerlink" title="2. Long Polling"></a>2. Long Polling</h3><p>서버가 변화가 생길 때까지 응답을 보류합니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="keyword">function</span> <span class="title function_">loop</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">    <span class="keyword">const</span> res = <span class="keyword">await</span> <span class="title function_">fetch</span>(<span class="string">&#x27;/api/events?since=&#x27;</span> + cursor);</span><br><span class="line">    <span class="keyword">const</span> data = <span class="keyword">await</span> res.<span class="title function_">json</span>();</span><br><span class="line">    <span class="title function_">handle</span>(data);</span><br><span class="line">    cursor = data.<span class="property">cursor</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>지연은 거의 0에 가깝지만, 서버가 다수의 열린 연결을 메모리에 들고 있어야 합니다.</p>
+<h3 id="3-SSE"><a href="#3-SSE" class="headerlink" title="3. SSE"></a>3. SSE</h3><p>HTTP 위에서 서버가 일방적으로 메시지를 흘려보냅니다. 클라이언트는 <code>EventSource</code>로 듣기만 합니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> es = <span class="keyword">new</span> <span class="title class_">EventSource</span>(<span class="string">&#x27;/stream&#x27;</span>);</span><br><span class="line">es.<span class="property">onmessage</span> = <span class="function">(<span class="params">e</span>) =&gt;</span> <span class="title function_">render</span>(<span class="title class_">JSON</span>.<span class="title function_">parse</span>(e.<span class="property">data</span>));</span><br></pre></td></tr></table></figure>
+
+<p>자동 재연결, <code>Last-Event-ID</code>로 누락 보완 같은 기능이 표준에 포함되어 있습니다.</p>
+<h3 id="4-WebSocket"><a href="#4-WebSocket" class="headerlink" title="4. WebSocket"></a>4. WebSocket</h3><p>HTTP로 핸드셰이크 후 같은 TCP 연결을 풀-듀플렉스 채널로 업그레이드합니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> ws = <span class="keyword">new</span> <span class="title class_">WebSocket</span>(<span class="string">&#x27;wss://example.com/chat&#x27;</span>);</span><br><span class="line">ws.<span class="property">onmessage</span> = <span class="function">(<span class="params">e</span>) =&gt;</span> <span class="title function_">render</span>(e.<span class="property">data</span>);</span><br><span class="line">ws.<span class="title function_">send</span>(<span class="title class_">JSON</span>.<span class="title function_">stringify</span>(&#123; <span class="attr">type</span>: <span class="string">&#x27;msg&#x27;</span>, <span class="attr">text</span>: <span class="string">&#x27;안녕&#x27;</span> &#125;));</span><br></pre></td></tr></table></figure>
+
+<p>양방향, 저지연, 바이너리 지원 등 가장 강력하지만 직접 챙겨야 하는 운영 항목도 많습니다.</p>
+<h2 id="한눈에-비교"><a href="#한눈에-비교" class="headerlink" title="한눈에 비교"></a>한눈에 비교</h2><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>Polling</th>
+<th>Long Polling</th>
+<th>SSE</th>
+<th>WebSocket</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>방향</td>
+<td>C → S</td>
+<td>C ↔ S (반복)</td>
+<td>S → C</td>
+<td>C ↔ S</td>
+</tr>
+<tr>
+<td>프로토콜</td>
+<td>HTTP</td>
+<td>HTTP</td>
+<td>HTTP</td>
+<td>TCP 위 WS</td>
+</tr>
+<tr>
+<td>지연</td>
+<td>주기 의존</td>
+<td>매우 낮음</td>
+<td>매우 낮음</td>
+<td>가장 낮음</td>
+</tr>
+<tr>
+<td>바이너리</td>
+<td>가능</td>
+<td>가능</td>
+<td>불가</td>
+<td>가능</td>
+</tr>
+<tr>
+<td>자동 재연결</td>
+<td>자연스러움</td>
+<td>자연스러움</td>
+<td><strong>내장</strong></td>
+<td>직접 구현</td>
+</tr>
+<tr>
+<td>프록시 호환</td>
+<td>매우 좋음</td>
+<td>매우 좋음</td>
+<td>좋음 (버퍼링 주의)</td>
+<td>업그레이드 필요</td>
+</tr>
+<tr>
+<td>서버 부하</td>
+<td>낮음(비효율)</td>
+<td>중간</td>
+<td>낮음</td>
+<td>낮음</td>
+</tr>
+<tr>
+<td>인증</td>
+<td>매 요청 헤더</td>
+<td>매 요청 헤더</td>
+<td>쿠키&#x2F;헤더</td>
+<td>핸드셰이크 시 1회</td>
+</tr>
+<tr>
+<td>구현 난이도</td>
+<td>가장 쉬움</td>
+<td>쉬움</td>
+<td>쉬움</td>
+<td>중간</td>
+</tr>
+</tbody></table>
+<h2 id="사례별-추천"><a href="#사례별-추천" class="headerlink" title="사례별 추천"></a>사례별 추천</h2><ul>
+<li><strong>알림 배지, 진행률 표시, 주식 시세, 로그 라이브 뷰</strong> → SSE.</li>
+<li><strong>채팅, 협업 도구, 게임, 화이트보드</strong> → WebSocket.</li>
+<li><strong>상태가 자주 바뀌지 않고 외부 시스템 통합이 단순해야 함</strong> → Polling.</li>
+<li><strong>AI 토큰 스트리밍</strong> → SSE가 사실상 표준.</li>
+<li><strong>모바일 푸시</strong> → 위 어느 것도 아닌 OS 푸시 채널(FCM&#x2F;APNs).</li>
+</ul>
+<h2 id="운영-고려사항"><a href="#운영-고려사항" class="headerlink" title="운영 고려사항"></a>운영 고려사항</h2><h3 id="수평-확장과-메시지-라우팅"><a href="#수평-확장과-메시지-라우팅" class="headerlink" title="수평 확장과 메시지 라우팅"></a>수평 확장과 메시지 라우팅</h3><p>WebSocket&#x2F;SSE 모두 연결이 특정 인스턴스에 묶입니다. 메시지를 전 인스턴스에 뿌리려면 Redis Pub&#x2F;Sub, NATS, Kafka 같은 메시지 버스가 필요합니다.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[Client] ── [LB] ── [App-1] ── publish ──▶ [Redis]</span><br><span class="line">                  └─[App-2] ◀── subscribe ──┘</span><br></pre></td></tr></table></figure>
+
+<h3 id="하트비트와-idle-종료"><a href="#하트비트와-idle-종료" class="headerlink" title="하트비트와 idle 종료"></a>하트비트와 idle 종료</h3><p>대부분의 로드 밸런서는 60초 정도의 idle timeout을 가집니다. WebSocket은 ping&#x2F;pong, SSE는 주기적 주석 라인(<code>: ping\n\n</code>)으로 연결을 유지하세요.</p>
+<h3 id="인증"><a href="#인증" class="headerlink" title="인증"></a>인증</h3><p>WebSocket은 핸드셰이크 시점에만 헤더를 검사합니다. 토큰을 쿼리에 담아 보내거나(<code>?token=...</code>) 첫 메시지로 인증을 마치는 패턴이 일반적입니다. SSE는 쿠키 기반 인증이 가장 단순합니다.</p>
+<h3 id="CORS와-프록시"><a href="#CORS와-프록시" class="headerlink" title="CORS와 프록시"></a>CORS와 프록시</h3><p>SSE&#x2F;Polling은 일반 HTTP CORS 규칙을 따릅니다. WebSocket은 CORS가 아닌 Origin 헤더 검증으로 처리하며, Nginx 프록시 뒤에 둘 때는 <code>Upgrade</code>, <code>Connection</code> 헤더 통과 설정을 반드시 추가해야 합니다.</p>
+<h2 id="의사-결정-트리"><a href="#의사-결정-트리" class="headerlink" title="의사 결정 트리"></a>의사 결정 트리</h2><ol>
+<li>양방향 통신이 꼭 필요한가? → 예: <strong>WebSocket</strong>, 아니오: 다음 단계.</li>
+<li>서버에서 클라이언트로 푸시가 필요한가? → 예: <strong>SSE</strong>, 아니오: 다음 단계.</li>
+<li>사건이 자주 발생하고 지연이 중요한가? → 예: <strong>Long Polling</strong>, 아니오: <strong>Polling</strong>.</li>
+</ol>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>“실시간이라면 무조건 WebSocket”이라는 신화는 이제 통하지 않습니다. 단방향 알림에는 SSE, 단순 조회에는 Polling이 더 잘 어울리는 경우가 많습니다. 요구 사항을 먼저 정리하고 가장 단순한 방식부터 검토하세요.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/HTTP/" rel="tag"># HTTP</a>
+              <a href="/tags/SSE/" rel="tag"># SSE</a>
+              <a href="/tags/%EC%8B%A4%EC%8B%9C%EA%B0%84/" rel="tag"># 실시간</a>
+              <a href="/tags/WebSocket/" rel="tag"># WebSocket</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/http-status-codes-guide/" rel="prev" title="HTTP 상태 코드 정리 - 자주 헷갈리는 것만 골라서">
+      <i class="fa fa-chevron-left"></i> HTTP 상태 코드 정리 - 자주 헷갈리는 것만 골라서
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/graphql-query-optimization/" rel="next" title="GraphQL 쿼리 최적화 - N+1 문제와 DataLoader">
+      GraphQL 쿼리 최적화 - N+1 문제와 DataLoader <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%8B%A4%EC%8B%9C%EA%B0%84-%ED%86%B5%EC%8B%A0-%EB%AC%B4%EC%97%87%EC%9C%BC%EB%A1%9C-%EA%B5%AC%ED%98%84%ED%95%A0%EA%B9%8C"><span class="nav-number">1.</span> <span class="nav-text">실시간 통신, 무엇으로 구현할까</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%84%A4-%EA%B0%80%EC%A7%80-%EB%B0%A9%EC%8B%9D%EC%9D%98-%EB%8F%99%EC%9E%91"><span class="nav-number">2.</span> <span class="nav-text">네 가지 방식의 동작</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Polling"><span class="nav-number">2.1.</span> <span class="nav-text">1. Polling</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Long-Polling"><span class="nav-number">2.2.</span> <span class="nav-text">2. Long Polling</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-SSE"><span class="nav-number">2.3.</span> <span class="nav-text">3. SSE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-WebSocket"><span class="nav-number">2.4.</span> <span class="nav-text">4. WebSocket</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%95%9C%EB%88%88%EC%97%90-%EB%B9%84%EA%B5%90"><span class="nav-number">3.</span> <span class="nav-text">한눈에 비교</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%82%AC%EB%A1%80%EB%B3%84-%EC%B6%94%EC%B2%9C"><span class="nav-number">4.</span> <span class="nav-text">사례별 추천</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9A%B4%EC%98%81-%EA%B3%A0%EB%A0%A4%EC%82%AC%ED%95%AD"><span class="nav-number">5.</span> <span class="nav-text">운영 고려사항</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%88%98%ED%8F%89-%ED%99%95%EC%9E%A5%EA%B3%BC-%EB%A9%94%EC%8B%9C%EC%A7%80-%EB%9D%BC%EC%9A%B0%ED%8C%85"><span class="nav-number">5.1.</span> <span class="nav-text">수평 확장과 메시지 라우팅</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%ED%95%98%ED%8A%B8%EB%B9%84%ED%8A%B8%EC%99%80-idle-%EC%A2%85%EB%A3%8C"><span class="nav-number">5.2.</span> <span class="nav-text">하트비트와 idle 종료</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%9D%B8%EC%A6%9D"><span class="nav-number">5.3.</span> <span class="nav-text">인증</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CORS%EC%99%80-%ED%94%84%EB%A1%9D%EC%8B%9C"><span class="nav-number">5.4.</span> <span class="nav-text">CORS와 프록시</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9D%98%EC%82%AC-%EA%B2%B0%EC%A0%95-%ED%8A%B8%EB%A6%AC"><span class="nav-number">6.</span> <span class="nav-text">의사 결정 트리</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">7.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">214</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">506</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="벡터 DB의 개념과 작동 원리, 주요 서비스인 Pinecone, Weaviate, Qdrant를 비교합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="벡터 데이터베이스 입문 - Pinecone, Weaviate, Qdrant 비교">
+<meta property="og:url" content="https://ew32.github.io/posts/vector-database-introduction/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="벡터 DB의 개념과 작동 원리, 주요 서비스인 Pinecone, Weaviate, Qdrant를 비교합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-07-13T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-15T07:07:06.942Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="LLM">
+<meta property="article:tag" content="데이터베이스">
+<meta property="article:tag" content="RAG">
+<meta property="article:tag" content="Vector DB">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/vector-database-introduction/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>벡터 데이터베이스 입문 - Pinecone, Weaviate, Qdrant 비교 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/vector-database-introduction/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          벡터 데이터베이스 입문 - Pinecone, Weaviate, Qdrant 비교
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-07-13 10:00:00" itemprop="dateCreated datePublished" datetime="2026-07-13T10:00:00+09:00">2026-07-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-15 16:07:06" itemprop="dateModified" datetime="2026-05-15T16:07:06+09:00">2026-05-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/AI%EB%8F%84%EA%B5%AC/" itemprop="url" rel="index"><span itemprop="name">AI도구</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">벡터 DB의 개념과 작동 원리, 주요 서비스인 Pinecone, Weaviate, Qdrant를 비교합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="벡터-DB가-필요한-이유"><a href="#벡터-DB가-필요한-이유" class="headerlink" title="벡터 DB가 필요한 이유"></a>벡터 DB가 필요한 이유</h2><p>LLM과 결합되는 RAG 시스템에서는 “의미적으로 비슷한” 문서를 빠르게 찾는 일이 핵심입니다. 텍스트를 임베딩 모델로 고차원 벡터(예: 1536차원)로 변환한 뒤, 새 질의 벡터와 가까운 것을 찾는 **근사 최근접 이웃 검색(ANN)**이 필요합니다. 일반 RDB는 이런 연산에 최적화되어 있지 않기 때문에 전용 벡터 DB가 등장했습니다.</p>
+<h2 id="핵심-작동-원리"><a href="#핵심-작동-원리" class="headerlink" title="핵심 작동 원리"></a>핵심 작동 원리</h2><ol>
+<li>문서를 작은 청크로 분할</li>
+<li>임베딩 모델로 각 청크를 벡터화</li>
+<li>벡터 DB에 메타데이터와 함께 저장</li>
+<li>질의도 동일 모델로 벡터화</li>
+<li>코사인 유사도&#x2F;내적&#x2F;L2 거리로 상위 k개 검색</li>
+</ol>
+<p>내부적으로는 HNSW, IVF, ScaNN 같은 인덱스 알고리즘이 사용됩니다. HNSW는 그래프 기반으로 정확도와 속도의 균형이 좋아 가장 널리 채택됩니다.</p>
+<h2 id="Pinecone"><a href="#Pinecone" class="headerlink" title="Pinecone"></a>Pinecone</h2><p>완전 관리형 SaaS입니다. 인프라를 신경 쓸 필요가 없고 자동 확장이 강점입니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pinecone <span class="keyword">import</span> Pinecone</span><br><span class="line">pc = Pinecone(api_key=<span class="string">&quot;...&quot;</span>)</span><br><span class="line">index = pc.Index(<span class="string">&quot;docs&quot;</span>)</span><br><span class="line"></span><br><span class="line">index.upsert(vectors=[</span><br><span class="line">    &#123;<span class="string">&quot;id&quot;</span>: <span class="string">&quot;doc1&quot;</span>, <span class="string">&quot;values&quot;</span>: embedding, <span class="string">&quot;metadata&quot;</span>: &#123;<span class="string">&quot;category&quot;</span>: <span class="string">&quot;FAQ&quot;</span>&#125;&#125;</span><br><span class="line">])</span><br><span class="line">res = index.query(vector=query_emb, top_k=<span class="number">5</span>, <span class="built_in">filter</span>=&#123;<span class="string">&quot;category&quot;</span>: <span class="string">&quot;FAQ&quot;</span>&#125;)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>장점: 운영 부담 제로, 안정적 SLA</li>
+<li>단점: 자체 호스팅 불가, 사용량 기반 비용이 빠르게 증가</li>
+</ul>
+<h2 id="Weaviate"><a href="#Weaviate" class="headerlink" title="Weaviate"></a>Weaviate</h2><p>오픈소스이며 자체 호스팅과 매니지드 모두 지원합니다. 벡터 + 객체 그래프 + 키워드 검색을 결합한 <strong>하이브리드 검색</strong>이 특징입니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> weaviate</span><br><span class="line">client = weaviate.connect_to_local()</span><br><span class="line">docs = client.collections.get(<span class="string">&quot;Document&quot;</span>)</span><br><span class="line">docs.query.hybrid(query=<span class="string">&quot;환불 정책&quot;</span>, alpha=<span class="number">0.5</span>, limit=<span class="number">5</span>)</span><br></pre></td></tr></table></figure>
+
+<p><code>alpha</code>는 벡터 vs BM25 가중치 조정 파라미터로, 0이면 키워드, 1이면 벡터 전용입니다. 모듈 시스템으로 임베딩 생성을 DB가 직접 처리하게 할 수도 있습니다.</p>
+<h2 id="Qdrant"><a href="#Qdrant" class="headerlink" title="Qdrant"></a>Qdrant</h2><p>Rust로 작성된 오픈소스 벡터 DB로 성능과 메모리 효율이 강점입니다. 풍부한 페이로드 필터링과 양자화 옵션을 제공합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> qdrant_client <span class="keyword">import</span> QdrantClient</span><br><span class="line"><span class="keyword">from</span> qdrant_client.models <span class="keyword">import</span> PointStruct, Filter, FieldCondition, MatchValue</span><br><span class="line"></span><br><span class="line">client = QdrantClient(url=<span class="string">&quot;http://localhost:6333&quot;</span>)</span><br><span class="line">client.upsert(<span class="string">&quot;docs&quot;</span>, points=[</span><br><span class="line">    PointStruct(<span class="built_in">id</span>=<span class="number">1</span>, vector=embedding, payload=&#123;<span class="string">&quot;lang&quot;</span>: <span class="string">&quot;ko&quot;</span>&#125;)</span><br><span class="line">])</span><br><span class="line">client.search(<span class="string">&quot;docs&quot;</span>, query_vector=q,</span><br><span class="line">    query_filter=Filter(must=[FieldCondition(key=<span class="string">&quot;lang&quot;</span>, <span class="keyword">match</span>=MatchValue(value=<span class="string">&quot;ko&quot;</span>))]),</span><br><span class="line">    limit=<span class="number">5</span>)</span><br></pre></td></tr></table></figure>
+
+<p>스칼라&#x2F;프로덕트 양자화로 메모리 사용을 1&#x2F;4 이하로 줄일 수 있어 대규모 데이터에 유리합니다.</p>
+<h2 id="비교-요약"><a href="#비교-요약" class="headerlink" title="비교 요약"></a>비교 요약</h2><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>Pinecone</th>
+<th>Weaviate</th>
+<th>Qdrant</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>라이선스</td>
+<td>상용 SaaS</td>
+<td>오픈소스</td>
+<td>오픈소스</td>
+</tr>
+<tr>
+<td>자체 호스팅</td>
+<td>불가</td>
+<td>가능</td>
+<td>가능</td>
+</tr>
+<tr>
+<td>하이브리드 검색</td>
+<td>제한적</td>
+<td>강력</td>
+<td>지원</td>
+</tr>
+<tr>
+<td>필터링</td>
+<td>메타데이터</td>
+<td>풍부</td>
+<td>매우 풍부</td>
+</tr>
+<tr>
+<td>언어</td>
+<td>-</td>
+<td>Go</td>
+<td>Rust</td>
+</tr>
+</tbody></table>
+<h2 id="선택-기준"><a href="#선택-기준" class="headerlink" title="선택 기준"></a>선택 기준</h2><ul>
+<li><strong>운영 인력 부족, 빠른 시작</strong>: Pinecone</li>
+<li><strong>하이브리드 검색·구조화 데이터 결합</strong>: Weaviate</li>
+<li><strong>자체 호스팅·고성능·세밀한 필터링</strong>: Qdrant</li>
+<li><strong>소규모 PoC</strong>: 메모리 기반 FAISS나 Chroma도 충분</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>벡터 DB는 RAG와 시맨틱 검색의 핵심 인프라입니다. 데이터 규모, 운영 환경, 검색 유형(벡터&#x2F;하이브리드)을 기준으로 선택하고, 청킹 전략과 임베딩 모델까지 함께 설계해야 좋은 결과가 나옵니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/LLM/" rel="tag"># LLM</a>
+              <a href="/tags/%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4/" rel="tag"># 데이터베이스</a>
+              <a href="/tags/RAG/" rel="tag"># RAG</a>
+              <a href="/tags/Vector-DB/" rel="tag"># Vector DB</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/llm-fine-tuning-basics/" rel="prev" title="LLM 파인튜닝 기초">
+      <i class="fa fa-chevron-left"></i> LLM 파인튜닝 기초
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/git-rebase-vs-merge/" rel="next" title="Git Rebase vs Merge 전략">
+      Git Rebase vs Merge 전략 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B2%A1%ED%84%B0-DB%EA%B0%80-%ED%95%84%EC%9A%94%ED%95%9C-%EC%9D%B4%EC%9C%A0"><span class="nav-number">1.</span> <span class="nav-text">벡터 DB가 필요한 이유</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%95%B5%EC%8B%AC-%EC%9E%91%EB%8F%99-%EC%9B%90%EB%A6%AC"><span class="nav-number">2.</span> <span class="nav-text">핵심 작동 원리</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pinecone"><span class="nav-number">3.</span> <span class="nav-text">Pinecone</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Weaviate"><span class="nav-number">4.</span> <span class="nav-text">Weaviate</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Qdrant"><span class="nav-number">5.</span> <span class="nav-text">Qdrant</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B9%84%EA%B5%90-%EC%9A%94%EC%95%BD"><span class="nav-number">6.</span> <span class="nav-text">비교 요약</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%84%A0%ED%83%9D-%EA%B8%B0%EC%A4%80"><span class="nav-number">7.</span> <span class="nav-text">선택 기준</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">8.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">214</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">506</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

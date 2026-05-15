@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="RBAC와 ABAC의 모델 차이, 장단점, 실무 적용 패턴을 비교하고 두 모델을 결합한 하이브리드 설계 사례를 살펴봅니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RBAC vs ABAC - 역할 기반과 속성 기반 접근 제어 비교">
+<meta property="og:url" content="https://ew32.github.io/posts/rbac-vs-abac/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="RBAC와 ABAC의 모델 차이, 장단점, 실무 적용 패턴을 비교하고 두 모델을 결합한 하이브리드 설계 사례를 살펴봅니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-04-26T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-15T07:07:06.940Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="RBAC">
+<meta property="article:tag" content="ABAC">
+<meta property="article:tag" content="Authorization">
+<meta property="article:tag" content="Access Control">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/rbac-vs-abac/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>RBAC vs ABAC - 역할 기반과 속성 기반 접근 제어 비교 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/rbac-vs-abac/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          RBAC vs ABAC - 역할 기반과 속성 기반 접근 제어 비교
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-04-26 10:00:00" itemprop="dateCreated datePublished" datetime="2026-04-26T10:00:00+09:00">2026-04-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-15 16:07:06" itemprop="dateModified" datetime="2026-05-15T16:07:06+09:00">2026-05-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Authentication/" itemprop="url" rel="index"><span itemprop="name">Authentication</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">RBAC와 ABAC의 모델 차이, 장단점, 실무 적용 패턴을 비교하고 두 모델을 결합한 하이브리드 설계 사례를 살펴봅니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="접근-제어-모델의-진화"><a href="#접근-제어-모델의-진화" class="headerlink" title="접근 제어 모델의 진화"></a>접근 제어 모델의 진화</h2><p>접근 제어(Access Control)는 “누가, 무엇에, 어떤 조건에서 접근할 수 있는가”를 결정하는 메커니즘입니다. 초기 시스템은 ACL(Access Control List)을 사용했지만, 사용자 수가 늘면서 관리가 어려워졌습니다. 이를 해결한 것이 RBAC이고, 더 세밀한 제어가 필요해지면서 등장한 것이 ABAC입니다.</p>
+<h2 id="RBAC-역할-기반-접근-제어"><a href="#RBAC-역할-기반-접근-제어" class="headerlink" title="RBAC - 역할 기반 접근 제어"></a>RBAC - 역할 기반 접근 제어</h2><p>RBAC(Role-Based Access Control)는 사용자에게 직접 권한을 부여하지 않고, **역할(Role)**을 통해 간접적으로 부여합니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">사용자 -&gt; 역할 -&gt; 권한 -&gt; 리소스</span><br></pre></td></tr></table></figure>
+
+<p>예를 들어 다음과 같이 모델링할 수 있습니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> users (id <span class="type">BIGINT</span> <span class="keyword">PRIMARY</span> KEY, email <span class="type">VARCHAR</span>(<span class="number">255</span>));</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> roles (id <span class="type">BIGINT</span> <span class="keyword">PRIMARY</span> KEY, name <span class="type">VARCHAR</span>(<span class="number">50</span>));</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> permissions (id <span class="type">BIGINT</span> <span class="keyword">PRIMARY</span> KEY, action <span class="type">VARCHAR</span>(<span class="number">50</span>), resource <span class="type">VARCHAR</span>(<span class="number">50</span>));</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> user_roles (user_id <span class="type">BIGINT</span>, role_id <span class="type">BIGINT</span>);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> role_permissions (role_id <span class="type">BIGINT</span>, permission_id <span class="type">BIGINT</span>);</span><br></pre></td></tr></table></figure>
+
+<p>장점은 단순함입니다. “이 사용자는 admin 역할이므로 모든 작업 가능”처럼 직관적이고, 관리자가 GUI로 쉽게 조작할 수 있습니다.</p>
+<p>단점은 **역할 폭발(role explosion)**입니다. 부서, 지역, 프로젝트별로 권한이 달라지면 <code>Sales-APAC-ReadOnly</code>, <code>Sales-EMEA-Editor</code> 같은 역할이 끝없이 늘어납니다.</p>
+<h2 id="ABAC-속성-기반-접근-제어"><a href="#ABAC-속성-기반-접근-제어" class="headerlink" title="ABAC - 속성 기반 접근 제어"></a>ABAC - 속성 기반 접근 제어</h2><p>ABAC(Attribute-Based Access Control)는 주체(Subject), 자원(Resource), 행위(Action), 환경(Environment)의 속성을 조합한 정책으로 접근을 결정합니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">허용 조건 = f(주체속성, 자원속성, 행위, 환경속성)</span><br></pre></td></tr></table></figure>
+
+<p>예시 정책: “마케팅 부서 직원은 자신의 부서가 소유한 캠페인을 업무시간(09:00~18:00)에만 수정할 수 있다.”</p>
+<p>OPA(Open Policy Agent)의 Rego로 표현하면 다음과 같습니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">package campaign</span><br><span class="line"></span><br><span class="line">default allow = false</span><br><span class="line"></span><br><span class="line">allow &#123;</span><br><span class="line">  input.user.department == input.resource.owner_department</span><br><span class="line">  input.action == &quot;update&quot;</span><br><span class="line">  hour := time.clock([time.now_ns(), &quot;Asia/Seoul&quot;])[0]</span><br><span class="line">  hour &gt;= 9</span><br><span class="line">  hour &lt; 18</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ABAC의 강점은 <strong>표현력</strong>입니다. 역할을 미리 정의하지 않아도 동적 조건을 정책으로 표현할 수 있습니다. 단점은 <strong>복잡성</strong>과 <strong>디버깅 난이도</strong>입니다. 어떤 정책이 어떤 결정을 내렸는지 추적이 어렵습니다.</p>
+<h2 id="비교-정리"><a href="#비교-정리" class="headerlink" title="비교 정리"></a>비교 정리</h2><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>RBAC</th>
+<th>ABAC</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>권한 단위</td>
+<td>역할</td>
+<td>속성 조합</td>
+</tr>
+<tr>
+<td>정책 표현</td>
+<td>정적, 명시적</td>
+<td>동적, 조건적</td>
+</tr>
+<tr>
+<td>관리 도구</td>
+<td>GUI 친화적</td>
+<td>정책 언어 필요</td>
+</tr>
+<tr>
+<td>감사(audit)</td>
+<td>쉬움</td>
+<td>어려움</td>
+</tr>
+<tr>
+<td>확장성</td>
+<td>제한적</td>
+<td>매우 높음</td>
+</tr>
+<tr>
+<td>도입 비용</td>
+<td>낮음</td>
+<td>높음</td>
+</tr>
+</tbody></table>
+<h2 id="하이브리드-접근법"><a href="#하이브리드-접근법" class="headerlink" title="하이브리드 접근법"></a>하이브리드 접근법</h2><p>실무에서는 두 모델을 결합한 <strong>RBAC + ABAC</strong> 하이브리드가 일반적입니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">can_access</span>(<span class="params">user, resource, action</span>):</span><br><span class="line">    <span class="comment"># 1단계: RBAC로 거친 필터</span></span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> has_role_permission(user.roles, action, resource.<span class="built_in">type</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">    <span class="comment"># 2단계: ABAC로 세부 조건</span></span><br><span class="line">    <span class="keyword">if</span> action == <span class="string">&#x27;update&#x27;</span> <span class="keyword">and</span> resource.owner_id != user.<span class="built_in">id</span>:</span><br><span class="line">        <span class="keyword">return</span> user.has_role(<span class="string">&#x27;admin&#x27;</span>)</span><br><span class="line">    <span class="keyword">if</span> resource.classification == <span class="string">&#x27;confidential&#x27;</span>:</span><br><span class="line">        <span class="keyword">return</span> user.clearance_level &gt;= <span class="number">3</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">True</span></span><br></pre></td></tr></table></figure>
+
+<p>기본 권한은 RBAC로 단순하게 부여하고, 데이터 단위의 세밀한 조건(소유자, 기밀 등급, 시간대)은 ABAC로 처리합니다. AWS IAM이 대표적인 하이브리드 모델로, 역할 + 조건(Condition) 정책을 함께 사용합니다.</p>
+<h2 id="ReBAC라는-또-다른-방향"><a href="#ReBAC라는-또-다른-방향" class="headerlink" title="ReBAC라는 또 다른 방향"></a>ReBAC라는 또 다른 방향</h2><p>최근에는 ReBAC(Relationship-Based Access Control)이 주목받고 있습니다. Google의 Zanzibar 논문이 시발점이며, “사용자 A가 문서 X의 작성자 그룹에 속하는가?” 같은 관계 그래프를 평가합니다. SpiceDB, OpenFGA 등 오픈소스 구현체가 있습니다.</p>
+<h2 id="실무-권장-사항"><a href="#실무-권장-사항" class="headerlink" title="실무 권장 사항"></a>실무 권장 사항</h2><ul>
+<li>단순한 사내 도구라면 RBAC로 시작하세요.</li>
+<li>멀티 테넌트 SaaS라면 RBAC + 테넌트 격리 ABAC 조건을 함께 설계하세요.</li>
+<li>정책이 코드 곳곳에 분산되면 OPA 같은 정책 엔진으로 외부화하세요.</li>
+<li>모든 권한 결정은 로그를 남겨 사후 감사가 가능하게 하세요.</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>RBAC는 단순하고 빠르게 도입할 수 있지만, 비즈니스가 복잡해지면 ABAC의 표현력이 필요해집니다. 두 모델을 적절히 결합하고, 정책을 코드 외부로 분리하는 설계가 장기적으로 유지보수 비용을 낮춥니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/RBAC/" rel="tag"># RBAC</a>
+              <a href="/tags/ABAC/" rel="tag"># ABAC</a>
+              <a href="/tags/Authorization/" rel="tag"># Authorization</a>
+              <a href="/tags/Access-Control/" rel="tag"># Access Control</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/mfa-2fa-authentication/" rel="prev" title="다중 인증(MFA) 완전 정리 - TOTP, HOTP, WebAuthn">
+      <i class="fa fa-chevron-left"></i> 다중 인증(MFA) 완전 정리 - TOTP, HOTP, WebAuthn
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/ssrf-attack-defense/" rel="next" title="SSRF 공격과 방어 - 내부망을 노리는 요청 변조">
+      SSRF 공격과 방어 - 내부망을 노리는 요청 변조 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%91%EA%B7%BC-%EC%A0%9C%EC%96%B4-%EB%AA%A8%EB%8D%B8%EC%9D%98-%EC%A7%84%ED%99%94"><span class="nav-number">1.</span> <span class="nav-text">접근 제어 모델의 진화</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RBAC-%EC%97%AD%ED%95%A0-%EA%B8%B0%EB%B0%98-%EC%A0%91%EA%B7%BC-%EC%A0%9C%EC%96%B4"><span class="nav-number">2.</span> <span class="nav-text">RBAC - 역할 기반 접근 제어</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ABAC-%EC%86%8D%EC%84%B1-%EA%B8%B0%EB%B0%98-%EC%A0%91%EA%B7%BC-%EC%A0%9C%EC%96%B4"><span class="nav-number">3.</span> <span class="nav-text">ABAC - 속성 기반 접근 제어</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B9%84%EA%B5%90-%EC%A0%95%EB%A6%AC"><span class="nav-number">4.</span> <span class="nav-text">비교 정리</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%95%98%EC%9D%B4%EB%B8%8C%EB%A6%AC%EB%93%9C-%EC%A0%91%EA%B7%BC%EB%B2%95"><span class="nav-number">5.</span> <span class="nav-text">하이브리드 접근법</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ReBAC%EB%9D%BC%EB%8A%94-%EB%98%90-%EB%8B%A4%EB%A5%B8-%EB%B0%A9%ED%96%A5"><span class="nav-number">6.</span> <span class="nav-text">ReBAC라는 또 다른 방향</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%8B%A4%EB%AC%B4-%EA%B6%8C%EC%9E%A5-%EC%82%AC%ED%95%AD"><span class="nav-number">7.</span> <span class="nav-text">실무 권장 사항</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">8.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">214</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">506</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

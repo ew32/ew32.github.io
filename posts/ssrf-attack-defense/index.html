@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="SSRF의 작동 원리, 클라우드 메타데이터 탈취 같은 실제 피해 사례, 그리고 DNS Rebinding까지 방어하는 강력한 대응 전략을 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SSRF 공격과 방어 - 내부망을 노리는 요청 변조">
+<meta property="og:url" content="https://ew32.github.io/posts/ssrf-attack-defense/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="SSRF의 작동 원리, 클라우드 메타데이터 탈취 같은 실제 피해 사례, 그리고 DNS Rebinding까지 방어하는 강력한 대응 전략을 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-04-27T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-15T07:07:06.942Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Web Security">
+<meta property="article:tag" content="SSRF">
+<meta property="article:tag" content="Cloud Security">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/ssrf-attack-defense/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>SSRF 공격과 방어 - 내부망을 노리는 요청 변조 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/ssrf-attack-defense/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SSRF 공격과 방어 - 내부망을 노리는 요청 변조
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-04-27 10:00:00" itemprop="dateCreated datePublished" datetime="2026-04-27T10:00:00+09:00">2026-04-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-15 16:07:06" itemprop="dateModified" datetime="2026-05-15T16:07:06+09:00">2026-05-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Security/" itemprop="url" rel="index"><span itemprop="name">Security</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Security/Cryptography/" itemprop="url" rel="index"><span itemprop="name">Cryptography</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">SSRF의 작동 원리, 클라우드 메타데이터 탈취 같은 실제 피해 사례, 그리고 DNS Rebinding까지 방어하는 강력한 대응 전략을 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="SSRF란-무엇인가"><a href="#SSRF란-무엇인가" class="headerlink" title="SSRF란 무엇인가"></a>SSRF란 무엇인가</h2><p>SSRF(Server-Side Request Forgery)는 공격자가 서버 측 애플리케이션을 속여 임의의 URL로 HTTP 요청을 보내게 만드는 취약점입니다. 일반적인 패턴은 사용자가 입력한 URL을 서버가 그대로 fetch할 때 발생합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 취약한 코드</span></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/preview&#x27;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">preview</span>():</span><br><span class="line">    url = request.args.get(<span class="string">&#x27;url&#x27;</span>)</span><br><span class="line">    response = requests.get(url)  <span class="comment"># 사용자 입력 그대로 사용</span></span><br><span class="line">    <span class="keyword">return</span> response.text</span><br></pre></td></tr></table></figure>
+
+<p>공격자는 <code>?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/</code>처럼 내부 메타데이터 엔드포인트를 지정해 AWS 자격증명을 탈취할 수 있습니다.</p>
+<h2 id="실제-피해-사례"><a href="#실제-피해-사례" class="headerlink" title="실제 피해 사례"></a>실제 피해 사례</h2><p>2019년 Capital One 사고는 SSRF로 EC2 IMDSv1에서 IAM 토큰을 훔쳐 S3 버킷 1억 건 이상의 데이터를 유출한 대표적 사례입니다. 단일 SSRF가 클라우드 인프라 전체를 노출시킬 수 있다는 점이 충격적이었습니다.</p>
+<p>SSRF 공격이 노리는 표적은 다양합니다.</p>
+<ul>
+<li>클라우드 메타데이터(<code>169.254.169.254</code>, GCP&#x2F;Azure 동등 엔드포인트)</li>
+<li>내부 관리 API(<code>http://localhost:8500/v1/kv/...</code> 같은 Consul, etcd)</li>
+<li>사내망 서비스(<code>http://10.0.0.5/admin</code>)</li>
+<li>파일 프로토콜(<code>file:///etc/passwd</code>)</li>
+</ul>
+<h2 id="기본-방어-충분하지-않은-접근"><a href="#기본-방어-충분하지-않은-접근" class="headerlink" title="기본 방어 - 충분하지 않은 접근"></a>기본 방어 - 충분하지 않은 접근</h2><p>흔히 시도하는 방어는 URL 파싱 후 호스트가 사설 IP인지 검사하는 것입니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> ipaddress</span><br><span class="line"><span class="keyword">from</span> urllib.parse <span class="keyword">import</span> urlparse</span><br><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">is_safe_url</span>(<span class="params">url</span>):</span><br><span class="line">    parsed = urlparse(url)</span><br><span class="line">    <span class="keyword">if</span> parsed.scheme <span class="keyword">not</span> <span class="keyword">in</span> (<span class="string">&#x27;http&#x27;</span>, <span class="string">&#x27;https&#x27;</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">    host = parsed.hostname</span><br><span class="line">    ip = ipaddress.ip_address(socket.gethostbyname(host))</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">not</span> (ip.is_private <span class="keyword">or</span> ip.is_loopback <span class="keyword">or</span> ip.is_link_local <span class="keyword">or</span> ip.is_reserved)</span><br></pre></td></tr></table></figure>
+
+<p>문제는 두 가지입니다.</p>
+<ol>
+<li><strong>TOCTOU</strong>: 검사 시점의 DNS 결과와 실제 요청 시점의 결과가 다를 수 있음(DNS Rebinding).</li>
+<li><strong>우회 기법</strong>: 10진수 IP(<code>http://2852039166/</code>), IPv6 매핑, 리다이렉트 체이닝 등.</li>
+</ol>
+<h2 id="강력한-방어-전략"><a href="#강력한-방어-전략" class="headerlink" title="강력한 방어 전략"></a>강력한 방어 전략</h2><p>다층 방어가 필요합니다.</p>
+<h3 id="1-허용-목록-Allowlist"><a href="#1-허용-목록-Allowlist" class="headerlink" title="1. 허용 목록(Allowlist)"></a>1. 허용 목록(Allowlist)</h3><p>가능하다면 호출 가능한 도메인을 명시적으로 한정합니다. 차단 목록(blocklist)보다 항상 안전합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ALLOWED_HOSTS = &#123;<span class="string">&#x27;images.example.com&#x27;</span>, <span class="string">&#x27;cdn.example.com&#x27;</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">is_allowed</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="keyword">return</span> urlparse(url).hostname <span class="keyword">in</span> ALLOWED_HOSTS</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-DNS-결과-고정"><a href="#2-DNS-결과-고정" class="headerlink" title="2. DNS 결과 고정"></a>2. DNS 결과 고정</h3><p>DNS Rebinding을 막기 위해 직접 IP를 해석한 뒤, 그 IP로 connection을 만들고 Host 헤더만 원래 호스트로 설정합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> urllib3.util <span class="keyword">import</span> connection</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">patched_resolve</span>(<span class="params">host, *args, **kwargs</span>):</span><br><span class="line">    ip = safe_resolve(host)  <span class="comment"># 사설/예약 IP면 예외</span></span><br><span class="line">    <span class="keyword">return</span> ip</span><br></pre></td></tr></table></figure>
+
+<p>Python의 <code>requests</code>는 <code>urllib3</code>의 connection pool을 후킹하면 됩니다.</p>
+<h3 id="3-리다이렉트-처리"><a href="#3-리다이렉트-처리" class="headerlink" title="3. 리다이렉트 처리"></a>3. 리다이렉트 처리</h3><p>서버가 응답으로 30x 리다이렉트를 보내면 클라이언트는 새 URL로 다시 요청합니다. 따라서 리다이렉트마다 같은 검증을 반복해야 합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">session = requests.Session()</span><br><span class="line">session.max_redirects = <span class="number">3</span></span><br><span class="line">response = session.get(url, allow_redirects=<span class="literal">False</span>)</span><br><span class="line"><span class="keyword">while</span> response.is_redirect:</span><br><span class="line">    next_url = response.headers[<span class="string">&#x27;Location&#x27;</span>]</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> is_allowed(next_url):</span><br><span class="line">        <span class="keyword">raise</span> Exception(<span class="string">&#x27;Blocked redirect&#x27;</span>)</span><br><span class="line">    response = session.get(next_url, allow_redirects=<span class="literal">False</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-메타데이터-보호"><a href="#4-메타데이터-보호" class="headerlink" title="4. 메타데이터 보호"></a>4. 메타데이터 보호</h3><p>AWS는 IMDSv2(세션 토큰 기반)를 사용해야 합니다. IMDSv2는 PUT 요청으로 토큰을 받고, GET 요청에 토큰 헤더를 포함시켜야 하므로 단순 SSRF로는 자격증명을 탈취하기 어렵습니다.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># IMDSv2 강제</span></span><br><span class="line">aws ec2 modify-instance-metadata-options \</span><br><span class="line">  --instance-id i-xxx --http-tokens required --http-endpoint enabled</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-네트워크-격리"><a href="#5-네트워크-격리" class="headerlink" title="5. 네트워크 격리"></a>5. 네트워크 격리</h3><p>가장 강력한 방어는 네트워크 수준입니다. 외부 호출 전용 프록시를 두고, 애플리케이션 서브넷에서 내부 메타데이터&#x2F;관리 IP로의 egress를 차단합니다. 보안 그룹과 VPC 라우팅으로 강제하면 코드 버그가 있어도 피해를 막을 수 있습니다.</p>
+<h2 id="점검-체크리스트"><a href="#점검-체크리스트" class="headerlink" title="점검 체크리스트"></a>점검 체크리스트</h2><ul>
+<li>사용자 입력 URL을 직접 fetch하지 않는가</li>
+<li>사설&#x2F;링크로컬&#x2F;예약 IP를 차단하는가</li>
+<li>DNS Rebinding 대응이 있는가</li>
+<li>리다이렉트마다 재검증하는가</li>
+<li>IMDSv2를 강제하고 있는가</li>
+<li>외부 호출용 egress 정책이 있는가</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>SSRF는 단순한 URL 파라미터에서 시작해 클라우드 전체를 위협할 수 있는 강력한 취약점입니다. 코드 레벨의 검증, 네트워크 분리, 클라우드 설정(IMDSv2)을 모두 적용해야 비로소 안전합니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Web-Security/" rel="tag"># Web Security</a>
+              <a href="/tags/SSRF/" rel="tag"># SSRF</a>
+              <a href="/tags/Cloud-Security/" rel="tag"># Cloud Security</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/rbac-vs-abac/" rel="prev" title="RBAC vs ABAC - 역할 기반과 속성 기반 접근 제어 비교">
+      <i class="fa fa-chevron-left"></i> RBAC vs ABAC - 역할 기반과 속성 기반 접근 제어 비교
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/xxe-attack-prevention/" rel="next" title="XXE 공격과 방어 - 안전한 XML 파서 설정">
+      XXE 공격과 방어 - 안전한 XML 파서 설정 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#SSRF%EB%9E%80-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80"><span class="nav-number">1.</span> <span class="nav-text">SSRF란 무엇인가</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%8B%A4%EC%A0%9C-%ED%94%BC%ED%95%B4-%EC%82%AC%EB%A1%80"><span class="nav-number">2.</span> <span class="nav-text">실제 피해 사례</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B8%B0%EB%B3%B8-%EB%B0%A9%EC%96%B4-%EC%B6%A9%EB%B6%84%ED%95%98%EC%A7%80-%EC%95%8A%EC%9D%80-%EC%A0%91%EA%B7%BC"><span class="nav-number">3.</span> <span class="nav-text">기본 방어 - 충분하지 않은 접근</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B0%95%EB%A0%A5%ED%95%9C-%EB%B0%A9%EC%96%B4-%EC%A0%84%EB%9E%B5"><span class="nav-number">4.</span> <span class="nav-text">강력한 방어 전략</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%ED%97%88%EC%9A%A9-%EB%AA%A9%EB%A1%9D-Allowlist"><span class="nav-number">4.1.</span> <span class="nav-text">1. 허용 목록(Allowlist)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-DNS-%EA%B2%B0%EA%B3%BC-%EA%B3%A0%EC%A0%95"><span class="nav-number">4.2.</span> <span class="nav-text">2. DNS 결과 고정</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%EB%A6%AC%EB%8B%A4%EC%9D%B4%EB%A0%89%ED%8A%B8-%EC%B2%98%EB%A6%AC"><span class="nav-number">4.3.</span> <span class="nav-text">3. 리다이렉트 처리</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%EB%A9%94%ED%83%80%EB%8D%B0%EC%9D%B4%ED%84%B0-%EB%B3%B4%ED%98%B8"><span class="nav-number">4.4.</span> <span class="nav-text">4. 메타데이터 보호</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EA%B2%A9%EB%A6%AC"><span class="nav-number">4.5.</span> <span class="nav-text">5. 네트워크 격리</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%90%EA%B2%80-%EC%B2%B4%ED%81%AC%EB%A6%AC%EC%8A%A4%ED%8A%B8"><span class="nav-number">5.</span> <span class="nav-text">점검 체크리스트</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">6.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">214</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">506</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

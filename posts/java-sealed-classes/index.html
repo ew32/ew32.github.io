@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Java 17에서 정식화된 sealed 클래스와 인터페이스의 문법, permits 절, exhaustive switch와의 결합, 도메인 모델링에서의 실전 활용을 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java Sealed 클래스와 인터페이스로 도메인 모델링하기">
+<meta property="og:url" content="https://ew32.github.io/posts/java-sealed-classes/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="Java 17에서 정식화된 sealed 클래스와 인터페이스의 문법, permits 절, exhaustive switch와의 결합, 도메인 모델링에서의 실전 활용을 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-04-02T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-15T07:07:06.937Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="Pattern Matching">
+<meta property="article:tag" content="Sealed">
+<meta property="article:tag" content="Domain Modeling">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/java-sealed-classes/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>Java Sealed 클래스와 인터페이스로 도메인 모델링하기 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/java-sealed-classes/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java Sealed 클래스와 인터페이스로 도메인 모델링하기
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-04-02 10:00:00" itemprop="dateCreated datePublished" datetime="2026-04-02T10:00:00+09:00">2026-04-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-15 16:07:06" itemprop="dateModified" datetime="2026-05-15T16:07:06+09:00">2026-05-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">Java 17에서 정식화된 sealed 클래스와 인터페이스의 문법, permits 절, exhaustive switch와의 결합, 도메인 모델링에서의 실전 활용을 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Sealed-타입이-등장한-배경"><a href="#Sealed-타입이-등장한-배경" class="headerlink" title="Sealed 타입이 등장한 배경"></a>Sealed 타입이 등장한 배경</h2><p>Java의 클래스 계층은 전통적으로 두 극단을 오갔습니다. <strong>완전히 열린 상속</strong>(public class)이거나, <strong>완전히 닫힌 final 클래스</strong>거나. 그 사이에 “내가 정한 몇 개의 자식만 허용하고 싶다”는 요구가 항상 있어 왔지만, 이는 패키지-프라이빗 트릭이나 enum으로 우회해야 했습니다.</p>
+<p>Java 15에서 프리뷰로 도입되어 <strong>Java 17에서 정식 기능</strong>이 된 sealed 타입은 이 빈틈을 메웁니다. <code>sealed</code> 키워드와 <code>permits</code> 절을 사용해 <strong>어떤 클래스·인터페이스가 상속·구현할 수 있는지 명시적으로 선언</strong>할 수 있습니다.</p>
+<h2 id="기본-문법"><a href="#기본-문법" class="headerlink" title="기본 문법"></a>기본 문법</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">interface</span> <span class="title class_">Payment</span></span><br><span class="line">    <span class="keyword">permits</span> CardPayment, BankTransfer, MobilePayment &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">CardPayment</span> <span class="keyword">implements</span> <span class="title class_">Payment</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String cardNumber;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">CardPayment</span><span class="params">(String cardNumber)</span> &#123; <span class="built_in">this</span>.cardNumber = cardNumber; &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">BankTransfer</span> <span class="keyword">implements</span> <span class="title class_">Payment</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String accountNumber;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">BankTransfer</span><span class="params">(String accountNumber)</span> &#123; <span class="built_in">this</span>.accountNumber = accountNumber; &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">MobilePayment</span> <span class="keyword">implements</span> <span class="title class_">Payment</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String phoneNumber;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">MobilePayment</span><span class="params">(String phoneNumber)</span> &#123; <span class="built_in">this</span>.phoneNumber = phoneNumber; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>Payment</code> 인터페이스는 정확히 3개의 구현체만 허용합니다. 외부에서 임의로 <code>implements Payment</code>를 시도하면 컴파일 에러가 발생합니다.</p>
+<h2 id="하위-타입의-3가지-선택지"><a href="#하위-타입의-3가지-선택지" class="headerlink" title="하위 타입의 3가지 선택지"></a>하위 타입의 3가지 선택지</h2><p>sealed 타입을 상속·구현하는 자식 타입은 반드시 다음 중 하나로 선언되어야 합니다.</p>
+<ul>
+<li><code>final</code> — 더 이상 상속 불가 (가장 일반적)</li>
+<li><code>sealed</code> — 또 다른 permits 목록 정의 (계층을 깊게 가져갈 때)</li>
+<li><code>non-sealed</code> — 봉인을 풀고 자유로운 상속 허용</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">interface</span> <span class="title class_">Animal</span> <span class="keyword">permits</span> Mammal, Bird &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">interface</span> <span class="title class_">Mammal</span> <span class="keyword">extends</span> <span class="title class_">Animal</span> <span class="keyword">permits</span> Dog, Cat &#123;&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">non-sealed</span> <span class="keyword">interface</span> <span class="title class_">Bird</span> <span class="keyword">extends</span> <span class="title class_">Animal</span> &#123;&#125; <span class="comment">// 누구나 Bird를 구현 가능</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Dog</span> <span class="keyword">implements</span> <span class="title class_">Mammal</span> &#123;&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Cat</span> <span class="keyword">implements</span> <span class="title class_">Mammal</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="permits-절-생략-규칙"><a href="#permits-절-생략-규칙" class="headerlink" title="permits 절 생략 규칙"></a>permits 절 생략 규칙</h2><p><code>permits</code> 절은 모든 자식 타입이 <strong>같은 모듈, 또는 같은 패키지</strong>에 있을 때 생략할 수 있습니다. 같은 파일 안에서 모두 정의한다면 가장 간결합니다.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">interface</span> <span class="title class_">Result</span> &#123;</span><br><span class="line">    <span class="keyword">record</span> <span class="title class_">Success</span><span class="params">(String value)</span> <span class="keyword">implements</span> <span class="title class_">Result</span> &#123;&#125;</span><br><span class="line">    <span class="keyword">record</span> <span class="title class_">Failure</span><span class="params">(String reason)</span> <span class="keyword">implements</span> <span class="title class_">Result</span> &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Exhaustive-Switch와의-결합"><a href="#Exhaustive-Switch와의-결합" class="headerlink" title="Exhaustive Switch와의 결합"></a>Exhaustive Switch와의 결합</h2><p>sealed의 진짜 매력은 <strong>패턴 매칭과 결합</strong>될 때 드러납니다. 컴파일러는 sealed 타입의 모든 하위 타입을 알고 있기 때문에, switch에서 모든 경우를 다뤘는지 검증해 줍니다. <code>default</code> 절 없이도 안전한 분기가 가능합니다.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">String <span class="title function_">describe</span><span class="params">(Payment p)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">switch</span> (p) &#123;</span><br><span class="line">        <span class="keyword">case</span> CardPayment c   -&gt; <span class="string">&quot;카드 결제: &quot;</span> + c.cardNumber();</span><br><span class="line">        <span class="keyword">case</span> BankTransfer b  -&gt; <span class="string">&quot;계좌 이체: &quot;</span> + b.accountNumber();</span><br><span class="line">        <span class="keyword">case</span> MobilePayment m -&gt; <span class="string">&quot;모바일 결제: &quot;</span> + m.phoneNumber();</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>만약 나중에 <code>KakaoPay</code>라는 새로운 결제 수단을 <code>permits</code>에 추가했는데 switch는 갱신하지 않았다면, 컴파일 시점에 “exhaustiveness 부족” 에러가 발생합니다. <strong>타입 시스템이 도메인 변경을 강제로 추적</strong>해 주는 효과가 있습니다.</p>
+<h2 id="도메인-모델링-Result-State-Event"><a href="#도메인-모델링-Result-State-Event" class="headerlink" title="도메인 모델링: Result, State, Event"></a>도메인 모델링: Result, State, Event</h2><p>sealed는 함수형 언어의 ADT(대수적 데이터 타입)와 비슷한 표현을 자바에 가져옵니다. 결과 타입, 상태 머신, 이벤트 정의 등에 잘 어울립니다.</p>
+<h3 id="Result-타입"><a href="#Result-타입" class="headerlink" title="Result 타입"></a>Result 타입</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">interface</span> <span class="title class_">ApiResult</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">record</span> <span class="title class_">Ok</span>&lt;T&gt;(T value) <span class="keyword">implements</span> <span class="title class_">ApiResult</span>&lt;T&gt; &#123;&#125;</span><br><span class="line">    <span class="keyword">record</span> <span class="title class_">Err</span>&lt;T&gt;(String code, String message) <span class="keyword">implements</span> <span class="title class_">ApiResult</span>&lt;T&gt; &#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">ApiResult&lt;User&gt; result = userService.find(<span class="number">1L</span>);</span><br><span class="line"><span class="type">String</span> <span class="variable">message</span> <span class="operator">=</span> <span class="keyword">switch</span> (result) &#123;</span><br><span class="line">    <span class="keyword">case</span> ApiResult.Ok&lt;User&gt; ok   -&gt; <span class="string">&quot;이름: &quot;</span> + ok.value().getName();</span><br><span class="line">    <span class="keyword">case</span> ApiResult.Err&lt;User&gt; err -&gt; <span class="string">&quot;오류: &quot;</span> + err.code();</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="주문-상태-머신"><a href="#주문-상태-머신" class="headerlink" title="주문 상태 머신"></a>주문 상태 머신</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">interface</span> <span class="title class_">OrderState</span> &#123;</span><br><span class="line">    <span class="keyword">record</span> <span class="title class_">Created</span><span class="params">(LocalDateTime at)</span> <span class="keyword">implements</span> <span class="title class_">OrderState</span> &#123;&#125;</span><br><span class="line">    <span class="keyword">record</span> <span class="title class_">Paid</span><span class="params">(LocalDateTime at, String txId)</span> <span class="keyword">implements</span> <span class="title class_">OrderState</span> &#123;&#125;</span><br><span class="line">    <span class="keyword">record</span> <span class="title class_">Shipped</span><span class="params">(LocalDateTime at, String tracking)</span> <span class="keyword">implements</span> <span class="title class_">OrderState</span> &#123;&#125;</span><br><span class="line">    <span class="keyword">record</span> <span class="title class_">Cancelled</span><span class="params">(LocalDateTime at, String reason)</span> <span class="keyword">implements</span> <span class="title class_">OrderState</span> &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>각 상태가 고유한 데이터를 가질 수 있고, switch로 분기하면 각 상태에 맞는 필드에 안전하게 접근할 수 있습니다.</p>
+<h2 id="enum-vs-sealed"><a href="#enum-vs-sealed" class="headerlink" title="enum vs sealed"></a>enum vs sealed</h2><p>비슷해 보이지만 차이가 있습니다.</p>
+<ul>
+<li><strong>enum</strong>: 상수의 집합. 각 값이 서로 다른 데이터를 갖기 어렵고, 인스턴스가 고정됨.</li>
+<li><strong>sealed</strong>: 타입의 집합. 각 하위 타입이 <strong>서로 다른 구조의 데이터</strong>를 가질 수 있고, 인스턴스를 다양하게 만들 수 있음.</li>
+</ul>
+<p>“상태 자체는 같은데 라벨만 다르다”면 enum, “상태마다 들고 있는 데이터가 다르다”면 sealed가 맞습니다.</p>
+<h2 id="리플렉션과-도구-지원"><a href="#리플렉션과-도구-지원" class="headerlink" title="리플렉션과 도구 지원"></a>리플렉션과 도구 지원</h2><p>sealed 정보는 런타임에도 보존됩니다.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;?&gt; clazz = Payment.class;</span><br><span class="line">System.out.println(clazz.isSealed());            <span class="comment">// true</span></span><br><span class="line"><span class="keyword">for</span> (Class&lt;?&gt; sub : clazz.getPermittedSubclasses()) &#123;</span><br><span class="line">    System.out.println(sub.getName());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>Sealed 타입은 <strong>자바 타입 시스템에 “닫힌 계층”을 도입</strong>하는 작지만 강력한 변화입니다. 패턴 매칭과 결합하면 분기 누락을 컴파일러가 잡아 주어, 도메인이 변할 때 영향을 받는 코드를 즉시 알 수 있습니다. Record와 함께 활용하면 표현력 높은 자바 코드를 작성할 수 있습니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Java/" rel="tag"># Java</a>
+              <a href="/tags/Pattern-Matching/" rel="tag"># Pattern Matching</a>
+              <a href="/tags/Sealed/" rel="tag"># Sealed</a>
+              <a href="/tags/Domain-Modeling/" rel="tag"># Domain Modeling</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/java-record-class-guide/" rel="prev" title="Java Record 클래스 완벽 가이드">
+      <i class="fa fa-chevron-left"></i> Java Record 클래스 완벽 가이드
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/java-pattern-matching/" rel="next" title="Java 패턴 매칭 완전 정복 - instanceof부터 switch까지">
+      Java 패턴 매칭 완전 정복 - instanceof부터 switch까지 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Sealed-%ED%83%80%EC%9E%85%EC%9D%B4-%EB%93%B1%EC%9E%A5%ED%95%9C-%EB%B0%B0%EA%B2%BD"><span class="nav-number">1.</span> <span class="nav-text">Sealed 타입이 등장한 배경</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B8%B0%EB%B3%B8-%EB%AC%B8%EB%B2%95"><span class="nav-number">2.</span> <span class="nav-text">기본 문법</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%ED%95%98%EC%9C%84-%ED%83%80%EC%9E%85%EC%9D%98-3%EA%B0%80%EC%A7%80-%EC%84%A0%ED%83%9D%EC%A7%80"><span class="nav-number">3.</span> <span class="nav-text">하위 타입의 3가지 선택지</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#permits-%EC%A0%88-%EC%83%9D%EB%9E%B5-%EA%B7%9C%EC%B9%99"><span class="nav-number">4.</span> <span class="nav-text">permits 절 생략 규칙</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Exhaustive-Switch%EC%99%80%EC%9D%98-%EA%B2%B0%ED%95%A9"><span class="nav-number">5.</span> <span class="nav-text">Exhaustive Switch와의 결합</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%8F%84%EB%A9%94%EC%9D%B8-%EB%AA%A8%EB%8D%B8%EB%A7%81-Result-State-Event"><span class="nav-number">6.</span> <span class="nav-text">도메인 모델링: Result, State, Event</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Result-%ED%83%80%EC%9E%85"><span class="nav-number">6.1.</span> <span class="nav-text">Result 타입</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%A3%BC%EB%AC%B8-%EC%83%81%ED%83%9C-%EB%A8%B8%EC%8B%A0"><span class="nav-number">6.2.</span> <span class="nav-text">주문 상태 머신</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#enum-vs-sealed"><span class="nav-number">7.</span> <span class="nav-text">enum vs sealed</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A6%AC%ED%94%8C%EB%A0%89%EC%85%98%EA%B3%BC-%EB%8F%84%EA%B5%AC-%EC%A7%80%EC%9B%90"><span class="nav-number">8.</span> <span class="nav-text">리플렉션과 도구 지원</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">9.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">214</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">506</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

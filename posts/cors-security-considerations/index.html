@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="CORS의 잘못된 설정이 만드는 보안 위험과 Access-Control-Allow-Origin 와일드카드, credentials 조합 시 주의점, 안전한 화이트리스트 패턴을 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CORS 보안 고려사항 - 안전한 설정 가이드">
+<meta property="og:url" content="https://ew32.github.io/posts/cors-security-considerations/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="CORS의 잘못된 설정이 만드는 보안 위험과 Access-Control-Allow-Origin 와일드카드, credentials 조합 시 주의점, 안전한 화이트리스트 패턴을 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-04-30T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-15T07:07:06.934Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Web Security">
+<meta property="article:tag" content="HTTP Headers">
+<meta property="article:tag" content="CORS">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/cors-security-considerations/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>CORS 보안 고려사항 - 안전한 설정 가이드 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/cors-security-considerations/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CORS 보안 고려사항 - 안전한 설정 가이드
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-04-30 10:00:00" itemprop="dateCreated datePublished" datetime="2026-04-30T10:00:00+09:00">2026-04-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-15 16:07:06" itemprop="dateModified" datetime="2026-05-15T16:07:06+09:00">2026-05-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Security/" itemprop="url" rel="index"><span itemprop="name">Security</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Security/Cryptography/" itemprop="url" rel="index"><span itemprop="name">Cryptography</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">CORS의 잘못된 설정이 만드는 보안 위험과 Access-Control-Allow-Origin 와일드카드, credentials 조합 시 주의점, 안전한 화이트리스트 패턴을 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="CORS는-보안-기능이-아니다"><a href="#CORS는-보안-기능이-아니다" class="headerlink" title="CORS는 보안 기능이 아니다"></a>CORS는 보안 기능이 아니다</h2><p>흔한 오해는 CORS(Cross-Origin Resource Sharing)가 “보안 기능”이라는 것입니다. 정확히 말하면 CORS는 같은 출처 정책(Same-Origin Policy)의 <strong>완화 메커니즘</strong>입니다. 즉, 기본적으로 차단되는 cross-origin 요청을 서버가 명시적으로 허용하도록 하는 프로토콜입니다.</p>
+<p>따라서 CORS를 잘못 설정하는 것은 보안을 약화시키는 행위이지, 강화하는 행위가 아닙니다.</p>
+<h2 id="가장-위험한-설정-조합"><a href="#가장-위험한-설정-조합" class="headerlink" title="가장 위험한 설정 조합"></a>가장 위험한 설정 조합</h2><p>다음 조합은 거의 항상 취약점입니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Access-Control-Allow-Origin: &lt;요청한 Origin을 그대로 반영&gt;</span><br><span class="line">Access-Control-Allow-Credentials: true</span><br></pre></td></tr></table></figure>
+
+<p>서버가 요청의 <code>Origin</code> 헤더 값을 그대로 응답에 넣고, 동시에 credentials를 허용하면 모든 출처에서 인증된 요청을 보낼 수 있게 됩니다. 공격자가 만든 <code>evil.com</code>이 피해자의 쿠키와 함께 API를 호출할 수 있습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 취약한 Flask 코드</span></span><br><span class="line"><span class="meta">@app.after_request</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">cors</span>(<span class="params">response</span>):</span><br><span class="line">    response.headers[<span class="string">&#x27;Access-Control-Allow-Origin&#x27;</span>] = request.headers.get(<span class="string">&#x27;Origin&#x27;</span>, <span class="string">&#x27;*&#x27;</span>)</span><br><span class="line">    response.headers[<span class="string">&#x27;Access-Control-Allow-Credentials&#x27;</span>] = <span class="string">&#x27;true&#x27;</span></span><br><span class="line">    <span class="keyword">return</span> response</span><br></pre></td></tr></table></figure>
+
+<h2 id="와일드카드의-함정"><a href="#와일드카드의-함정" class="headerlink" title="와일드카드의 함정"></a>와일드카드의 함정</h2><p><code>Access-Control-Allow-Origin: *</code>는 credentials와 함께 사용할 수 없습니다. 브라우저가 거부합니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Access-Control-Allow-Origin: *</span><br><span class="line">Access-Control-Allow-Credentials: true   &lt;- 작동하지 않음</span><br></pre></td></tr></table></figure>
+
+<p>이 사실 때문에 개발자들이 종종 “그럼 Origin을 반사하면 되겠다”는 잘못된 결론에 도달합니다. 이 우회는 위에서 본 것처럼 더 큰 위험을 만듭니다.</p>
+<h2 id="null-Origin-주의"><a href="#null-Origin-주의" class="headerlink" title="null Origin 주의"></a>null Origin 주의</h2><p>샌드박스 iframe, 로컬 파일(<code>file://</code>), 일부 리다이렉트 상황에서 <code>Origin: null</code>이 전송됩니다. 다음 설정은 공격에 활용될 수 있습니다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Access-Control-Allow-Origin: null</span><br><span class="line">Access-Control-Allow-Credentials: true</span><br></pre></td></tr></table></figure>
+
+<p>공격자는 <code>&lt;iframe sandbox&gt;</code> 안에서 요청을 보내 null Origin을 가장할 수 있습니다. <strong>null은 절대 허용 목록에 넣지 마세요.</strong></p>
+<h2 id="안전한-화이트리스트-패턴"><a href="#안전한-화이트리스트-패턴" class="headerlink" title="안전한 화이트리스트 패턴"></a>안전한 화이트리스트 패턴</h2><p>올바른 구현은 명시적 허용 목록을 검사하는 것입니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">ALLOWED_ORIGINS = &#123;</span><br><span class="line">    <span class="string">&#x27;https://app.example.com&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;https://admin.example.com&#x27;</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.after_request</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">cors</span>(<span class="params">response</span>):</span><br><span class="line">    origin = request.headers.get(<span class="string">&#x27;Origin&#x27;</span>)</span><br><span class="line">    <span class="keyword">if</span> origin <span class="keyword">in</span> ALLOWED_ORIGINS:</span><br><span class="line">        response.headers[<span class="string">&#x27;Access-Control-Allow-Origin&#x27;</span>] = origin</span><br><span class="line">        response.headers[<span class="string">&#x27;Vary&#x27;</span>] = <span class="string">&#x27;Origin&#x27;</span></span><br><span class="line">        response.headers[<span class="string">&#x27;Access-Control-Allow-Credentials&#x27;</span>] = <span class="string">&#x27;true&#x27;</span></span><br><span class="line">    <span class="keyword">return</span> response</span><br></pre></td></tr></table></figure>
+
+<p>핵심은 다음과 같습니다.</p>
+<ul>
+<li>허용 목록에 있는 정확한 출처만 응답에 포함</li>
+<li><code>Vary: Origin</code>을 추가해 CDN이 잘못 캐시하지 않도록 함</li>
+<li>와일드카드 서브도메인 매칭은 정규식으로 엄격히</li>
+</ul>
+<h2 id="정규식-매칭-시-함정"><a href="#정규식-매칭-시-함정" class="headerlink" title="정규식 매칭 시 함정"></a>정규식 매칭 시 함정</h2><p>서브도메인 허용 시 정규식 실수가 자주 발생합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 잘못된 정규식</span></span><br><span class="line">re.<span class="keyword">match</span>(<span class="string">r&#x27;https://.*\.example\.com&#x27;</span>, origin)  <span class="comment"># &#x27;https://evil.com#.example.com&#x27; 통과</span></span><br></pre></td></tr></table></figure>
+
+<p>반드시 anchor를 명시하고, 전체 일치를 보장해야 합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">re.fullmatch(<span class="string">r&#x27;https://[a-z0-9-]+\.example\.com&#x27;</span>, origin)</span><br></pre></td></tr></table></figure>
+
+<h2 id="Preflight-요청"><a href="#Preflight-요청" class="headerlink" title="Preflight 요청"></a>Preflight 요청</h2><p>복잡한 cross-origin 요청은 Preflight(<code>OPTIONS</code>)가 먼저 발생합니다. 서버는 다음 헤더로 응답합니다.</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Access-Control-Allow-Origin</span><span class="punctuation">: </span>https://app.example.com</span><br><span class="line"><span class="attribute">Access-Control-Allow-Methods</span><span class="punctuation">: </span>GET, POST, PUT, DELETE</span><br><span class="line"><span class="attribute">Access-Control-Allow-Headers</span><span class="punctuation">: </span>Content-Type, Authorization</span><br><span class="line"><span class="attribute">Access-Control-Max-Age</span><span class="punctuation">: </span>600</span><br></pre></td></tr></table></figure>
+
+<p><code>Access-Control-Max-Age</code>로 캐시 시간을 늘려 성능을 개선할 수 있지만, 정책 변경 시 반영 지연을 고려해야 합니다.</p>
+<h2 id="CSRF와의-관계"><a href="#CSRF와의-관계" class="headerlink" title="CSRF와의 관계"></a>CSRF와의 관계</h2><p>CORS는 CSRF를 막아주지 않습니다. CSRF는 브라우저가 자동으로 쿠키를 첨부하는 동작에서 발생하며, CORS의 보호는 응답 읽기를 차단할 뿐 요청 자체는 도달합니다. 상태 변경 API는 다음 중 하나로 보호해야 합니다.</p>
+<ul>
+<li>CSRF 토큰</li>
+<li><code>SameSite=Strict|Lax</code> 쿠키</li>
+<li>Custom 헤더 + Preflight 강제</li>
+</ul>
+<h2 id="점검-체크리스트"><a href="#점검-체크리스트" class="headerlink" title="점검 체크리스트"></a>점검 체크리스트</h2><ul>
+<li><code>Allow-Origin</code>이 와일드카드나 Origin 반사가 아닌 명시적 허용 목록인가</li>
+<li><code>Allow-Credentials: true</code>와 <code>*</code> 조합이 없는가</li>
+<li><code>null</code> Origin을 허용하지 않는가</li>
+<li><code>Vary: Origin</code> 헤더가 응답에 포함되는가</li>
+<li>서브도메인 정규식이 fullmatch이며 escape가 정확한가</li>
+<li>상태 변경 API에 별도 CSRF 보호가 있는가</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>CORS는 잘못된 설정이 가장 흔하게 보안 사고로 이어지는 영역 중 하나입니다. 와일드카드의 유혹을 버리고 명시적 허용 목록을 사용하세요. CORS는 SOP의 완화 수단이지, CSRF나 인증의 대체재가 아닙니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Web-Security/" rel="tag"># Web Security</a>
+              <a href="/tags/HTTP-Headers/" rel="tag"># HTTP Headers</a>
+              <a href="/tags/CORS/" rel="tag"># CORS</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/clickjacking-defense/" rel="prev" title="클릭재킹 방어 - X-Frame-Options와 frame-ancestors">
+      <i class="fa fa-chevron-left"></i> 클릭재킹 방어 - X-Frame-Options와 frame-ancestors
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/docker-container-basics/" rel="next" title="Docker 컨테이너 기초">
+      Docker 컨테이너 기초 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#CORS%EB%8A%94-%EB%B3%B4%EC%95%88-%EA%B8%B0%EB%8A%A5%EC%9D%B4-%EC%95%84%EB%8B%88%EB%8B%A4"><span class="nav-number">1.</span> <span class="nav-text">CORS는 보안 기능이 아니다</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B0%80%EC%9E%A5-%EC%9C%84%ED%97%98%ED%95%9C-%EC%84%A4%EC%A0%95-%EC%A1%B0%ED%95%A9"><span class="nav-number">2.</span> <span class="nav-text">가장 위험한 설정 조합</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%99%80%EC%9D%BC%EB%93%9C%EC%B9%B4%EB%93%9C%EC%9D%98-%ED%95%A8%EC%A0%95"><span class="nav-number">3.</span> <span class="nav-text">와일드카드의 함정</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#null-Origin-%EC%A3%BC%EC%9D%98"><span class="nav-number">4.</span> <span class="nav-text">null Origin 주의</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%95%88%EC%A0%84%ED%95%9C-%ED%99%94%EC%9D%B4%ED%8A%B8%EB%A6%AC%EC%8A%A4%ED%8A%B8-%ED%8C%A8%ED%84%B4"><span class="nav-number">5.</span> <span class="nav-text">안전한 화이트리스트 패턴</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%95%EA%B7%9C%EC%8B%9D-%EB%A7%A4%EC%B9%AD-%EC%8B%9C-%ED%95%A8%EC%A0%95"><span class="nav-number">6.</span> <span class="nav-text">정규식 매칭 시 함정</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Preflight-%EC%9A%94%EC%B2%AD"><span class="nav-number">7.</span> <span class="nav-text">Preflight 요청</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CSRF%EC%99%80%EC%9D%98-%EA%B4%80%EA%B3%84"><span class="nav-number">8.</span> <span class="nav-text">CSRF와의 관계</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A0%90%EA%B2%80-%EC%B2%B4%ED%81%AC%EB%A6%AC%EC%8A%A4%ED%8A%B8"><span class="nav-number">9.</span> <span class="nav-text">점검 체크리스트</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">10.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">214</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">506</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="MongoDB의 강력한 데이터 분석 도구인 Aggregation Pipeline의 주요 stage와 실전 예제, 성능 최적화 팁을 종합적으로 설명합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MongoDB Aggregation Pipeline 완벽 가이드">
+<meta property="og:url" content="https://ew32.github.io/posts/mongodb-aggregation-pipeline/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="MongoDB의 강력한 데이터 분석 도구인 Aggregation Pipeline의 주요 stage와 실전 예제, 성능 최적화 팁을 종합적으로 설명합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-04-19T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-15T07:07:06.939Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="NoSQL">
+<meta property="article:tag" content="Database">
+<meta property="article:tag" content="Query">
+<meta property="article:tag" content="MongoDB">
+<meta property="article:tag" content="Aggregation">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/mongodb-aggregation-pipeline/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>MongoDB Aggregation Pipeline 완벽 가이드 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/mongodb-aggregation-pipeline/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MongoDB Aggregation Pipeline 완벽 가이드
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-04-19 10:00:00" itemprop="dateCreated datePublished" datetime="2026-04-19T10:00:00+09:00">2026-04-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-15 16:07:06" itemprop="dateModified" datetime="2026-05-15T16:07:06+09:00">2026-05-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">MongoDB의 강력한 데이터 분석 도구인 Aggregation Pipeline의 주요 stage와 실전 예제, 성능 최적화 팁을 종합적으로 설명합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Aggregation-Pipeline이란"><a href="#Aggregation-Pipeline이란" class="headerlink" title="Aggregation Pipeline이란?"></a>Aggregation Pipeline이란?</h2><p>MongoDB의 Aggregation Pipeline은 문서를 여러 단계(stage)를 거치며 변환·집계하는 강력한 데이터 처리 프레임워크입니다. 각 stage는 이전 stage의 출력을 입력으로 받아 처리하며, 결과적으로 SQL의 <code>SELECT ... GROUP BY ... HAVING ... ORDER BY</code>보다 훨씬 표현력이 풍부한 쿼리를 작성할 수 있습니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">db.<span class="property">orders</span>.<span class="title function_">aggregate</span>([</span><br><span class="line">  &#123; <span class="attr">$match</span>: &#123; <span class="attr">status</span>: <span class="string">&quot;paid&quot;</span> &#125; &#125;,</span><br><span class="line">  &#123; <span class="attr">$group</span>: &#123; <span class="attr">_id</span>: <span class="string">&quot;$userId&quot;</span>, <span class="attr">total</span>: &#123; <span class="attr">$sum</span>: <span class="string">&quot;$amount&quot;</span> &#125; &#125; &#125;,</span><br><span class="line">  &#123; <span class="attr">$sort</span>: &#123; <span class="attr">total</span>: -<span class="number">1</span> &#125; &#125;,</span><br><span class="line">  &#123; <span class="attr">$limit</span>: <span class="number">10</span> &#125;</span><br><span class="line">])</span><br></pre></td></tr></table></figure>
+
+<p>이 한 줄로 결제 상태인 주문을 사용자별로 합산하여 상위 10명을 가져옵니다.</p>
+<h2 id="주요-Stage-정리"><a href="#주요-Stage-정리" class="headerlink" title="주요 Stage 정리"></a>주요 Stage 정리</h2><h3 id="match"><a href="#match" class="headerlink" title="$match"></a>$match</h3><p>가장 자주 쓰이는 stage. 일반 쿼리 조건과 동일하게 작동합니다. <strong>가능한 한 파이프라인의 가장 앞에 두는 것</strong> 이 성능에 유리합니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123; <span class="attr">$match</span>: &#123; <span class="attr">status</span>: <span class="string">&quot;paid&quot;</span>, <span class="attr">amount</span>: &#123; <span class="attr">$gte</span>: <span class="number">1000</span> &#125; &#125; &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="project"><a href="#project" class="headerlink" title="$project"></a>$project</h3><p>필요한 필드만 선택하거나 새로운 필드를 계산합니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">$project</span>: &#123;</span><br><span class="line">    <span class="attr">_id</span>: <span class="number">0</span>,</span><br><span class="line">    <span class="attr">name</span>: <span class="number">1</span>,</span><br><span class="line">    <span class="attr">yearMonth</span>: &#123; <span class="attr">$dateToString</span>: &#123; <span class="attr">format</span>: <span class="string">&quot;%Y-%m&quot;</span>, <span class="attr">date</span>: <span class="string">&quot;$createdAt&quot;</span> &#125; &#125;,</span><br><span class="line">    <span class="attr">netAmount</span>: &#123; <span class="attr">$subtract</span>: [<span class="string">&quot;$amount&quot;</span>, <span class="string">&quot;$fee&quot;</span>] &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="group"><a href="#group" class="headerlink" title="$group"></a>$group</h3><p>SQL의 GROUP BY에 해당합니다. <code>_id</code>로 그룹 키를 정의하고, 다양한 집계 연산자를 적용합니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">$group</span>: &#123;</span><br><span class="line">    <span class="attr">_id</span>: &#123; <span class="attr">user</span>: <span class="string">&quot;$userId&quot;</span>, <span class="attr">status</span>: <span class="string">&quot;$status&quot;</span> &#125;,</span><br><span class="line">    <span class="attr">count</span>: &#123; <span class="attr">$sum</span>: <span class="number">1</span> &#125;,</span><br><span class="line">    <span class="attr">total</span>: &#123; <span class="attr">$sum</span>: <span class="string">&quot;$amount&quot;</span> &#125;,</span><br><span class="line">    <span class="attr">avg</span>: &#123; <span class="attr">$avg</span>: <span class="string">&quot;$amount&quot;</span> &#125;,</span><br><span class="line">    <span class="attr">min</span>: &#123; <span class="attr">$min</span>: <span class="string">&quot;$amount&quot;</span> &#125;,</span><br><span class="line">    <span class="attr">max</span>: &#123; <span class="attr">$max</span>: <span class="string">&quot;$amount&quot;</span> &#125;,</span><br><span class="line">    <span class="attr">items</span>: &#123; <span class="attr">$push</span>: <span class="string">&quot;$itemId&quot;</span> &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="sort"><a href="#sort" class="headerlink" title="$sort"></a>$sort</h3><p>정렬. 인덱스를 활용할 수 있다면 매우 빠릅니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123; <span class="attr">$sort</span>: &#123; <span class="attr">total</span>: -<span class="number">1</span>, <span class="attr">createdAt</span>: -<span class="number">1</span> &#125; &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="limit-skip"><a href="#limit-skip" class="headerlink" title="$limit &#x2F; $skip"></a>$limit &#x2F; $skip</h3><p>페이징. 단, $skip은 큰 값에서 느려지므로 keyset 페이징을 고려합니다.</p>
+<h3 id="lookup-조인"><a href="#lookup-조인" class="headerlink" title="$lookup (조인)"></a>$lookup (조인)</h3><p>다른 컬렉션과 left outer join을 수행합니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">$lookup</span>: &#123;</span><br><span class="line">    <span class="attr">from</span>: <span class="string">&quot;users&quot;</span>,</span><br><span class="line">    <span class="attr">localField</span>: <span class="string">&quot;userId&quot;</span>,</span><br><span class="line">    <span class="attr">foreignField</span>: <span class="string">&quot;_id&quot;</span>,</span><br><span class="line">    <span class="attr">as</span>: <span class="string">&quot;user&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>여러 조건 조인을 위한 확장 문법도 지원합니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">$lookup</span>: &#123;</span><br><span class="line">    <span class="attr">from</span>: <span class="string">&quot;orders&quot;</span>,</span><br><span class="line">    <span class="attr">let</span>: &#123; <span class="attr">uid</span>: <span class="string">&quot;$_id&quot;</span> &#125;,</span><br><span class="line">    <span class="attr">pipeline</span>: [</span><br><span class="line">      &#123; <span class="attr">$match</span>: &#123; <span class="attr">$expr</span>: &#123; <span class="attr">$and</span>: [</span><br><span class="line">        &#123; <span class="attr">$eq</span>: [<span class="string">&quot;$userId&quot;</span>, <span class="string">&quot;$$uid&quot;</span>] &#125;,</span><br><span class="line">        &#123; <span class="attr">$eq</span>: [<span class="string">&quot;$status&quot;</span>, <span class="string">&quot;paid&quot;</span>] &#125;</span><br><span class="line">      ] &#125; &#125; &#125;</span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">as</span>: <span class="string">&quot;paidOrders&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="unwind"><a href="#unwind" class="headerlink" title="$unwind"></a>$unwind</h3><p>배열 필드를 풀어 여러 행으로 만듭니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123; <span class="attr">$unwind</span>: <span class="string">&quot;$tags&quot;</span> &#125;</span><br><span class="line"><span class="comment">// 옵션: 빈 배열도 보존</span></span><br><span class="line">&#123; <span class="attr">$unwind</span>: &#123; <span class="attr">path</span>: <span class="string">&quot;$tags&quot;</span>, <span class="attr">preserveNullAndEmptyArrays</span>: <span class="literal">true</span> &#125; &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="addFields-set"><a href="#addFields-set" class="headerlink" title="$addFields &#x2F; $set"></a>$addFields &#x2F; $set</h3><p>기존 문서에 필드를 추가합니다. $project와 달리 다른 필드를 제거하지 않습니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123; <span class="attr">$addFields</span>: &#123; <span class="attr">discountedPrice</span>: &#123; <span class="attr">$multiply</span>: [<span class="string">&quot;$price&quot;</span>, <span class="number">0.9</span>] &#125; &#125; &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="facet"><a href="#facet" class="headerlink" title="$facet"></a>$facet</h3><p>같은 데이터로 여러 파이프라인을 병렬 실행합니다. 검색 결과 페이지의 “전체 카운트 + 상위 10건 + 카테고리별 통계”를 한 번에 얻을 때 유용합니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">$facet</span>: &#123;</span><br><span class="line">    <span class="attr">totalCount</span>: [ &#123; <span class="attr">$count</span>: <span class="string">&quot;count&quot;</span> &#125; ],</span><br><span class="line">    <span class="attr">top10</span>: [ &#123; <span class="attr">$sort</span>: &#123; <span class="attr">score</span>: -<span class="number">1</span> &#125; &#125;, &#123; <span class="attr">$limit</span>: <span class="number">10</span> &#125; ],</span><br><span class="line">    <span class="attr">byCategory</span>: [ &#123; <span class="attr">$group</span>: &#123; <span class="attr">_id</span>: <span class="string">&quot;$category&quot;</span>, <span class="attr">c</span>: &#123; <span class="attr">$sum</span>: <span class="number">1</span> &#125; &#125; &#125; ]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="bucket-bucketAuto"><a href="#bucket-bucketAuto" class="headerlink" title="$bucket &#x2F; $bucketAuto"></a>$bucket &#x2F; $bucketAuto</h3><p>범위별 그룹화. 히스토그램에 적합합니다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">$bucket</span>: &#123;</span><br><span class="line">    <span class="attr">groupBy</span>: <span class="string">&quot;$amount&quot;</span>,</span><br><span class="line">    <span class="attr">boundaries</span>: [<span class="number">0</span>, <span class="number">1000</span>, <span class="number">5000</span>, <span class="number">10000</span>, <span class="number">50000</span>],</span><br><span class="line">    <span class="attr">default</span>: <span class="string">&quot;Other&quot;</span>,</span><br><span class="line">    <span class="attr">output</span>: &#123; <span class="attr">count</span>: &#123; <span class="attr">$sum</span>: <span class="number">1</span> &#125; &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="out-merge"><a href="#out-merge" class="headerlink" title="$out &#x2F; $merge"></a>$out &#x2F; $merge</h3><p>파이프라인 결과를 새 컬렉션으로 저장하거나 기존 컬렉션에 upsert. ETL과 머터리얼라이즈드 뷰에 유용합니다.</p>
+<h2 id="실전-예제"><a href="#실전-예제" class="headerlink" title="실전 예제"></a>실전 예제</h2><h3 id="사용자별-월-매출-집계"><a href="#사용자별-월-매출-집계" class="headerlink" title="사용자별 월 매출 집계"></a>사용자별 월 매출 집계</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">db.<span class="property">orders</span>.<span class="title function_">aggregate</span>([</span><br><span class="line">  &#123; <span class="attr">$match</span>: &#123; <span class="attr">status</span>: <span class="string">&quot;paid&quot;</span>, <span class="attr">createdAt</span>: &#123; <span class="attr">$gte</span>: <span class="title class_">ISODate</span>(<span class="string">&quot;2026-01-01&quot;</span>) &#125; &#125; &#125;,</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">$group</span>: &#123;</span><br><span class="line">      <span class="attr">_id</span>: &#123;</span><br><span class="line">        <span class="attr">user</span>: <span class="string">&quot;$userId&quot;</span>,</span><br><span class="line">        <span class="attr">month</span>: &#123; <span class="attr">$dateToString</span>: &#123; <span class="attr">format</span>: <span class="string">&quot;%Y-%m&quot;</span>, <span class="attr">date</span>: <span class="string">&quot;$createdAt&quot;</span> &#125; &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="attr">revenue</span>: &#123; <span class="attr">$sum</span>: <span class="string">&quot;$amount&quot;</span> &#125;,</span><br><span class="line">      <span class="attr">orderCount</span>: &#123; <span class="attr">$sum</span>: <span class="number">1</span> &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  &#123; <span class="attr">$sort</span>: &#123; <span class="string">&quot;_id.month&quot;</span>: <span class="number">1</span>, <span class="attr">revenue</span>: -<span class="number">1</span> &#125; &#125;</span><br><span class="line">])</span><br></pre></td></tr></table></figure>
+
+<h3 id="회원-활동-분석-lookup-facet"><a href="#회원-활동-분석-lookup-facet" class="headerlink" title="회원 활동 분석 (lookup + facet)"></a>회원 활동 분석 (lookup + facet)</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">db.<span class="property">users</span>.<span class="title function_">aggregate</span>([</span><br><span class="line">  &#123; <span class="attr">$match</span>: &#123; <span class="attr">active</span>: <span class="literal">true</span> &#125; &#125;,</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">$lookup</span>: &#123;</span><br><span class="line">      <span class="attr">from</span>: <span class="string">&quot;orders&quot;</span>,</span><br><span class="line">      <span class="attr">localField</span>: <span class="string">&quot;_id&quot;</span>,</span><br><span class="line">      <span class="attr">foreignField</span>: <span class="string">&quot;userId&quot;</span>,</span><br><span class="line">      <span class="attr">as</span>: <span class="string">&quot;orders&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">$facet</span>: &#123;</span><br><span class="line">      <span class="attr">summary</span>: [</span><br><span class="line">        &#123; <span class="attr">$project</span>: &#123; <span class="attr">name</span>: <span class="number">1</span>, <span class="attr">orderCount</span>: &#123; <span class="attr">$size</span>: <span class="string">&quot;$orders&quot;</span> &#125; &#125; &#125;,</span><br><span class="line">        &#123; <span class="attr">$sort</span>: &#123; <span class="attr">orderCount</span>: -<span class="number">1</span> &#125; &#125;,</span><br><span class="line">        &#123; <span class="attr">$limit</span>: <span class="number">10</span> &#125;</span><br><span class="line">      ],</span><br><span class="line">      <span class="attr">total</span>: [ &#123; <span class="attr">$count</span>: <span class="string">&quot;users&quot;</span> &#125; ]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">])</span><br></pre></td></tr></table></figure>
+
+<h3 id="텍스트-검색-집계-결합"><a href="#텍스트-검색-집계-결합" class="headerlink" title="텍스트 검색 + 집계 결합"></a>텍스트 검색 + 집계 결합</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">db.<span class="property">products</span>.<span class="title function_">aggregate</span>([</span><br><span class="line">  &#123; <span class="attr">$match</span>: &#123; <span class="attr">$text</span>: &#123; <span class="attr">$search</span>: <span class="string">&quot;keyboard&quot;</span> &#125; &#125; &#125;,</span><br><span class="line">  &#123; <span class="attr">$addFields</span>: &#123; <span class="attr">score</span>: &#123; <span class="attr">$meta</span>: <span class="string">&quot;textScore&quot;</span> &#125; &#125; &#125;,</span><br><span class="line">  &#123; <span class="attr">$sort</span>: &#123; <span class="attr">score</span>: -<span class="number">1</span> &#125; &#125;,</span><br><span class="line">  &#123; <span class="attr">$limit</span>: <span class="number">20</span> &#125;</span><br><span class="line">])</span><br></pre></td></tr></table></figure>
+
+<h2 id="성능-최적화-팁"><a href="#성능-최적화-팁" class="headerlink" title="성능 최적화 팁"></a>성능 최적화 팁</h2><ol>
+<li><strong>$match와 $sort를 앞쪽에</strong> 배치해 데이터 양을 줄인다</li>
+<li>$sort에 활용할 수 있는 <strong>인덱스</strong>를 만든다</li>
+<li><strong>$project로 필요한 필드만</strong> 남겨 메모리 사용량 감소</li>
+<li><code>$lookup</code> 대상 컬렉션에 인덱스 필수</li>
+<li>정렬에 100MB 이상 메모리가 필요하면 <code>allowDiskUse: true</code></li>
+<li>복잡한 파이프라인은 <code>explain()</code>으로 단계별 비용 확인</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">db.<span class="property">orders</span>.<span class="title function_">explain</span>(<span class="string">&quot;executionStats&quot;</span>).<span class="title function_">aggregate</span>([...])</span><br></pre></td></tr></table></figure>
+
+<h2 id="Aggregation-Framework-vs-Map-Reduce"><a href="#Aggregation-Framework-vs-Map-Reduce" class="headerlink" title="Aggregation Framework vs Map-Reduce"></a>Aggregation Framework vs Map-Reduce</h2><p>과거에는 Map-Reduce도 자주 쓰였지만, Aggregation Pipeline이 훨씬 빠르고 표현력이 풍부하므로 새 코드에서는 거의 항상 Aggregation을 선택합니다.</p>
+<h2 id="자주-쓰는-표현식"><a href="#자주-쓰는-표현식" class="headerlink" title="자주 쓰는 표현식"></a>자주 쓰는 표현식</h2><ul>
+<li>산술: <code>$add</code>, <code>$subtract</code>, <code>$multiply</code>, <code>$divide</code>, <code>$mod</code></li>
+<li>비교: <code>$eq</code>, <code>$ne</code>, <code>$gt</code>, <code>$gte</code>, <code>$lt</code>, <code>$lte</code></li>
+<li>논리: <code>$and</code>, <code>$or</code>, <code>$not</code></li>
+<li>조건: <code>$cond</code>, <code>$switch</code>, <code>$ifNull</code></li>
+<li>배열: <code>$size</code>, <code>$map</code>, <code>$filter</code>, <code>$reduce</code>, <code>$arrayElemAt</code></li>
+<li>날짜: <code>$dateToString</code>, <code>$dateAdd</code>, <code>$year</code>, <code>$month</code>, <code>$dayOfMonth</code></li>
+<li>문자열: <code>$concat</code>, <code>$toLower</code>, <code>$substr</code>, <code>$regexMatch</code></li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>MongoDB Aggregation Pipeline은 단순한 검색을 넘어 강력한 데이터 분석과 변환을 가능하게 합니다. 각 stage를 작은 함수처럼 조합해 점진적으로 결과를 다듬는 사고방식이 익숙해지면, 별도의 분석 시스템 없이도 MongoDB 안에서 ETL과 리포팅 작업을 충분히 수행할 수 있습니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/NoSQL/" rel="tag"># NoSQL</a>
+              <a href="/tags/Database/" rel="tag"># Database</a>
+              <a href="/tags/Query/" rel="tag"># Query</a>
+              <a href="/tags/MongoDB/" rel="tag"># MongoDB</a>
+              <a href="/tags/Aggregation/" rel="tag"># Aggregation</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/database-query-optimization/" rel="prev" title="데이터베이스 쿼리 최적화 기법 - EXPLAIN부터 N+1 문제까지">
+      <i class="fa fa-chevron-left"></i> 데이터베이스 쿼리 최적화 기법 - EXPLAIN부터 N+1 문제까지
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/redis-data-structures-guide/" rel="next" title="Redis 자료구조 완벽 정리 - String, List, Hash, Set, ZSet, Stream">
+      Redis 자료구조 완벽 정리 - String, List, Hash, Set, ZSet, Stream <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Aggregation-Pipeline%EC%9D%B4%EB%9E%80"><span class="nav-number">1.</span> <span class="nav-text">Aggregation Pipeline이란?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A3%BC%EC%9A%94-Stage-%EC%A0%95%EB%A6%AC"><span class="nav-number">2.</span> <span class="nav-text">주요 Stage 정리</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#match"><span class="nav-number">2.1.</span> <span class="nav-text">$match</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#project"><span class="nav-number">2.2.</span> <span class="nav-text">$project</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#group"><span class="nav-number">2.3.</span> <span class="nav-text">$group</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sort"><span class="nav-number">2.4.</span> <span class="nav-text">$sort</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#limit-skip"><span class="nav-number">2.5.</span> <span class="nav-text">$limit &#x2F; $skip</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#lookup-%EC%A1%B0%EC%9D%B8"><span class="nav-number">2.6.</span> <span class="nav-text">$lookup (조인)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#unwind"><span class="nav-number">2.7.</span> <span class="nav-text">$unwind</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#addFields-set"><span class="nav-number">2.8.</span> <span class="nav-text">$addFields &#x2F; $set</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#facet"><span class="nav-number">2.9.</span> <span class="nav-text">$facet</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bucket-bucketAuto"><span class="nav-number">2.10.</span> <span class="nav-text">$bucket &#x2F; $bucketAuto</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#out-merge"><span class="nav-number">2.11.</span> <span class="nav-text">$out &#x2F; $merge</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%8B%A4%EC%A0%84-%EC%98%88%EC%A0%9C"><span class="nav-number">3.</span> <span class="nav-text">실전 예제</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%82%AC%EC%9A%A9%EC%9E%90%EB%B3%84-%EC%9B%94-%EB%A7%A4%EC%B6%9C-%EC%A7%91%EA%B3%84"><span class="nav-number">3.1.</span> <span class="nav-text">사용자별 월 매출 집계</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%ED%9A%8C%EC%9B%90-%ED%99%9C%EB%8F%99-%EB%B6%84%EC%84%9D-lookup-facet"><span class="nav-number">3.2.</span> <span class="nav-text">회원 활동 분석 (lookup + facet)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%ED%85%8D%EC%8A%A4%ED%8A%B8-%EA%B2%80%EC%83%89-%EC%A7%91%EA%B3%84-%EA%B2%B0%ED%95%A9"><span class="nav-number">3.3.</span> <span class="nav-text">텍스트 검색 + 집계 결합</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94-%ED%8C%81"><span class="nav-number">4.</span> <span class="nav-text">성능 최적화 팁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Aggregation-Framework-vs-Map-Reduce"><span class="nav-number">5.</span> <span class="nav-text">Aggregation Framework vs Map-Reduce</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%9E%90%EC%A3%BC-%EC%93%B0%EB%8A%94-%ED%91%9C%ED%98%84%EC%8B%9D"><span class="nav-number">6.</span> <span class="nav-text">자주 쓰는 표현식</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">7.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">214</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">506</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

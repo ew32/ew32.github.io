@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Spring Boot Actuator의 주요 엔드포인트, 보안 설정, Micrometer를 통한 Prometheus 메트릭 수집과 Grafana 시각화까지 실전 구성으로 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Boot Actuator 모니터링 - 엔드포인트와 Prometheus 연동">
+<meta property="og:url" content="https://ew32.github.io/posts/spring-actuator-monitoring/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="Spring Boot Actuator의 주요 엔드포인트, 보안 설정, Micrometer를 통한 Prometheus 메트릭 수집과 Grafana 시각화까지 실전 구성으로 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-04-10T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-15T07:07:06.941Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Spring Boot">
+<meta property="article:tag" content="Actuator">
+<meta property="article:tag" content="Monitoring">
+<meta property="article:tag" content="Prometheus">
+<meta property="article:tag" content="Micrometer">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/spring-actuator-monitoring/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>Spring Boot Actuator 모니터링 - 엔드포인트와 Prometheus 연동 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/spring-actuator-monitoring/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring Boot Actuator 모니터링 - 엔드포인트와 Prometheus 연동
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-04-10 10:00:00" itemprop="dateCreated datePublished" datetime="2026-04-10T10:00:00+09:00">2026-04-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-15 16:07:06" itemprop="dateModified" datetime="2026-05-15T16:07:06+09:00">2026-05-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">Spring Boot Actuator의 주요 엔드포인트, 보안 설정, Micrometer를 통한 Prometheus 메트릭 수집과 Grafana 시각화까지 실전 구성으로 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Actuator란"><a href="#Actuator란" class="headerlink" title="Actuator란"></a>Actuator란</h2><p>Spring Boot Actuator는 운영 중인 애플리케이션의 <strong>상태, 메트릭, 환경, 빈, 로깅</strong> 등 내부 정보를 HTTP 또는 JMX로 노출하는 모듈입니다. 단순 헬스 체크부터 Prometheus 메트릭 수집까지 모두 Actuator를 통해 이뤄집니다.</p>
+<h2 id="시작하기"><a href="#시작하기" class="headerlink" title="시작하기"></a>시작하기</h2><p>의존성을 추가합니다.</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">implementation <span class="string">&#x27;org.springframework.boot:spring-boot-starter-actuator&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>기본 노출 엔드포인트는 <code>health</code>와 <code>info</code> 두 개입니다. 나머지는 명시적으로 노출해야 합니다.</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">management:</span></span><br><span class="line">  <span class="attr">endpoints:</span></span><br><span class="line">    <span class="attr">web:</span></span><br><span class="line">      <span class="attr">exposure:</span></span><br><span class="line">        <span class="attr">include:</span> <span class="string">health,info,metrics,prometheus,env,loggers</span></span><br><span class="line">  <span class="attr">endpoint:</span></span><br><span class="line">    <span class="attr">health:</span></span><br><span class="line">      <span class="attr">show-details:</span> <span class="string">when-authorized</span></span><br></pre></td></tr></table></figure>
+
+<p><code>http://localhost:8080/actuator</code>로 접속하면 노출된 엔드포인트 목록을 볼 수 있습니다.</p>
+<h2 id="주요-엔드포인트"><a href="#주요-엔드포인트" class="headerlink" title="주요 엔드포인트"></a>주요 엔드포인트</h2><table>
+<thead>
+<tr>
+<th>엔드포인트</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/actuator/health</code></td>
+<td>헬스 체크. DB, Redis, 디스크 등 컴포넌트별 상태</td>
+</tr>
+<tr>
+<td><code>/actuator/info</code></td>
+<td>빌드&#x2F;Git 정보 등 사용자 정의 정보</td>
+</tr>
+<tr>
+<td><code>/actuator/metrics</code></td>
+<td>JVM, HTTP, 커스텀 메트릭</td>
+</tr>
+<tr>
+<td><code>/actuator/prometheus</code></td>
+<td>Prometheus 형식 메트릭</td>
+</tr>
+<tr>
+<td><code>/actuator/env</code></td>
+<td>환경 변수, 프로퍼티</td>
+</tr>
+<tr>
+<td><code>/actuator/loggers</code></td>
+<td>런타임 로그 레벨 조회·변경</td>
+</tr>
+<tr>
+<td><code>/actuator/threaddump</code></td>
+<td>스레드 덤프</td>
+</tr>
+<tr>
+<td><code>/actuator/heapdump</code></td>
+<td>힙 덤프 다운로드</td>
+</tr>
+<tr>
+<td><code>/actuator/httpexchanges</code></td>
+<td>최근 HTTP 요청·응답</td>
+</tr>
+<tr>
+<td><code>/actuator/mappings</code></td>
+<td>등록된 컨트롤러 매핑</td>
+</tr>
+</tbody></table>
+<h2 id="Health-Indicator"><a href="#Health-Indicator" class="headerlink" title="Health Indicator"></a>Health Indicator</h2><p><code>/actuator/health</code>는 등록된 <code>HealthIndicator</code>들의 결과를 종합합니다. JDBC DataSource, Redis, RabbitMQ 등은 자동 등록되며, 사용자 정의도 쉽습니다.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ExternalApiHealthIndicator</span> <span class="keyword">implements</span> <span class="title class_">HealthIndicator</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> WebClient webClient;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">ExternalApiHealthIndicator</span><span class="params">(WebClient webClient)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.webClient = webClient;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Health <span class="title function_">health</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">String</span> <span class="variable">body</span> <span class="operator">=</span> webClient.get().uri(<span class="string">&quot;/ping&quot;</span>)</span><br><span class="line">                .retrieve().bodyToMono(String.class)</span><br><span class="line">                .timeout(Duration.ofSeconds(<span class="number">2</span>)).block();</span><br><span class="line">            <span class="keyword">return</span> Health.up().withDetail(<span class="string">&quot;response&quot;</span>, body).build();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="keyword">return</span> Health.down(e).build();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Kubernetes liveness&#x2F;readiness 프로브와 연동하려면 별도 그룹을 사용합니다.</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">management:</span></span><br><span class="line">  <span class="attr">endpoint:</span></span><br><span class="line">    <span class="attr">health:</span></span><br><span class="line">      <span class="attr">probes:</span></span><br><span class="line">        <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">health:</span></span><br><span class="line">    <span class="attr">livenessstate:</span></span><br><span class="line">      <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">readinessstate:</span></span><br><span class="line">      <span class="attr">enabled:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>이렇게 하면 <code>/actuator/health/liveness</code>, <code>/actuator/health/readiness</code> 엔드포인트가 활성화됩니다.</p>
+<h2 id="Micrometer-메트릭"><a href="#Micrometer-메트릭" class="headerlink" title="Micrometer 메트릭"></a>Micrometer 메트릭</h2><p>Actuator는 <strong>Micrometer</strong>를 메트릭 추상화 레이어로 사용합니다. Micrometer는 Prometheus, Datadog, New Relic, CloudWatch 등 다양한 백엔드를 지원합니다. 코드는 한 번만 작성하면 백엔드 교체가 자유롭습니다.</p>
+<h3 id="자동-수집되는-메트릭"><a href="#자동-수집되는-메트릭" class="headerlink" title="자동 수집되는 메트릭"></a>자동 수집되는 메트릭</h3><p>JVM 메모리, GC, 스레드, HTTP 요청(<code>http.server.requests</code>), Tomcat, HikariCP 등이 자동으로 수집됩니다.</p>
+<h3 id="커스텀-메트릭"><a href="#커스텀-메트릭" class="headerlink" title="커스텀 메트릭"></a>커스텀 메트릭</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">OrderService</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Counter orderCounter;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Timer paymentTimer;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">OrderService</span><span class="params">(MeterRegistry registry)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.orderCounter = Counter.builder(<span class="string">&quot;orders.created&quot;</span>)</span><br><span class="line">            .description(<span class="string">&quot;주문 생성 수&quot;</span>)</span><br><span class="line">            .tag(<span class="string">&quot;type&quot;</span>, <span class="string">&quot;online&quot;</span>)</span><br><span class="line">            .register(registry);</span><br><span class="line">        <span class="built_in">this</span>.paymentTimer = Timer.builder(<span class="string">&quot;payment.duration&quot;</span>)</span><br><span class="line">            .description(<span class="string">&quot;결제 처리 시간&quot;</span>)</span><br><span class="line">            .register(registry);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">createOrder</span><span class="params">(Order order)</span> &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">        orderCounter.increment();</span><br><span class="line">        paymentTimer.record(() -&gt; paymentClient.charge(order));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>세 가지 주요 메트릭 타입:</p>
+<ul>
+<li><strong>Counter</strong> — 증가만 가능 (요청 수, 에러 수)</li>
+<li><strong>Gauge</strong> — 현재 값 (큐 크기, 활성 세션)</li>
+<li><strong>Timer &#x2F; Distribution Summary</strong> — 분포(요청 시간, 응답 크기)</li>
+</ul>
+<h2 id="Prometheus-연동"><a href="#Prometheus-연동" class="headerlink" title="Prometheus 연동"></a>Prometheus 연동</h2><p>Micrometer Prometheus 레지스트리를 추가하면 <code>/actuator/prometheus</code> 엔드포인트가 활성화됩니다.</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">runtimeOnly <span class="string">&#x27;io.micrometer:micrometer-registry-prometheus&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">management:</span></span><br><span class="line">  <span class="attr">endpoints:</span></span><br><span class="line">    <span class="attr">web:</span></span><br><span class="line">      <span class="attr">exposure:</span></span><br><span class="line">        <span class="attr">include:</span> <span class="string">health,prometheus</span></span><br><span class="line">  <span class="attr">metrics:</span></span><br><span class="line">    <span class="attr">tags:</span></span><br><span class="line">      <span class="attr">application:</span> <span class="string">$&#123;spring.application.name&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>tags.application</code>은 모든 메트릭에 공통 태그를 붙여 여러 서비스 메트릭을 구분할 수 있게 해 줍니다.</p>
+<p>Prometheus 설정에서 해당 엔드포인트를 스크랩 대상으로 등록합니다.</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># prometheus.yml</span></span><br><span class="line"><span class="attr">scrape_configs:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">job_name:</span> <span class="string">&#x27;spring-boot-apps&#x27;</span></span><br><span class="line">    <span class="attr">metrics_path:</span> <span class="string">/actuator/prometheus</span></span><br><span class="line">    <span class="attr">scrape_interval:</span> <span class="string">15s</span></span><br><span class="line">    <span class="attr">static_configs:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">targets:</span> [<span class="string">&#x27;order-service:8080&#x27;</span>, <span class="string">&#x27;user-service:8080&#x27;</span>]</span><br></pre></td></tr></table></figure>
+
+<p>이후 Grafana에서 Prometheus를 데이터 소스로 연결해 대시보드를 구성합니다. Spring Boot용 공개 대시보드(예: ID 12900, 6756)를 임포트하면 즉시 사용할 수 있습니다.</p>
+<h2 id="보안-설정"><a href="#보안-설정" class="headerlink" title="보안 설정"></a>보안 설정</h2><p>Actuator 엔드포인트는 운영 정보를 노출하므로 반드시 보호해야 합니다.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ActuatorSecurity</span> &#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> SecurityFilterChain <span class="title function_">actuator</span><span class="params">(HttpSecurity http)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        http.securityMatcher(EndpointRequest.toAnyEndpoint())</span><br><span class="line">            .authorizeHttpRequests(auth -&gt; auth</span><br><span class="line">                .requestMatchers(EndpointRequest.to(<span class="string">&quot;health&quot;</span>, <span class="string">&quot;info&quot;</span>)).permitAll()</span><br><span class="line">                .anyRequest().hasRole(<span class="string">&quot;ACTUATOR&quot;</span>))</span><br><span class="line">            .httpBasic(Customizer.withDefaults());</span><br><span class="line">        <span class="keyword">return</span> http.build();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>운영 환경에서는 Actuator 전용 관리 포트를 분리하는 것이 더 안전합니다.</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">management:</span></span><br><span class="line">  <span class="attr">server:</span></span><br><span class="line">    <span class="attr">port:</span> <span class="number">9090</span></span><br><span class="line">    <span class="attr">address:</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span></span><br></pre></td></tr></table></figure>
+
+<p>이렇게 하면 9090 포트가 내부망에서만 열려 외부 노출 위험이 줄어듭니다.</p>
+<h2 id="로그-레벨-동적-변경"><a href="#로그-레벨-동적-변경" class="headerlink" title="로그 레벨 동적 변경"></a>로그 레벨 동적 변경</h2><p>운영 중에 디버그 로그를 켜야 할 때 매우 유용합니다.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl -X POST http://localhost:8080/actuator/loggers/com.example.order \</span><br><span class="line">  -H <span class="string">&quot;Content-Type: application/json&quot;</span> \</span><br><span class="line">  -d <span class="string">&#x27;&#123;&quot;configuredLevel&quot;: &quot;DEBUG&quot;&#125;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="분산-추적과-결합"><a href="#분산-추적과-결합" class="headerlink" title="분산 추적과 결합"></a>분산 추적과 결합</h2><p>Micrometer Tracing(Spring Boot 3+)을 함께 사용하면 traceId가 메트릭과 로그에 일관되게 들어가 <strong>메트릭 이상 → 로그 → 트레이스</strong>로 자연스럽게 따라갈 수 있습니다.</p>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>Actuator는 Spring Boot 애플리케이션 운영의 <strong>기본 인프라</strong>입니다. 단순한 헬스 체크만으로도 가치가 있지만, Micrometer + Prometheus + Grafana 조합과 결합할 때 본격적인 관측 가능성(observability)을 얻게 됩니다. 보안에 유의해 노출 범위를 적절히 제한하고, 핵심 비즈니스 메트릭을 직접 정의해 대시보드에 올려 두는 것을 추천합니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring-Boot/" rel="tag"># Spring Boot</a>
+              <a href="/tags/Actuator/" rel="tag"># Actuator</a>
+              <a href="/tags/Monitoring/" rel="tag"># Monitoring</a>
+              <a href="/tags/Prometheus/" rel="tag"># Prometheus</a>
+              <a href="/tags/Micrometer/" rel="tag"># Micrometer</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/spring-cloud-microservices/" rel="prev" title="Spring Cloud로 시작하는 마이크로서비스 - Eureka, Config Server, Gateway">
+      <i class="fa fa-chevron-left"></i> Spring Cloud로 시작하는 마이크로서비스 - Eureka, Config Server, Gateway
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/spring-profiles-configuration/" rel="next" title="Spring Profiles와 외부 설정 - 환경별 application.yml 분리 전략">
+      Spring Profiles와 외부 설정 - 환경별 application.yml 분리 전략 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Actuator%EB%9E%80"><span class="nav-number">1.</span> <span class="nav-text">Actuator란</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%8B%9C%EC%9E%91%ED%95%98%EA%B8%B0"><span class="nav-number">2.</span> <span class="nav-text">시작하기</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A3%BC%EC%9A%94-%EC%97%94%EB%93%9C%ED%8F%AC%EC%9D%B8%ED%8A%B8"><span class="nav-number">3.</span> <span class="nav-text">주요 엔드포인트</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Health-Indicator"><span class="nav-number">4.</span> <span class="nav-text">Health Indicator</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Micrometer-%EB%A9%94%ED%8A%B8%EB%A6%AD"><span class="nav-number">5.</span> <span class="nav-text">Micrometer 메트릭</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%9E%90%EB%8F%99-%EC%88%98%EC%A7%91%EB%90%98%EB%8A%94-%EB%A9%94%ED%8A%B8%EB%A6%AD"><span class="nav-number">5.1.</span> <span class="nav-text">자동 수집되는 메트릭</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%BB%A4%EC%8A%A4%ED%85%80-%EB%A9%94%ED%8A%B8%EB%A6%AD"><span class="nav-number">5.2.</span> <span class="nav-text">커스텀 메트릭</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Prometheus-%EC%97%B0%EB%8F%99"><span class="nav-number">6.</span> <span class="nav-text">Prometheus 연동</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B3%B4%EC%95%88-%EC%84%A4%EC%A0%95"><span class="nav-number">7.</span> <span class="nav-text">보안 설정</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A1%9C%EA%B7%B8-%EB%A0%88%EB%B2%A8-%EB%8F%99%EC%A0%81-%EB%B3%80%EA%B2%BD"><span class="nav-number">8.</span> <span class="nav-text">로그 레벨 동적 변경</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B6%84%EC%82%B0-%EC%B6%94%EC%A0%81%EA%B3%BC-%EA%B2%B0%ED%95%A9"><span class="nav-number">9.</span> <span class="nav-text">분산 추적과 결합</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">10.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">214</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">506</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

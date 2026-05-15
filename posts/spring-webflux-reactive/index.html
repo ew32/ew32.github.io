@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Spring WebFlux와 Project Reactor의 Mono&#x2F;Flux 개념, MVC와의 차이, WebClient·R2DBC 활용, 그리고 리액티브가 적합한 시나리오를 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring WebFlux로 시작하는 리액티브 프로그래밍">
+<meta property="og:url" content="https://ew32.github.io/posts/spring-webflux-reactive/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="Spring WebFlux와 Project Reactor의 Mono&#x2F;Flux 개념, MVC와의 차이, WebClient·R2DBC 활용, 그리고 리액티브가 적합한 시나리오를 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-04-07T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-15T07:07:06.941Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Spring">
+<meta property="article:tag" content="WebFlux">
+<meta property="article:tag" content="Reactive">
+<meta property="article:tag" content="Project Reactor">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/spring-webflux-reactive/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>Spring WebFlux로 시작하는 리액티브 프로그래밍 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/spring-webflux-reactive/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring WebFlux로 시작하는 리액티브 프로그래밍
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-04-07 10:00:00" itemprop="dateCreated datePublished" datetime="2026-04-07T10:00:00+09:00">2026-04-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-15 16:07:06" itemprop="dateModified" datetime="2026-05-15T16:07:06+09:00">2026-05-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">Spring WebFlux와 Project Reactor의 Mono/Flux 개념, MVC와의 차이, WebClient·R2DBC 활용, 그리고 리액티브가 적합한 시나리오를 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="WebFlux란"><a href="#WebFlux란" class="headerlink" title="WebFlux란"></a>WebFlux란</h2><p>Spring WebFlux는 Spring 5에서 도입된 <strong>논블로킹 리액티브 웹 스택</strong>입니다. 기존 Spring MVC가 서블릿 기반의 동기·블로킹 모델이라면, WebFlux는 <strong>Reactor Netty</strong>를 기본으로 하는 비동기 이벤트 루프 위에서 동작합니다.</p>
+<p>리액티브 프로그래밍의 핵심은 <strong>데이터를 스트림으로 다루며, 비동기적으로 발생하는 이벤트를 선언적으로 합성</strong>하는 것입니다. 적은 수의 스레드로 많은 요청을 처리해야 하는 I&#x2F;O 집약적 서비스에 적합합니다.</p>
+<h2 id="Mono와-Flux"><a href="#Mono와-Flux" class="headerlink" title="Mono와 Flux"></a>Mono와 Flux</h2><p>Project Reactor가 제공하는 두 가지 핵심 타입입니다.</p>
+<ul>
+<li><code>Mono&lt;T&gt;</code> — <strong>0 또는 1개</strong>의 결과를 비동기적으로 방출</li>
+<li><code>Flux&lt;T&gt;</code> — <strong>0개부터 N개</strong>의 결과를 비동기적으로 방출</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Mono&lt;String&gt; mono = Mono.just(<span class="string">&quot;hello&quot;</span>);</span><br><span class="line">Flux&lt;Integer&gt; flux = Flux.range(<span class="number">1</span>, <span class="number">5</span>);</span><br><span class="line"></span><br><span class="line">mono.subscribe(System.out::println);</span><br><span class="line">flux.map(i -&gt; i * <span class="number">2</span>)</span><br><span class="line">    .filter(i -&gt; i &gt; <span class="number">4</span>)</span><br><span class="line">    .subscribe(System.out::println);</span><br></pre></td></tr></table></figure>
+
+<p><strong>구독(subscribe) 전까지는 아무 일도 일어나지 않는다</strong>는 점이 핵심입니다. Reactor의 파이프라인은 <strong>선언</strong>일 뿐이고, 실제 실행은 subscribe 시점에 시작됩니다.</p>
+<h2 id="기본-컨트롤러-작성"><a href="#기본-컨트롤러-작성" class="headerlink" title="기본 컨트롤러 작성"></a>기본 컨트롤러 작성</h2><p>WebFlux는 두 가지 프로그래밍 모델을 지원합니다.</p>
+<h3 id="1-어노테이션-기반-MVC와-유사"><a href="#1-어노테이션-기반-MVC와-유사" class="headerlink" title="1) 어노테이션 기반 (MVC와 유사)"></a>1) 어노테이션 기반 (MVC와 유사)</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="meta">@RequestMapping(&quot;/users&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserController</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> UserService userService;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping(&quot;/&#123;id&#125;&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> Mono&lt;UserResponse&gt; <span class="title function_">getUser</span><span class="params">(<span class="meta">@PathVariable</span> Long id)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> userService.findById(id);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping</span></span><br><span class="line">    <span class="keyword">public</span> Flux&lt;UserResponse&gt; <span class="title function_">list</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> userService.findAll();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-함수형-라우터"><a href="#2-함수형-라우터" class="headerlink" title="2) 함수형 라우터"></a>2) 함수형 라우터</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Routes</span> &#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    RouterFunction&lt;ServerResponse&gt; <span class="title function_">userRoutes</span><span class="params">(UserHandler h)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> route()</span><br><span class="line">            .GET(<span class="string">&quot;/users/&#123;id&#125;&quot;</span>, h::get)</span><br><span class="line">            .GET(<span class="string">&quot;/users&quot;</span>, h::list)</span><br><span class="line">            .build();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="연산자-Operator-활용"><a href="#연산자-Operator-활용" class="headerlink" title="연산자(Operator) 활용"></a>연산자(Operator) 활용</h2><p>리액티브의 강점은 <strong>연산자 합성</strong>에 있습니다.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Mono&lt;UserDetail&gt; result = userRepository.findById(id)</span><br><span class="line">    .flatMap(user -&gt;</span><br><span class="line">        Mono.zip(</span><br><span class="line">            orderRepository.findByUserId(user.id()).collectList(),</span><br><span class="line">            pointRepository.findBalance(user.id())</span><br><span class="line">        ).map(tuple -&gt; <span class="keyword">new</span> <span class="title class_">UserDetail</span>(user, tuple.getT1(), tuple.getT2()))</span><br><span class="line">    )</span><br><span class="line">    .switchIfEmpty(Mono.error(<span class="keyword">new</span> <span class="title class_">UserNotFoundException</span>(id)))</span><br><span class="line">    .timeout(Duration.ofSeconds(<span class="number">3</span>))</span><br><span class="line">    .onErrorResume(TimeoutException.class, e -&gt; Mono.just(UserDetail.empty()));</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>flatMap</code> — 비동기 연쇄</li>
+<li><code>zip</code> — 여러 Mono를 병렬 실행 후 합치기</li>
+<li><code>switchIfEmpty</code> — 비어 있을 때 대체</li>
+<li><code>timeout</code> — 지연 시 예외</li>
+<li><code>onErrorResume</code> — 에러 발생 시 폴백</li>
+</ul>
+<h2 id="WebClient-—-논블로킹-HTTP-클라이언트"><a href="#WebClient-—-논블로킹-HTTP-클라이언트" class="headerlink" title="WebClient — 논블로킹 HTTP 클라이언트"></a>WebClient — 논블로킹 HTTP 클라이언트</h2><p><code>RestTemplate</code>의 리액티브 대체재입니다.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">WebClient</span> <span class="variable">client</span> <span class="operator">=</span> WebClient.builder()</span><br><span class="line">    .baseUrl(<span class="string">&quot;https://api.example.com&quot;</span>)</span><br><span class="line">    .build();</span><br><span class="line"></span><br><span class="line">Mono&lt;Order&gt; order = client.get()</span><br><span class="line">    .uri(<span class="string">&quot;/orders/&#123;id&#125;&quot;</span>, orderId)</span><br><span class="line">    .retrieve()</span><br><span class="line">    .bodyToMono(Order.class);</span><br></pre></td></tr></table></figure>
+
+<p>여러 외부 API를 호출해 결과를 합치는 시나리오에서 빛을 발합니다.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Mono&lt;Dashboard&gt; dashboard = Mono.zip(</span><br><span class="line">    client.get().uri(<span class="string">&quot;/users/me&quot;</span>).retrieve().bodyToMono(User.class),</span><br><span class="line">    client.get().uri(<span class="string">&quot;/notifications&quot;</span>).retrieve().bodyToFlux(Notification.class).collectList(),</span><br><span class="line">    client.get().uri(<span class="string">&quot;/feed&quot;</span>).retrieve().bodyToFlux(Post.class).collectList()</span><br><span class="line">).map(tuple -&gt; <span class="keyword">new</span> <span class="title class_">Dashboard</span>(tuple.getT1(), tuple.getT2(), tuple.getT3()));</span><br></pre></td></tr></table></figure>
+
+<p>세 호출이 <strong>병렬</strong>로 실행되어 전체 응답 시간이 가장 느린 호출에 수렴합니다.</p>
+<h2 id="데이터-접근-—-R2DBC"><a href="#데이터-접근-—-R2DBC" class="headerlink" title="데이터 접근 — R2DBC"></a>데이터 접근 — R2DBC</h2><p>JDBC는 블로킹 API라서 WebFlux의 이점을 살리지 못합니다. 리액티브 환경에서는 <strong>R2DBC(Reactive Relational Database Connectivity)</strong> 또는 MongoDB&#x2F;Redis 리액티브 드라이버를 사용하세요.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">UserRepository</span> <span class="keyword">extends</span> <span class="title class_">ReactiveCrudRepository</span>&lt;User, Long&gt; &#123;</span><br><span class="line">    Flux&lt;User&gt; <span class="title function_">findByStatus</span><span class="params">(String status)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>JPA는 리액티브 환경에 부적합합니다. 굳이 써야 한다면 별도 스레드 풀로 격리하세요.</p>
+<h2 id="백프레셔-Backpressure"><a href="#백프레셔-Backpressure" class="headerlink" title="백프레셔(Backpressure)"></a>백프레셔(Backpressure)</h2><p>리액티브 스트림의 또 다른 핵심은 <strong>소비자가 자신이 감당할 수 있는 양만큼 데이터를 요청</strong>할 수 있다는 점입니다. Reactor는 <code>request(n)</code> 신호로 이를 구현합니다. 대용량 데이터를 다룰 때 자동으로 흐름을 조절해 OOM을 막아 줍니다.</p>
+<h2 id="WebFlux-vs-MVC-언제-무엇을"><a href="#WebFlux-vs-MVC-언제-무엇을" class="headerlink" title="WebFlux vs MVC, 언제 무엇을?"></a>WebFlux vs MVC, 언제 무엇을?</h2><table>
+<thead>
+<tr>
+<th>상황</th>
+<th>권장</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>외부 API 다수 호출, 게이트웨이</td>
+<td>WebFlux</td>
+</tr>
+<tr>
+<td>스트리밍·SSE·웹소켓 위주</td>
+<td>WebFlux</td>
+</tr>
+<tr>
+<td>일반 CRUD, JPA 사용</td>
+<td>MVC</td>
+</tr>
+<tr>
+<td>CPU 집약적 작업</td>
+<td>MVC</td>
+</tr>
+<tr>
+<td>팀의 비동기 경험 부족</td>
+<td>MVC</td>
+</tr>
+</tbody></table>
+<p>Java 21의 <strong>Virtual Threads</strong>가 등장하면서, “동시성을 위해 리액티브가 꼭 필요한가”라는 질문이 다시 나오고 있습니다. 동기 코드를 유지하면서 수십만 동시 요청을 처리하려면 MVC + 가상 스레드도 강력한 대안입니다.</p>
+<h2 id="디버깅-팁"><a href="#디버깅-팁" class="headerlink" title="디버깅 팁"></a>디버깅 팁</h2><p>리액티브 스택은 스택 트레이스가 끊기기 쉽습니다.</p>
+<ul>
+<li>개발 환경에서 <code>Hooks.onOperatorDebug()</code> 또는 Reactor Tools BlockHound 활용</li>
+<li><code>.log()</code> 연산자로 신호 추적</li>
+<li><code>checkpoint(&quot;name&quot;)</code>으로 파이프라인 위치 표시</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>WebFlux는 <strong>적합한 워크로드</strong>에서는 효율적이고 우아한 도구입니다. 하지만 학습 곡선이 가파르고, 한 곳에서라도 블로킹 호출이 섞이면 전체 성능이 무너집니다. “꼭 필요한가”를 먼저 자문하고, 도입 시에는 <strong>끝에서 끝까지 논블로킹</strong>을 유지하는 일관성을 지키는 것이 핵심입니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring/" rel="tag"># Spring</a>
+              <a href="/tags/WebFlux/" rel="tag"># WebFlux</a>
+              <a href="/tags/Reactive/" rel="tag"># Reactive</a>
+              <a href="/tags/Project-Reactor/" rel="tag"># Project Reactor</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/java-exception-handling-best-practices/" rel="prev" title="Java 예외 처리 모범 사례 - Checked/Unchecked부터 사용자 정의 예외까지">
+      <i class="fa fa-chevron-left"></i> Java 예외 처리 모범 사례 - Checked/Unchecked부터 사용자 정의 예외까지
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/spring-batch-introduction/" rel="next" title="Spring Batch 입문 - Job/Step/ItemReader/Processor/Writer">
+      Spring Batch 입문 - Job/Step/ItemReader/Processor/Writer <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#WebFlux%EB%9E%80"><span class="nav-number">1.</span> <span class="nav-text">WebFlux란</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Mono%EC%99%80-Flux"><span class="nav-number">2.</span> <span class="nav-text">Mono와 Flux</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EA%B8%B0%EB%B3%B8-%EC%BB%A8%ED%8A%B8%EB%A1%A4%EB%9F%AC-%EC%9E%91%EC%84%B1"><span class="nav-number">3.</span> <span class="nav-text">기본 컨트롤러 작성</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%EC%96%B4%EB%85%B8%ED%85%8C%EC%9D%B4%EC%85%98-%EA%B8%B0%EB%B0%98-MVC%EC%99%80-%EC%9C%A0%EC%82%AC"><span class="nav-number">3.1.</span> <span class="nav-text">1) 어노테이션 기반 (MVC와 유사)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%ED%95%A8%EC%88%98%ED%98%95-%EB%9D%BC%EC%9A%B0%ED%84%B0"><span class="nav-number">3.2.</span> <span class="nav-text">2) 함수형 라우터</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%97%B0%EC%82%B0%EC%9E%90-Operator-%ED%99%9C%EC%9A%A9"><span class="nav-number">4.</span> <span class="nav-text">연산자(Operator) 활용</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WebClient-%E2%80%94-%EB%85%BC%EB%B8%94%EB%A1%9C%ED%82%B9-HTTP-%ED%81%B4%EB%9D%BC%EC%9D%B4%EC%96%B8%ED%8A%B8"><span class="nav-number">5.</span> <span class="nav-text">WebClient — 논블로킹 HTTP 클라이언트</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%8D%B0%EC%9D%B4%ED%84%B0-%EC%A0%91%EA%B7%BC-%E2%80%94-R2DBC"><span class="nav-number">6.</span> <span class="nav-text">데이터 접근 — R2DBC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B0%B1%ED%94%84%EB%A0%88%EC%85%94-Backpressure"><span class="nav-number">7.</span> <span class="nav-text">백프레셔(Backpressure)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WebFlux-vs-MVC-%EC%96%B8%EC%A0%9C-%EB%AC%B4%EC%97%87%EC%9D%84"><span class="nav-number">8.</span> <span class="nav-text">WebFlux vs MVC, 언제 무엇을?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%94%94%EB%B2%84%EA%B9%85-%ED%8C%81"><span class="nav-number">9.</span> <span class="nav-text">디버깅 팁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">10.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">214</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">506</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

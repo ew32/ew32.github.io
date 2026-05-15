@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="시계열 데이터의 특징, 일반 RDBMS로는 부족한 이유, InfluxDB와 TimescaleDB의 구조·쿼리 차이, 도입 시 고려사항을 실무 관점에서 정리합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="시계열 데이터베이스 입문 - InfluxDB, TimescaleDB 비교와 사용 시나리오">
+<meta property="og:url" content="https://ew32.github.io/posts/time-series-database-intro/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="시계열 데이터의 특징, 일반 RDBMS로는 부족한 이유, InfluxDB와 TimescaleDB의 구조·쿼리 차이, 도입 시 고려사항을 실무 관점에서 정리합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-04-22T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-15T07:07:06.942Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Database">
+<meta property="article:tag" content="Time Series">
+<meta property="article:tag" content="InfluxDB">
+<meta property="article:tag" content="TimescaleDB">
+<meta property="article:tag" content="모니터링">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/time-series-database-intro/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>시계열 데이터베이스 입문 - InfluxDB, TimescaleDB 비교와 사용 시나리오 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/time-series-database-intro/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          시계열 데이터베이스 입문 - InfluxDB, TimescaleDB 비교와 사용 시나리오
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-04-22 10:00:00" itemprop="dateCreated datePublished" datetime="2026-04-22T10:00:00+09:00">2026-04-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-15 16:07:06" itemprop="dateModified" datetime="2026-05-15T16:07:06+09:00">2026-05-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">시계열 데이터의 특징, 일반 RDBMS로는 부족한 이유, InfluxDB와 TimescaleDB의 구조·쿼리 차이, 도입 시 고려사항을 실무 관점에서 정리합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="시계열-데이터란-무엇인가"><a href="#시계열-데이터란-무엇인가" class="headerlink" title="시계열 데이터란 무엇인가"></a>시계열 데이터란 무엇인가</h2><p>시계열(time-series) 데이터는 <strong>시간 순서로 기록되는 측정값</strong>을 의미한다. 서버 CPU 사용률, 주식 가격, IoT 센서값, 사용자 이벤트 로그 등 우리가 매일 다루는 데이터 상당수가 시계열에 속한다. 시계열 데이터의 공통적인 특징은 다음과 같다.</p>
+<ul>
+<li><strong>시간 + 측정값(metric)</strong> 구조: 모든 행이 timestamp를 가짐</li>
+<li><strong>append 위주</strong>: 새 데이터는 거의 항상 가장 최근 시각으로 들어옴 (random write 거의 없음)</li>
+<li><strong>읽기는 범위 스캔</strong>: “지난 1시간 평균”, “지난 7일 95퍼센타일” 같이 시간 범위 + 집계 쿼리가 절대 다수</li>
+<li><strong>데이터 양이 매우 큼</strong>: 초당 수천~수십만 포인트가 들어오는 경우가 흔함</li>
+<li><strong>오래된 데이터의 가치 감소</strong>: 1년 전 1초 단위 데이터는 분 단위로 다운샘플링해도 충분</li>
+</ul>
+<p>이러한 패턴은 일반 RDBMS의 트랜잭션·정규화 위주 설계와 다르므로, 전용 시계열 DB를 사용하면 저장 효율과 쿼리 성능을 크게 끌어올릴 수 있다.</p>
+<h2 id="왜-일반-RDBMS만으로는-부족한가"><a href="#왜-일반-RDBMS만으로는-부족한가" class="headerlink" title="왜 일반 RDBMS만으로는 부족한가"></a>왜 일반 RDBMS만으로는 부족한가</h2><p>PostgreSQL이나 MySQL로 시계열 데이터를 저장하는 것 자체는 가능하다. 다만 다음 문제가 생긴다.</p>
+<ol>
+<li><strong>B-Tree 인덱스 비대화</strong>: 측정값 1억 행이 쌓이면 timestamp 인덱스만으로도 수 GB가 된다.</li>
+<li><strong>압축 부재</strong>: 같은 메트릭 이름·태그가 매 행 반복 저장된다.</li>
+<li><strong>데이터 보존 정책(retention) 부재</strong>: “30일 이상 된 데이터 자동 삭제”를 직접 구현해야 한다.</li>
+<li><strong>다운샘플링 부재</strong>: 1초 → 1분 평균으로 자동 압축 같은 기능이 없다.</li>
+<li><strong>시간 함수 부족</strong>: <code>time_bucket</code>, <code>last</code>, <code>first</code> 같은 시계열 함수가 표준 SQL에 없다.</li>
+</ol>
+<p>전용 시계열 DB는 이런 문제를 시간축에 특화된 저장 엔진·쿼리 함수로 해결한다.</p>
+<h2 id="InfluxDB"><a href="#InfluxDB" class="headerlink" title="InfluxDB"></a>InfluxDB</h2><p>InfluxData가 만든 대표 시계열 DB로, Go 기반 단일 바이너리로 동작한다. v2 이후 자체 쿼리 언어 <strong>Flux</strong>(InfluxQL도 지원)를 사용한다.</p>
+<h3 id="데이터-모델"><a href="#데이터-모델" class="headerlink" title="데이터 모델"></a>데이터 모델</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">measurement,tag_key=tag_value field_key=field_value timestamp</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>measurement</strong>: 테이블에 대응</li>
+<li><strong>tag</strong>: 인덱싱되는 메타데이터 (호스트명, 리전 등)</li>
+<li><strong>field</strong>: 인덱싱되지 않는 실제 측정값</li>
+<li><strong>timestamp</strong>: 나노초 정밀도</li>
+</ul>
+<h3 id="쓰기-예시-HTTP-API"><a href="#쓰기-예시-HTTP-API" class="headerlink" title="쓰기 예시 (HTTP API)"></a>쓰기 예시 (HTTP API)</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl -i -XPOST <span class="string">&#x27;http://localhost:8086/api/v2/write?bucket=metrics&#x27;</span> \</span><br><span class="line">  -H <span class="string">&#x27;Authorization: Token YOUR_TOKEN&#x27;</span> \</span><br><span class="line">  --data-raw <span class="string">&#x27;cpu,host=web-01,region=ap-northeast-2 usage=72.4 1716000000000000000&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="쿼리-예시-Flux"><a href="#쿼리-예시-Flux" class="headerlink" title="쿼리 예시 (Flux)"></a>쿼리 예시 (Flux)</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">from(bucket: &quot;metrics&quot;)</span><br><span class="line">  |&gt; range(start: -1h)</span><br><span class="line">  |&gt; filter(fn: (r) =&gt; r._measurement == &quot;cpu&quot; and r.host == &quot;web-01&quot;)</span><br><span class="line">  |&gt; aggregateWindow(every: 1m, fn: mean)</span><br></pre></td></tr></table></figure>
+
+<p>장점은 운영이 단순하고, Telegraf·Grafana와의 통합이 검증되어 있다는 점. 단점은 Flux 학습 곡선이 있고, 조인·복잡한 분석 쿼리가 PostgreSQL만큼 자유롭지 않다는 점이다.</p>
+<h2 id="TimescaleDB"><a href="#TimescaleDB" class="headerlink" title="TimescaleDB"></a>TimescaleDB</h2><p>PostgreSQL의 확장(extension)으로 동작하므로, 기존 SQL 지식과 도구를 그대로 쓸 수 있다는 것이 가장 큰 강점이다.</p>
+<h3 id="핵심-개념-Hypertable"><a href="#핵심-개념-Hypertable" class="headerlink" title="핵심 개념: Hypertable"></a>핵심 개념: Hypertable</h3><p>일반 테이블을 시간 구간(chunk)별로 자동 파티셔닝한 가상 테이블이다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> metrics (</span><br><span class="line">  <span class="type">time</span>        TIMESTAMPTZ <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  host        TEXT <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  cpu_usage   <span class="type">DOUBLE PRECISION</span>,</span><br><span class="line">  mem_usage   <span class="type">DOUBLE PRECISION</span></span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> create_hypertable(<span class="string">&#x27;metrics&#x27;</span>, <span class="string">&#x27;time&#x27;</span>, chunk_time_interval <span class="operator">=</span><span class="operator">&gt;</span> <span class="type">INTERVAL</span> <span class="string">&#x27;1 day&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>이후 INSERT&#x2F;SELECT는 일반 테이블처럼 쓰지만, 내부적으로 일자별 청크로 분리되어 저장된다.</p>
+<h3 id="시계열-함수"><a href="#시계열-함수" class="headerlink" title="시계열 함수"></a>시계열 함수</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">  time_bucket(<span class="string">&#x27;1 minute&#x27;</span>, <span class="type">time</span>) <span class="keyword">AS</span> bucket,</span><br><span class="line">  host,</span><br><span class="line">  <span class="built_in">avg</span>(cpu_usage) <span class="keyword">AS</span> avg_cpu</span><br><span class="line"><span class="keyword">FROM</span> metrics</span><br><span class="line"><span class="keyword">WHERE</span> <span class="type">time</span> <span class="operator">&gt;</span> NOW() <span class="operator">-</span> <span class="type">INTERVAL</span> <span class="string">&#x27;1 hour&#x27;</span></span><br><span class="line"><span class="keyword">GROUP</span> <span class="keyword">BY</span> bucket, host</span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span> bucket <span class="keyword">DESC</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="압축과-보존-정책"><a href="#압축과-보존-정책" class="headerlink" title="압축과 보존 정책"></a>압축과 보존 정책</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> metrics <span class="keyword">SET</span> (timescaledb.compress, timescaledb.compress_segmentby <span class="operator">=</span> <span class="string">&#x27;host&#x27;</span>);</span><br><span class="line"><span class="keyword">SELECT</span> add_compression_policy(<span class="string">&#x27;metrics&#x27;</span>, <span class="type">INTERVAL</span> <span class="string">&#x27;7 days&#x27;</span>);</span><br><span class="line"><span class="keyword">SELECT</span> add_retention_policy(<span class="string">&#x27;metrics&#x27;</span>, <span class="type">INTERVAL</span> <span class="string">&#x27;90 days&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>7일 이상 된 청크는 자동 압축되고, 90일이 지나면 삭제된다.</p>
+<h2 id="InfluxDB-vs-TimescaleDB-비교"><a href="#InfluxDB-vs-TimescaleDB-비교" class="headerlink" title="InfluxDB vs TimescaleDB 비교"></a>InfluxDB vs TimescaleDB 비교</h2><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>InfluxDB</th>
+<th>TimescaleDB</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>기반</td>
+<td>자체 엔진 (Go)</td>
+<td>PostgreSQL 확장</td>
+</tr>
+<tr>
+<td>쿼리 언어</td>
+<td>Flux &#x2F; InfluxQL</td>
+<td>표준 SQL + 시계열 함수</td>
+</tr>
+<tr>
+<td>조인</td>
+<td>제한적</td>
+<td>PostgreSQL 전체 기능</td>
+</tr>
+<tr>
+<td>JSON·관계형 데이터</td>
+<td>부족</td>
+<td>강력 (JSONB, FK 등)</td>
+</tr>
+<tr>
+<td>운영 도구</td>
+<td>Telegraf·Chronograf</td>
+<td>풍부한 PG 생태계</td>
+</tr>
+<tr>
+<td>학습 곡선</td>
+<td>Flux 학습 필요</td>
+<td>SQL에 익숙하면 즉시</td>
+</tr>
+<tr>
+<td>압축비</td>
+<td>매우 높음</td>
+<td>높음 (10배 이상)</td>
+</tr>
+</tbody></table>
+<h2 id="도입-시-체크리스트"><a href="#도입-시-체크리스트" class="headerlink" title="도입 시 체크리스트"></a>도입 시 체크리스트</h2><ul>
+<li><strong>쓰기 처리량</strong>: 초당 몇 포인트인가? 단일 노드로 충분한지 확인</li>
+<li><strong>보존 기간과 다운샘플링 정책</strong>: 1초 → 1분 → 1시간 단계가 필요한가?</li>
+<li><strong>분석 쿼리 복잡도</strong>: 조인·서브쿼리가 많다면 TimescaleDB가 유리</li>
+<li><strong>기존 운영 스택</strong>: Grafana만 있으면 InfluxDB가 쉽고, PG가 이미 있다면 TimescaleDB가 자연스러움</li>
+<li><strong>고가용성·클러스터링</strong>: 두 제품 모두 상용 버전에서 더 강한 클러스터링 제공</li>
+</ul>
+<h2 id="시계열-DB의-일반적인-안티패턴"><a href="#시계열-DB의-일반적인-안티패턴" class="headerlink" title="시계열 DB의 일반적인 안티패턴"></a>시계열 DB의 일반적인 안티패턴</h2><ul>
+<li><strong>태그(라벨)에 고-카디널리티 값 넣기</strong>: user_id, request_id 같은 값을 태그로 쓰면 인덱스가 폭발한다. fields에 넣자.</li>
+<li><strong>모든 데이터를 영구 보관</strong>: retention 정책 없이 운영하면 디스크가 금세 차고 쿼리 성능이 떨어진다.</li>
+<li><strong>단일 측정값 테이블에 모든 메트릭 몰아넣기</strong>: 의미별로 measurement &#x2F; hypertable을 분리해야 압축·쿼리 효율이 좋다.</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>시계열 DB는 “시간 + 메트릭” 패턴의 워크로드를 위한 도구다. 이미 PostgreSQL을 운영 중이고 SQL 친화적인 환경이라면 TimescaleDB가, 메트릭 수집·시각화 파이프라인을 빠르게 세우고 싶다면 InfluxDB가 적합하다. 두 제품 모두 retention과 다운샘플링을 적극 활용해야 장기적으로 비용·성능 모두 만족시킬 수 있다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Database/" rel="tag"># Database</a>
+              <a href="/tags/Time-Series/" rel="tag"># Time Series</a>
+              <a href="/tags/InfluxDB/" rel="tag"># InfluxDB</a>
+              <a href="/tags/TimescaleDB/" rel="tag"># TimescaleDB</a>
+              <a href="/tags/%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81/" rel="tag"># 모니터링</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/database-backup-recovery/" rel="prev" title="데이터베이스 백업과 복구 전략 - 풀백업, 증분, PITR, 재해 복구">
+      <i class="fa fa-chevron-left"></i> 데이터베이스 백업과 복구 전략 - 풀백업, 증분, PITR, 재해 복구
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/oidc-vs-oauth2/" rel="next" title="OIDC와 OAuth2의 차이 - ID Token과 Access Token">
+      OIDC와 OAuth2의 차이 - ID Token과 Access Token <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%8B%9C%EA%B3%84%EC%97%B4-%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%9E%80-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80"><span class="nav-number">1.</span> <span class="nav-text">시계열 데이터란 무엇인가</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%99%9C-%EC%9D%BC%EB%B0%98-RDBMS%EB%A7%8C%EC%9C%BC%EB%A1%9C%EB%8A%94-%EB%B6%80%EC%A1%B1%ED%95%9C%EA%B0%80"><span class="nav-number">2.</span> <span class="nav-text">왜 일반 RDBMS만으로는 부족한가</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#InfluxDB"><span class="nav-number">3.</span> <span class="nav-text">InfluxDB</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%8D%B0%EC%9D%B4%ED%84%B0-%EB%AA%A8%EB%8D%B8"><span class="nav-number">3.1.</span> <span class="nav-text">데이터 모델</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%93%B0%EA%B8%B0-%EC%98%88%EC%8B%9C-HTTP-API"><span class="nav-number">3.2.</span> <span class="nav-text">쓰기 예시 (HTTP API)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%BF%BC%EB%A6%AC-%EC%98%88%EC%8B%9C-Flux"><span class="nav-number">3.3.</span> <span class="nav-text">쿼리 예시 (Flux)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TimescaleDB"><span class="nav-number">4.</span> <span class="nav-text">TimescaleDB</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%ED%95%B5%EC%8B%AC-%EA%B0%9C%EB%85%90-Hypertable"><span class="nav-number">4.1.</span> <span class="nav-text">핵심 개념: Hypertable</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%8B%9C%EA%B3%84%EC%97%B4-%ED%95%A8%EC%88%98"><span class="nav-number">4.2.</span> <span class="nav-text">시계열 함수</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%95%95%EC%B6%95%EA%B3%BC-%EB%B3%B4%EC%A1%B4-%EC%A0%95%EC%B1%85"><span class="nav-number">4.3.</span> <span class="nav-text">압축과 보존 정책</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#InfluxDB-vs-TimescaleDB-%EB%B9%84%EA%B5%90"><span class="nav-number">5.</span> <span class="nav-text">InfluxDB vs TimescaleDB 비교</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%8F%84%EC%9E%85-%EC%8B%9C-%EC%B2%B4%ED%81%AC%EB%A6%AC%EC%8A%A4%ED%8A%B8"><span class="nav-number">6.</span> <span class="nav-text">도입 시 체크리스트</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%8B%9C%EA%B3%84%EC%97%B4-DB%EC%9D%98-%EC%9D%BC%EB%B0%98%EC%A0%81%EC%9D%B8-%EC%95%88%ED%8B%B0%ED%8C%A8%ED%84%B4"><span class="nav-number">7.</span> <span class="nav-text">시계열 DB의 일반적인 안티패턴</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">8.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">214</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">506</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

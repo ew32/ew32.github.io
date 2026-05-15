@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="MySQL 복제의 핵심 전략인 Master-Slave, Group Replication, GTID를 비교하고 실무에서의 구성, 장애 대응, 모니터링 방법을 상세히 설명합니다.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL 복제 전략 완벽 가이드 - Master-Slave부터 Group Replication까지">
+<meta property="og:url" content="https://ew32.github.io/posts/mysql-replication-strategies/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="MySQL 복제의 핵심 전략인 Master-Slave, Group Replication, GTID를 비교하고 실무에서의 구성, 장애 대응, 모니터링 방법을 상세히 설명합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2026-04-12T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-15T07:07:06.939Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Database">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="Replication">
+<meta property="article:tag" content="GTID">
+<meta property="article:tag" content="HA">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/posts/mysql-replication-strategies/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>MySQL 복제 전략 완벽 가이드 - Master-Slave부터 Group Replication까지 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>태그</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>카테고리</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/mysql-replication-strategies/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL 복제 전략 완벽 가이드 - Master-Slave부터 Group Replication까지
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-04-12 10:00:00" itemprop="dateCreated datePublished" datetime="2026-04-12T10:00:00+09:00">2026-04-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-15 16:07:06" itemprop="dateModified" datetime="2026-05-15T16:07:06+09:00">2026-05-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">MySQL 복제의 핵심 전략인 Master-Slave, Group Replication, GTID를 비교하고 실무에서의 구성, 장애 대응, 모니터링 방법을 상세히 설명합니다.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="MySQL-복제란"><a href="#MySQL-복제란" class="headerlink" title="MySQL 복제란?"></a>MySQL 복제란?</h2><p>MySQL 복제(Replication)는 한 MySQL 서버의 데이터를 다른 MySQL 서버로 비동기 또는 준동기 방식으로 전달하는 기술입니다. 이를 통해 읽기 부하 분산, 고가용성(HA), 백업, 분석 워크로드 분리 등 다양한 운영상 이점을 얻을 수 있습니다. 복제는 단순히 데이터를 복사하는 것에 그치지 않고, 운영 환경의 안정성을 책임지는 핵심 기반 인프라입니다.</p>
+<h2 id="복제의-기본-동작-원리"><a href="#복제의-기본-동작-원리" class="headerlink" title="복제의 기본 동작 원리"></a>복제의 기본 동작 원리</h2><p>MySQL 복제는 <strong>바이너리 로그(binlog)</strong> 를 기반으로 동작합니다. 마스터(소스) 서버는 모든 데이터 변경 사항(INSERT, UPDATE, DELETE, DDL)을 binlog에 기록하고, 슬레이브(레플리카) 서버는 이를 읽어와서 자기 자신에게 다시 실행합니다.</p>
+<p>복제 처리 흐름은 다음과 같습니다.</p>
+<ol>
+<li>마스터: 트랜잭션 커밋 시 binlog에 이벤트 기록</li>
+<li>슬레이브의 <strong>IO Thread</strong>: 마스터에서 binlog 이벤트를 읽어와 로컬의 relay log에 저장</li>
+<li>슬레이브의 <strong>SQL Thread</strong>: relay log를 읽어 데이터에 적용</li>
+</ol>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 마스터에서 binlog 활성화 확인</span></span><br><span class="line"><span class="keyword">SHOW</span> VARIABLES <span class="keyword">LIKE</span> <span class="string">&#x27;log_bin&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 슬레이브 상태 확인</span></span><br><span class="line"><span class="keyword">SHOW</span> REPLICA STATUS\G</span><br></pre></td></tr></table></figure>
+
+<h2 id="Master-Slave-전통적-비동기-복제"><a href="#Master-Slave-전통적-비동기-복제" class="headerlink" title="Master-Slave (전통적 비동기 복제)"></a>Master-Slave (전통적 비동기 복제)</h2><p>가장 기본적인 구성으로, 단일 마스터가 쓰기를 받고 N개의 슬레이브가 비동기로 데이터를 복제받습니다.</p>
+<h3 id="장점"><a href="#장점" class="headerlink" title="장점"></a>장점</h3><ul>
+<li>구성이 단순하고 운영 부담이 적다</li>
+<li>읽기 부하를 슬레이브로 분산할 수 있다</li>
+<li>마스터 장애 시 슬레이브를 승격(promote)하여 빠르게 복구 가능</li>
+</ul>
+<h3 id="단점"><a href="#단점" class="headerlink" title="단점"></a>단점</h3><ul>
+<li>비동기 방식이므로 <strong>복제 지연(lag)</strong> 발생 가능</li>
+<li>슬레이브로 읽기 시 stale read 위험</li>
+<li>마스터 장애 시 아직 복제되지 않은 데이터 손실 가능성</li>
+</ul>
+<h3 id="구성-예시"><a href="#구성-예시" class="headerlink" title="구성 예시"></a>구성 예시</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 마스터 my.cnf</span></span><br><span class="line">[mysqld]</span><br><span class="line">server-id = 1</span><br><span class="line">log-bin = mysql-bin</span><br><span class="line">binlog_format = ROW</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 슬레이브 my.cnf</span></span><br><span class="line">[mysqld]</span><br><span class="line">server-id = 2</span><br><span class="line">relay-log = relay-bin</span><br><span class="line">read_only = ON</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 슬레이브에서 복제 시작</span></span><br><span class="line">CHANGE REPLICATION SOURCE <span class="keyword">TO</span></span><br><span class="line">  SOURCE_HOST<span class="operator">=</span><span class="string">&#x27;master.example.com&#x27;</span>,</span><br><span class="line">  SOURCE_USER<span class="operator">=</span><span class="string">&#x27;repl&#x27;</span>,</span><br><span class="line">  SOURCE_PASSWORD<span class="operator">=</span><span class="string">&#x27;secret&#x27;</span>,</span><br><span class="line">  SOURCE_AUTO_POSITION<span class="operator">=</span><span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">START</span> REPLICA;</span><br></pre></td></tr></table></figure>
+
+<h2 id="준동기-복제-Semi-Synchronous-Replication"><a href="#준동기-복제-Semi-Synchronous-Replication" class="headerlink" title="준동기 복제(Semi-Synchronous Replication)"></a>준동기 복제(Semi-Synchronous Replication)</h2><p>비동기 복제의 데이터 손실 위험을 줄이기 위해 등장한 방식입니다. 마스터는 적어도 하나의 슬레이브가 binlog 이벤트를 relay log에 기록했다고 ACK할 때까지 커밋 응답을 지연시킵니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 마스터에서 활성화</span></span><br><span class="line">INSTALL PLUGIN rpl_semi_sync_source SONAME <span class="string">&#x27;semisync_source.so&#x27;</span>;</span><br><span class="line"><span class="keyword">SET</span> <span class="keyword">GLOBAL</span> rpl_semi_sync_source_enabled <span class="operator">=</span> <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+
+<p>성능과 안정성의 균형이 좋아 금융권 등에서 자주 사용됩니다.</p>
+<h2 id="GTID-기반-복제"><a href="#GTID-기반-복제" class="headerlink" title="GTID 기반 복제"></a>GTID 기반 복제</h2><p><strong>GTID(Global Transaction Identifier)</strong> 는 각 트랜잭션에 전역 고유 ID를 부여하는 방식입니다. 기존의 binlog 파일명·포지션 기반 복제는 페일오버 시 정확한 위치를 찾기 어려웠지만, GTID는 이러한 문제를 해결합니다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- GTID 활성화</span></span><br><span class="line"><span class="keyword">SET</span> <span class="keyword">GLOBAL</span> gtid_mode <span class="operator">=</span> <span class="keyword">ON</span>;</span><br><span class="line"><span class="keyword">SET</span> <span class="keyword">GLOBAL</span> enforce_gtid_consistency <span class="operator">=</span> <span class="keyword">ON</span>;</span><br></pre></td></tr></table></figure>
+
+<p>GTID 형식은 <code>server_uuid:transaction_id</code> 입니다. 예: <code>3E11FA47-71CA-11E1-9E33-C80AA9429562:23</code>.</p>
+<h3 id="GTID의-장점"><a href="#GTID의-장점" class="headerlink" title="GTID의 장점"></a>GTID의 장점</h3><ul>
+<li>페일오버가 단순해진다 (<code>SOURCE_AUTO_POSITION=1</code>)</li>
+<li>어떤 트랜잭션이 어디까지 적용되었는지 추적 용이</li>
+<li>복제 토폴로지 변경이 쉬움</li>
+</ul>
+<h2 id="MySQL-Group-Replication"><a href="#MySQL-Group-Replication" class="headerlink" title="MySQL Group Replication"></a>MySQL Group Replication</h2><p>MySQL 5.7부터 등장한 <strong>다중 마스터 동기식 복제</strong> 솔루션입니다. Paxos 기반의 합의 알고리즘(XCom)을 사용하며, 일관성과 가용성을 모두 제공합니다.</p>
+<h3 id="주요-특징"><a href="#주요-특징" class="headerlink" title="주요 특징"></a>주요 특징</h3><ul>
+<li>그룹 내 모든 노드가 동등 (single-primary 또는 multi-primary 모드)</li>
+<li>트랜잭션은 그룹의 과반수 합의 후 커밋</li>
+<li>노드 장애 시 자동 감지 및 그룹 재구성</li>
+<li>충돌 감지 및 인증(certification) 단계 포함</li>
+</ul>
+<h3 id="구성-예시-1"><a href="#구성-예시-1" class="headerlink" title="구성 예시"></a>구성 예시</h3><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># my.cnf</span></span><br><span class="line"><span class="section">[mysqld]</span></span><br><span class="line"><span class="attr">server_id</span> = <span class="number">1</span></span><br><span class="line"><span class="attr">gtid_mode</span> = <span class="literal">ON</span></span><br><span class="line"><span class="attr">enforce_gtid_consistency</span> = <span class="literal">ON</span></span><br><span class="line"><span class="attr">plugin_load_add</span> = <span class="string">&#x27;group_replication.so&#x27;</span></span><br><span class="line"><span class="attr">group_replication_group_name</span> = <span class="string">&#x27;aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee&#x27;</span></span><br><span class="line"><span class="attr">group_replication_local_address</span> = <span class="string">&#x27;10.0.0.1:33061&#x27;</span></span><br><span class="line"><span class="attr">group_replication_group_seeds</span> = <span class="string">&#x27;10.0.0.1:33061,10.0.0.2:33061,10.0.0.3:33061&#x27;</span></span><br><span class="line"><span class="attr">group_replication_single_primary_mode</span> = <span class="literal">ON</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 그룹 시작 (첫 노드)</span></span><br><span class="line"><span class="keyword">SET</span> <span class="keyword">GLOBAL</span> group_replication_bootstrap_group <span class="operator">=</span> <span class="keyword">ON</span>;</span><br><span class="line"><span class="keyword">START</span> GROUP_REPLICATION;</span><br><span class="line"><span class="keyword">SET</span> <span class="keyword">GLOBAL</span> group_replication_bootstrap_group <span class="operator">=</span> OFF;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Group-Replication을-쓰면-좋은-경우"><a href="#Group-Replication을-쓰면-좋은-경우" class="headerlink" title="Group Replication을 쓰면 좋은 경우"></a>Group Replication을 쓰면 좋은 경우</h3><ul>
+<li>자동 페일오버가 필요한 미션 크리티컬 서비스</li>
+<li>여러 데이터센터 간 데이터 일관성이 중요한 환경</li>
+<li>InnoDB Cluster를 통한 통합 운영을 원할 때</li>
+</ul>
+<h2 id="복제-지연-모니터링"><a href="#복제-지연-모니터링" class="headerlink" title="복제 지연 모니터링"></a>복제 지연 모니터링</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SHOW</span> REPLICA STATUS\G</span><br><span class="line"><span class="comment">-- Seconds_Behind_Source 값이 핵심 지표</span></span><br></pre></td></tr></table></figure>
+
+<p>추가로 <code>pt-heartbeat</code>나 PMM 같은 도구를 활용하면 더 정확한 지연 측정이 가능합니다.</p>
+<h2 id="실무-운영-팁"><a href="#실무-운영-팁" class="headerlink" title="실무 운영 팁"></a>실무 운영 팁</h2><ul>
+<li><strong>binlog_format은 ROW로 통일</strong>: 비결정적 SQL 문제를 피할 수 있음</li>
+<li><strong>슬레이브는 <code>read_only=ON</code></strong> 으로 설정해 실수 방지</li>
+<li><strong>복제 채널별 모니터링</strong>: 멀티 소스 복제 사용 시 채널별로 지연 추적</li>
+<li><strong>VIP 또는 ProxySQL</strong> 등을 활용한 페일오버 자동화 고려</li>
+<li><strong>백업 전략과 결합</strong>: 슬레이브에서 mysqldump 또는 Xtrabackup 수행</li>
+</ul>
+<h2 id="마무리"><a href="#마무리" class="headerlink" title="마무리"></a>마무리</h2><p>MySQL 복제는 단순한 데이터 복사가 아니라 가용성, 일관성, 성능의 균형을 잡는 도구입니다. 서비스 특성에 따라 비동기, 준동기, Group Replication 중 적절한 방식을 선택하고, GTID 활성화와 자동 페일오버 도구를 함께 사용하면 더 안정적인 운영이 가능합니다.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Database/" rel="tag"># Database</a>
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+              <a href="/tags/Replication/" rel="tag"># Replication</a>
+              <a href="/tags/GTID/" rel="tag"># GTID</a>
+              <a href="/tags/HA/" rel="tag"># HA</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/spring-profiles-configuration/" rel="prev" title="Spring Profiles와 외부 설정 - 환경별 application.yml 분리 전략">
+      <i class="fa fa-chevron-left"></i> Spring Profiles와 외부 설정 - 환경별 application.yml 분리 전략
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/postgresql-vacuum-explained/" rel="next" title="PostgreSQL VACUUM 완전 정복 - MVCC와 autovacuum의 모든 것">
+      PostgreSQL VACUUM 완전 정복 - MVCC와 autovacuum의 모든 것 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL-%EB%B3%B5%EC%A0%9C%EB%9E%80"><span class="nav-number">1.</span> <span class="nav-text">MySQL 복제란?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B3%B5%EC%A0%9C%EC%9D%98-%EA%B8%B0%EB%B3%B8-%EB%8F%99%EC%9E%91-%EC%9B%90%EB%A6%AC"><span class="nav-number">2.</span> <span class="nav-text">복제의 기본 동작 원리</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Master-Slave-%EC%A0%84%ED%86%B5%EC%A0%81-%EB%B9%84%EB%8F%99%EA%B8%B0-%EB%B3%B5%EC%A0%9C"><span class="nav-number">3.</span> <span class="nav-text">Master-Slave (전통적 비동기 복제)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%9E%A5%EC%A0%90"><span class="nav-number">3.1.</span> <span class="nav-text">장점</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EB%8B%A8%EC%A0%90"><span class="nav-number">3.2.</span> <span class="nav-text">단점</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EA%B5%AC%EC%84%B1-%EC%98%88%EC%8B%9C"><span class="nav-number">3.3.</span> <span class="nav-text">구성 예시</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%A4%80%EB%8F%99%EA%B8%B0-%EB%B3%B5%EC%A0%9C-Semi-Synchronous-Replication"><span class="nav-number">4.</span> <span class="nav-text">준동기 복제(Semi-Synchronous Replication)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GTID-%EA%B8%B0%EB%B0%98-%EB%B3%B5%EC%A0%9C"><span class="nav-number">5.</span> <span class="nav-text">GTID 기반 복제</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#GTID%EC%9D%98-%EC%9E%A5%EC%A0%90"><span class="nav-number">5.1.</span> <span class="nav-text">GTID의 장점</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL-Group-Replication"><span class="nav-number">6.</span> <span class="nav-text">MySQL Group Replication</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EC%A3%BC%EC%9A%94-%ED%8A%B9%EC%A7%95"><span class="nav-number">6.1.</span> <span class="nav-text">주요 특징</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EA%B5%AC%EC%84%B1-%EC%98%88%EC%8B%9C-1"><span class="nav-number">6.2.</span> <span class="nav-text">구성 예시</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Group-Replication%EC%9D%84-%EC%93%B0%EB%A9%B4-%EC%A2%8B%EC%9D%80-%EA%B2%BD%EC%9A%B0"><span class="nav-number">6.3.</span> <span class="nav-text">Group Replication을 쓰면 좋은 경우</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%B3%B5%EC%A0%9C-%EC%A7%80%EC%97%B0-%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81"><span class="nav-number">7.</span> <span class="nav-text">복제 지연 모니터링</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EC%8B%A4%EB%AC%B4-%EC%9A%B4%EC%98%81-%ED%8C%81"><span class="nav-number">8.</span> <span class="nav-text">실무 운영 팁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EB%A7%88%EB%AC%B4%EB%A6%AC"><span class="nav-number">9.</span> <span class="nav-text">마무리</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">214</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">506</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>
