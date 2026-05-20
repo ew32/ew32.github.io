@@ -2,6 +2,24 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://ew32.github.io/contact/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/disclaimer/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://ew32.github.io/privacy/</loc>
     
     <lastmod>2026-05-20</lastmod>
@@ -29,7 +47,61 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/about/</loc>
+    <loc>https://ew32.github.io/posts/websocket-vs-sse-vs-polling/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/windows-package-manager-chocolatey/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/windows-subsystem-for-linux-guide/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/wsl-ubuntu-dev-environment/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/xss-attack-defense/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/xxe-attack-prevention/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/zsh-oh-my-zsh-setup/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -47,7 +119,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/contact/</loc>
+    <loc>https://ew32.github.io/about/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -56,7 +128,34 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/disclaimer/</loc>
+    <loc>https://ew32.github.io/posts/typescript-getting-started/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/typescript-utility-types/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/understanding-public-private-key-encryption/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/vector-database-introduction/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -129,78 +228,6 @@
   
   <url>
     <loc>https://ew32.github.io/posts/websocket-explained/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/websocket-vs-sse-vs-polling/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/windows-package-manager-chocolatey/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/windows-subsystem-for-linux-guide/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/wsl-ubuntu-dev-environment/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/xss-attack-defense/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/xxe-attack-prevention/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/zsh-oh-my-zsh-setup/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/sync-async-blocking-nonblocking/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -308,87 +335,6 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/typescript-getting-started/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/typescript-utility-types/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/understanding-public-private-key-encryption/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/vector-database-introduction/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/spring-batch-introduction/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/spring-bean-lifecycle/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/spring-boot-getting-started/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/spring-boot-testing-strategy/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/spring-cloud-microservices/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://ew32.github.io/posts/spring-data-jpa-advanced/</loc>
     
     <lastmod>2026-05-20</lastmod>
@@ -407,7 +353,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/spring-security-basics/</loc>
+    <loc>https://ew32.github.io/posts/spring-webflux-reactive/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -416,7 +362,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/spring-webflux-reactive/</loc>
+    <loc>https://ew32.github.io/posts/spring-security-basics/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -471,6 +417,132 @@
   
   <url>
     <loc>https://ew32.github.io/posts/symmetric-vs-asymmetric-encryption/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/sync-async-blocking-nonblocking/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/shell-scripting-basics/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/spa-ssr-ssg-comparison/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/solid-principles-explained/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/spring-actuator-monitoring/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/spring-aop-explained/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/spring-batch-introduction/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/spring-bean-lifecycle/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/spring-boot-testing-strategy/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/spring-boot-getting-started/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/spring-cloud-microservices/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/react-suspense-and-error-boundaries/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/react-testing-library-guide/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/redis-caching-strategies/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -578,7 +650,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/shell-scripting-basics/</loc>
+    <loc>https://ew32.github.io/posts/oidc-vs-oauth2/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -587,7 +659,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/solid-principles-explained/</loc>
+    <loc>https://ew32.github.io/posts/orm-vs-query-builder/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -596,7 +668,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/spa-ssr-ssg-comparison/</loc>
+    <loc>https://ew32.github.io/posts/os-scheduling-algorithms-md/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -605,16 +677,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/spring-actuator-monitoring/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/spring-aop-explained/</loc>
+    <loc>https://ew32.github.io/posts/osi-7-layer-model-md/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -731,7 +794,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/react-suspense-and-error-boundaries/</loc>
+    <loc>https://ew32.github.io/posts/mfa-2fa-authentication/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -740,7 +803,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/react-testing-library-guide/</loc>
+    <loc>https://ew32.github.io/posts/microservices-architecture/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -749,7 +812,16 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/redis-caching-strategies/</loc>
+    <loc>https://ew32.github.io/posts/moneyprinter-installation/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/mongodb-aggregation-pipeline/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -776,7 +848,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/mysql-vs-postgresql/</loc>
+    <loc>https://ew32.github.io/posts/mysql-replication-strategies/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -785,7 +857,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/mysql-replication-strategies/</loc>
+    <loc>https://ew32.github.io/posts/mysql-vs-postgresql/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -866,69 +938,6 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/oidc-vs-oauth2/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/orm-vs-query-builder/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/osi-7-layer-model-md/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/os-scheduling-algorithms-md/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/langchain-basics/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/lazy-loading-strategies/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/linux-cron-scheduling/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://ew32.github.io/posts/linux-file-permissions/</loc>
     
     <lastmod>2026-05-20</lastmod>
@@ -992,78 +1001,6 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/mfa-2fa-authentication/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/microservices-architecture/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/moneyprinter-installation/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/mongodb-aggregation-pipeline/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/javascript-module-systems/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/javascript-prototype-chain/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/javascript-symbol-and-reflect/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/javascript-this-binding/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://ew32.github.io/posts/jpa-repository-vs-mapper-comparison/</loc>
     
     <lastmod>2026-05-20</lastmod>
@@ -1110,6 +1047,114 @@
   
   <url>
     <loc>https://ew32.github.io/posts/langchain-agents-tools/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/langchain-basics/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/lazy-loading-strategies/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/linux-cron-scheduling/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-event-loop/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-functional-programming/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-iterators-generators/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-memory-leaks/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-module-systems/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-prototype-chain/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-symbol-and-reflect/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/javascript-this-binding/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/java-virtual-threads/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -1172,34 +1217,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/javascript-event-loop/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/javascript-functional-programming/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/javascript-iterators-generators/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/javascript-memory-leaks/</loc>
+    <loc>https://ew32.github.io/posts/java-collections-framework/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -1209,15 +1227,6 @@
   
   <url>
     <loc>https://ew32.github.io/posts/infrastructure-as-code-comparison/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/java-collections-framework/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -1298,33 +1307,6 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/java-virtual-threads/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/es6-essential-syntax/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/event-driven-architecture/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://ew32.github.io/posts/event-sourcing-pattern/</loc>
     
     <lastmod>2026-05-20</lastmod>
@@ -1361,7 +1343,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/github-actions-getting-started/</loc>
+    <loc>https://ew32.github.io/posts/github-copilot-usage/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -1370,7 +1352,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/github-copilot-usage/</loc>
+    <loc>https://ew32.github.io/posts/github-actions-getting-started/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -1397,7 +1379,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/grpc-introduction/</loc>
+    <loc>https://ew32.github.io/posts/hello-world/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -1406,7 +1388,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/hello-world/</loc>
+    <loc>https://ew32.github.io/posts/grpc-introduction/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -1478,6 +1460,60 @@
   </url>
   
   <url>
+    <loc>https://ew32.github.io/posts/docker-image-optimization/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/dotfiles-management/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/elasticsearch-basics/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/es6-essential-syntax/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/event-driven-architecture/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/en/posts/ai-coding-prompt-patterns/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://ew32.github.io/en/posts/api-gateway-pattern/</loc>
     
     <lastmod>2026-05-20</lastmod>
@@ -1487,7 +1523,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/en/posts/api-key-management-best-practices/</loc>
+    <loc>https://ew32.github.io/en/posts/aws-ec2-ecs-eks-comparison/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -1496,7 +1532,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/en/posts/aws-ec2-ecs-eks-comparison/</loc>
+    <loc>https://ew32.github.io/en/posts/api-key-management-best-practices/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -1568,16 +1604,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/elasticsearch-basics/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/en/posts/ai-coding-prompt-patterns/</loc>
+    <loc>https://ew32.github.io/posts/database-connection-pool/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -1622,7 +1649,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/database-query-optimization/</loc>
+    <loc>https://ew32.github.io/posts/ddd-basics/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -1631,7 +1658,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/ddd-basics/</loc>
+    <loc>https://ew32.github.io/posts/database-query-optimization/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -1722,195 +1749,6 @@
   
   <url>
     <loc>https://ew32.github.io/posts/docker-container-basics/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/docker-image-optimization/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/dotfiles-management/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/api-gateway-pattern/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/api-key-management-best-practices/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/aws-ec2-ecs-eks-comparison/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/aws-iam-best-practices/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/aws-lambda-serverless-intro/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/aws-rds-vs-aurora/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/aws-s3-guide/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/bff-pattern/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/browser-rendering-process/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/cap-theorem-explained/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/cdn-how-it-works/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/chatgpt-prompt-engineering/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/ci-cd-pipeline-best-practices/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/circuit-breaker-pattern/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/claude-code-cli-guide/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/claude-effective-usage/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/clickjacking-defense/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/clean-architecture-overview/</loc>
-    
-    <lastmod>2026-05-20</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/posts/cloud-computing-overview-md/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -2072,7 +1910,7 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/posts/database-connection-pool/</loc>
+    <loc>https://ew32.github.io/posts/api-gateway-pattern/</loc>
     
     <lastmod>2026-05-20</lastmod>
     
@@ -2089,6 +1927,168 @@
     <priority>0.6</priority>
   </url>
   
+  <url>
+    <loc>https://ew32.github.io/posts/api-key-management-best-practices/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/aws-ec2-ecs-eks-comparison/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/aws-iam-best-practices/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/aws-lambda-serverless-intro/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/aws-rds-vs-aurora/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/aws-s3-guide/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/bff-pattern/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/browser-rendering-process/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/cap-theorem-explained/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/cdn-how-it-works/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/chatgpt-prompt-engineering/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/ci-cd-pipeline-best-practices/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/circuit-breaker-pattern/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/claude-code-cli-guide/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/claude-effective-usage/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/clean-architecture-overview/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/clickjacking-defense/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/posts/cloud-computing-overview-md/</loc>
+    
+    <lastmod>2026-05-20</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
 
   <url>
     <loc>https://ew32.github.io/</loc>
@@ -2097,6 +2097,27 @@
     <priority>1.0</priority>
   </url>
 
+  
+  <url>
+    <loc>https://ew32.github.io/tags/APIGateway/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/MSA/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
   
   <url>
     <loc>https://ew32.github.io/tags/%ED%94%84%EB%A1%AC%ED%94%84%ED%8A%B8%EC%97%94%EC%A7%80%EB%8B%88%EC%96%B4%EB%A7%81/</loc>
@@ -2121,27 +2142,6 @@
   
   <url>
     <loc>https://ew32.github.io/tags/%EC%83%9D%EC%82%B0%EC%84%B1/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/APIGateway/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/MSA/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -2470,6 +2470,20 @@
   </url>
   
   <url>
+    <loc>https://ew32.github.io/tags/CleanArchitecture/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/%EC%84%A4%EA%B3%84/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://ew32.github.io/tags/Clickjacking/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -2492,20 +2506,6 @@
   
   <url>
     <loc>https://ew32.github.io/tags/HTTP-Headers/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/CleanArchitecture/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/%EC%84%A4%EA%B3%84/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -2960,6 +2960,20 @@
   </url>
   
   <url>
+    <loc>https://ew32.github.io/tags/DDD/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/%EB%8F%84%EB%A9%94%EC%9D%B8/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://ew32.github.io/tags/SQL/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -2982,20 +2996,6 @@
   
   <url>
     <loc>https://ew32.github.io/tags/Index/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/DDD/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/%EB%8F%84%EB%A9%94%EC%9D%B8/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -3303,13 +3303,6 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/tags/GitHubActions/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://ew32.github.io/tags/Copilot/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -3325,6 +3318,13 @@
   
   <url>
     <loc>https://ew32.github.io/tags/AI%EC%BD%94%EB%94%A9/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/GitHubActions/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -3352,27 +3352,6 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/tags/gRPC/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/Protocol-Buffers/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/HTTP-2/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://ew32.github.io/tags/Hexo/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -3388,6 +3367,27 @@
   
   <url>
     <loc>https://ew32.github.io/tags/%EC%8B%9C%EC%9E%91%ED%95%98%EA%B8%B0/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/gRPC/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/Protocol-Buffers/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/HTTP-2/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -3513,34 +3513,6 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/tags/IaC/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/Terraform/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/Pulumi/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/CloudFormation/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://ew32.github.io/tags/Collections/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -3563,6 +3535,34 @@
   
   <url>
     <loc>https://ew32.github.io/tags/%EC%9E%90%EB%A3%8C%EA%B5%AC%EC%A1%B0/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/IaC/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/Terraform/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/Pulumi/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/CloudFormation/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -3947,20 +3947,6 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/tags/this/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/%EB%B0%94%EC%9D%B8%EB%94%A9/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://ew32.github.io/tags/JPA/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -3983,6 +3969,20 @@
   
   <url>
     <loc>https://ew32.github.io/tags/Spring/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/this/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/%EB%B0%94%EC%9D%B8%EB%94%A9/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -4493,27 +4493,6 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/tags/OSI/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/%ED%94%84%EB%A1%9C%ED%86%A0%EC%BD%9C/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/TCP-IP/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://ew32.github.io/tags/%EC%9A%B4%EC%98%81%EC%B2%B4%EC%A0%9C/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -4529,6 +4508,27 @@
   
   <url>
     <loc>https://ew32.github.io/tags/CPU/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/OSI/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/%ED%94%84%EB%A1%9C%ED%86%A0%EC%BD%9C/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/TCP-IP/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -5046,13 +5046,6 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/tags/SpringBoot/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://ew32.github.io/tags/Test/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -5075,6 +5068,13 @@
   
   <url>
     <loc>https://ew32.github.io/tags/TDD/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/SpringBoot/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -5130,20 +5130,6 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/tags/Security/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/%EC%9D%B8%EA%B0%80/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://ew32.github.io/tags/WebFlux/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -5159,6 +5145,20 @@
   
   <url>
     <loc>https://ew32.github.io/tags/Project-Reactor/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/Security/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/%EC%9D%B8%EA%B0%80/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -5242,6 +5242,20 @@
   </url>
   
   <url>
+    <loc>https://ew32.github.io/tags/TailwindCSS/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://ew32.github.io/tags/UtilityFirst/</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://ew32.github.io/tags/%EB%8F%99%EA%B8%B0/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -5257,20 +5271,6 @@
   
   <url>
     <loc>https://ew32.github.io/tags/%EB%85%BC%EB%B8%94%EB%A1%9C%ED%82%B9/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/TailwindCSS/</loc>
-    <lastmod>2026-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://ew32.github.io/tags/UtilityFirst/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -5720,14 +5720,14 @@
 
   
   <url>
-    <loc>https://ew32.github.io/categories/AI%EB%8F%84%EA%B5%AC/</loc>
+    <loc>https://ew32.github.io/categories/Backend/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://ew32.github.io/categories/Backend/</loc>
+    <loc>https://ew32.github.io/categories/AI%EB%8F%84%EA%B5%AC/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -5818,14 +5818,14 @@
   </url>
   
   <url>
-    <loc>https://ew32.github.io/categories/Backend/Java/</loc>
+    <loc>https://ew32.github.io/categories/Frontend/JavaScript/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://ew32.github.io/categories/Frontend/JavaScript/</loc>
+    <loc>https://ew32.github.io/categories/Backend/Java/</loc>
     <lastmod>2026-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
