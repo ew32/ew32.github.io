@@ -10,7 +10,7 @@
   <rights>All rights reserved 2026, EW32</rights>
   <subtitle>실무 중심 개발·인프라·보안 아카이브</subtitle>
   <title>EW32 Tech Blog</title>
-  <updated>2026-05-20T01:55:07.464Z</updated>
+  <updated>2026-05-20T03:50:02.644Z</updated>
   <entry>
     <author>
       <name>EW32</name>
@@ -25,7 +25,7 @@
     <published>2026-07-18T01:00:00.000Z</published>
     <summary>Docker 기반 Dev Containers로 팀원 모두 동일한 개발환경을 사용하도록 구성하는 방법을 정리합니다.</summary>
     <title>VSCode Dev Containers로 일관된 개발환경 만들기</title>
-    <updated>2026-05-20T01:55:07.464Z</updated>
+    <updated>2026-05-20T03:50:02.644Z</updated>
   </entry>
   <entry>
     <author>
@@ -41,7 +41,7 @@
     <published>2026-07-17T01:00:00.000Z</published>
     <summary>설정 파일을 Git으로 관리하고 새 기기에서 즉시 복원하는 dotfiles 워크플로를 소개합니다.</summary>
     <title>dotfiles 관리법 - 내 환경을 코드로</title>
-    <updated>2026-05-20T01:55:07.465Z</updated>
+    <updated>2026-05-20T03:50:02.645Z</updated>
   </entry>
   <entry>
     <author>
@@ -57,7 +57,7 @@
     <published>2026-07-16T01:00:00.000Z</published>
     <summary>Zsh의 강점과 Oh My Zsh, Powerlevel10k, 자동완성/하이라이트 플러그인으로 생산성 높은 터미널을 구성하는 방법.</summary>
     <title>Zsh와 Oh My Zsh로 셸 환경 꾸미기</title>
-    <updated>2026-05-20T01:55:07.479Z</updated>
+    <updated>2026-05-20T03:50:02.667Z</updated>
   </entry>
   <entry>
     <author>
@@ -73,7 +73,7 @@
     <published>2026-07-15T01:00:00.000Z</published>
     <summary>Git Hooks의 종류와 활용법, Husky를 이용한 팀 단위 공유 설정까지 정리합니다.</summary>
     <title>Git Hooks로 워크플로 자동화하기</title>
-    <updated>2026-05-20T01:55:07.466Z</updated>
+    <updated>2026-05-20T03:50:02.646Z</updated>
   </entry>
   <entry>
     <author>
@@ -89,7 +89,7 @@
     <published>2026-07-14T01:00:00.000Z</published>
     <summary>Git의 두 통합 방법인 rebase와 merge의 차이, 장단점, 그리고 팀에서의 선택 가이드를 정리합니다.</summary>
     <title>Git Rebase vs Merge 전략</title>
-    <updated>2026-05-20T01:55:07.466Z</updated>
+    <updated>2026-05-20T03:50:02.646Z</updated>
   </entry>
   <entry>
     <author>
@@ -105,7 +105,7 @@
     <published>2026-07-13T01:00:00.000Z</published>
     <summary>벡터 DB의 개념과 작동 원리, 주요 서비스인 Pinecone, Weaviate, Qdrant를 비교합니다.</summary>
     <title>벡터 데이터베이스 입문 - Pinecone, Weaviate, Qdrant 비교</title>
-    <updated>2026-05-20T01:55:07.478Z</updated>
+    <updated>2026-05-20T03:50:02.665Z</updated>
   </entry>
   <entry>
     <author>
@@ -121,7 +121,7 @@
     <published>2026-07-12T01:00:00.000Z</published>
     <summary>LLM 파인튜닝의 개념과 종류, LoRA와 SFT의 차이, 실제 작업 흐름까지 입문자 관점에서 정리합니다.</summary>
     <title>LLM 파인튜닝 기초</title>
-    <updated>2026-05-20T01:55:07.471Z</updated>
+    <updated>2026-05-20T03:50:02.657Z</updated>
   </entry>
   <entry>
     <author>
@@ -137,7 +137,7 @@
     <published>2026-07-11T01:00:00.000Z</published>
     <summary>LangChain의 Agent와 Tool 추상화를 살펴보고, 외부 도구를 호출하는 LLM 에이전트를 구현하는 방법을 정리합니다.</summary>
     <title>LangChain Agents와 Tools 이해하기</title>
-    <updated>2026-05-20T01:55:07.470Z</updated>
+    <updated>2026-05-20T03:50:02.655Z</updated>
   </entry>
   <entry>
     <author>
@@ -153,7 +153,7 @@
     <published>2026-07-10T01:00:00.000Z</published>
     <summary>AI 코딩 도구에서 일관되고 정확한 결과를 얻기 위한 실용 프롬프트 패턴 모음입니다.</summary>
     <title>AI 코딩을 위한 프롬프트 패턴</title>
-    <updated>2026-05-20T01:55:07.462Z</updated>
+    <updated>2026-05-20T03:50:02.641Z</updated>
   </entry>
   <entry>
     <author>
@@ -169,7 +169,7 @@
     <published>2026-07-10T01:00:00.000Z</published>
     <summary>A collection of practical prompt patterns for getting consistent, accurate results out of AI coding tools.</summary>
     <title>Prompt Patterns for AI-Assisted Coding</title>
-    <updated>2026-05-20T01:55:07.465Z</updated>
+    <updated>2026-05-20T03:50:02.645Z</updated>
   </entry>
   <entry>
     <author>
@@ -185,7 +185,7 @@
     <published>2026-07-09T01:00:00.000Z</published>
     <summary>AI 네이티브 코드 에디터 Cursor의 핵심 기능과 단축키, 효율적인 사용 패턴을 소개합니다.</summary>
     <title>Cursor IDE 활용 팁</title>
-    <updated>2026-05-20T01:55:07.463Z</updated>
+    <updated>2026-05-20T03:50:02.643Z</updated>
   </entry>
   <entry>
     <author>
@@ -201,7 +201,7 @@
     <published>2026-07-08T01:00:00.000Z</published>
     <summary>터미널 기반 AI 코딩 어시스턴트 Claude Code CLI의 설치, 핵심 명령어, 워크플로 자동화 방법을 정리합니다.</summary>
     <title>Claude Code CLI 활용 가이드</title>
-    <updated>2026-05-20T01:55:07.462Z</updated>
+    <updated>2026-05-20T03:50:02.642Z</updated>
   </entry>
   <entry>
     <author>
@@ -218,7 +218,7 @@
     <published>2026-07-07T01:00:00.000Z</published>
     <summary>Infrastructure as Code의 핵심 개념과 대표 도구 Terraform, Pulumi, CloudFormation의 차이를 비교하고 선택 기준을 제시합니다.</summary>
     <title>IaC 도구 비교 - Terraform, Pulumi, CloudFormation</title>
-    <updated>2026-05-20T01:55:07.467Z</updated>
+    <updated>2026-05-20T03:50:02.648Z</updated>
   </entry>
   <entry>
     <author>
@@ -235,7 +235,7 @@
     <published>2026-07-06T01:00:00.000Z</published>
     <summary>안정적이고 빠르며 신뢰할 수 있는 CI/CD 파이프라인을 만들기 위한 설계 원칙과 실전 패턴을 정리합니다.</summary>
     <title>CI/CD 파이프라인 설계 원칙과 모범 사례</title>
-    <updated>2026-05-20T01:55:07.462Z</updated>
+    <updated>2026-05-20T03:50:02.642Z</updated>
   </entry>
   <entry>
     <author>
@@ -252,7 +252,7 @@
     <published>2026-07-05T01:00:00.000Z</published>
     <summary>리눅스 서버에서 네트워크 상태를 점검할 때 자주 쓰는 명령어들의 사용법과 실전 활용 패턴을 정리합니다.</summary>
     <title>Linux 네트워크 진단 명령어 정리 - ip, ss, netstat, tcpdump</title>
-    <updated>2026-05-20T01:55:07.471Z</updated>
+    <updated>2026-05-20T03:50:02.657Z</updated>
   </entry>
   <entry>
     <author>
@@ -269,7 +269,7 @@
     <published>2026-07-04T01:00:00.000Z</published>
     <summary>리눅스의 전통적 작업 스케줄러 cron의 동작 원리, crontab 문법, 자주 발생하는 함정과 대안을 정리합니다.</summary>
     <title>Linux cron과 crontab으로 스케줄링하기</title>
-    <updated>2026-05-20T01:55:07.470Z</updated>
+    <updated>2026-05-20T03:50:02.655Z</updated>
   </entry>
   <entry>
     <author>
@@ -286,7 +286,7 @@
     <published>2026-07-03T01:00:00.000Z</published>
     <summary>현대 리눅스의 init 시스템인 systemd의 구조와 유닛 파일 작성법, 자주 쓰는 systemctl/journalctl 명령을 정리합니다.</summary>
     <title>Linux systemd 기초 - 유닛 작성과 서비스 관리</title>
-    <updated>2026-05-20T01:55:07.471Z</updated>
+    <updated>2026-05-20T03:50:02.657Z</updated>
   </entry>
   <entry>
     <author>
@@ -303,7 +303,7 @@
     <published>2026-07-02T01:00:00.000Z</published>
     <summary>AWS의 관리형 관계형 DB 서비스 RDS와 Aurora의 아키텍처, 성능, 비용, 운영 측면 차이를 비교하고 선택 기준을 정리합니다.</summary>
     <title>AWS RDS와 Aurora 비교 - 무엇을 언제 선택할까</title>
-    <updated>2026-05-20T01:55:07.462Z</updated>
+    <updated>2026-05-20T03:50:02.641Z</updated>
   </entry>
   <entry>
     <author>
@@ -320,7 +320,7 @@
     <published>2026-07-02T01:00:00.000Z</published>
     <summary>A comparison of AWS's managed relational database services - RDS and Aurora - across architecture, performance, cost, and operations, plus selection criteria.</summary>
     <title>AWS RDS vs Aurora - What to Choose and When</title>
-    <updated>2026-05-20T01:55:07.465Z</updated>
+    <updated>2026-05-20T03:50:02.646Z</updated>
   </entry>
   <entry>
     <author>
@@ -337,6 +337,6 @@
     <published>2026-07-01T01:00:00.000Z</published>
     <summary>최소 권한 원칙을 지키며 AWS 계정을 안전하게 운영하기 위한 IAM 정책, 역할, 자격 증명 관리 모범 사례를 정리합니다.</summary>
     <title>AWS IAM 정책과 역할 모범 사례</title>
-    <updated>2026-05-20T01:55:07.462Z</updated>
+    <updated>2026-05-20T03:50:02.641Z</updated>
   </entry>
 </feed>
