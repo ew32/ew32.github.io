@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="The core React Router v6 APIs - BrowserRouter, Routes, useNavigate - plus nested routing and the data router.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to Use React Router v6">
+<meta property="og:url" content="https://ew32.github.io/en/posts/react-router-guide/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="The core React Router v6 APIs - BrowserRouter, Routes, useNavigate - plus nested routing and the data router.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-05-20T07:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-22T14:03:12.801Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="React">
+<meta property="article:tag" content="ReactRouter">
+<meta property="article:tag" content="SPA">
+<meta property="article:tag" content="Routing">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/en/posts/react-router-guide/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1041908788954754" crossorigin="anonymous"></script>
+
+  <title>How to Use React Router v6 | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/react-router-guide/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          How to Use React Router v6
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2026-05-20 16:00:00" itemprop="dateCreated datePublished" datetime="2026-05-20T16:00:00+09:00">2026-05-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">The core React Router v6 APIs - BrowserRouter, Routes, useNavigate - plus nested routing and the data router.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Introducing-React-Router"><a href="#Introducing-React-Router" class="headerlink" title="Introducing React Router"></a>Introducing React Router</h2><p><strong>React Router</strong> is the de facto standard routing library in the<br>React ecosystem. v6 substantially streamlined the API, making it<br>more intuitive with a smaller bundle, and since v6.4 a <strong>data<br>router</strong> that supports data loading was added.</p>
+<p>This post covers the core usage as of v6.</p>
+<h2 id="Basic-Setup"><a href="#Basic-Setup" class="headerlink" title="Basic Setup"></a>Basic Setup</h2><p>First, install the library.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install react-router-dom</span><br></pre></td></tr></table></figure>
+
+<p>Place <code>BrowserRouter</code> at the top of the app and declare <code>Route</code>s<br>inside <code>Routes</code>.</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; <span class="title class_">BrowserRouter</span>, <span class="title class_">Routes</span>, <span class="title class_">Route</span> &#125; <span class="keyword">from</span> <span class="string">&#x27;react-router-dom&#x27;</span></span><br><span class="line"><span class="keyword">import</span> <span class="title class_">Home</span> <span class="keyword">from</span> <span class="string">&#x27;./pages/Home&#x27;</span></span><br><span class="line"><span class="keyword">import</span> <span class="title class_">About</span> <span class="keyword">from</span> <span class="string">&#x27;./pages/About&#x27;</span></span><br><span class="line"><span class="keyword">import</span> <span class="title class_">NotFound</span> <span class="keyword">from</span> <span class="string">&#x27;./pages/NotFound&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="keyword">function</span> <span class="title function_">App</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    <span class="language-xml"><span class="tag">&lt;<span class="name">BrowserRouter</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;<span class="name">Routes</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">        <span class="tag">&lt;<span class="name">Route</span> <span class="attr">path</span>=<span class="string">&quot;/&quot;</span> <span class="attr">element</span>=<span class="string">&#123;</span>&lt;<span class="attr">Home</span> /&gt;</span>&#125; /&gt;</span></span><br><span class="line"><span class="language-xml">        <span class="tag">&lt;<span class="name">Route</span> <span class="attr">path</span>=<span class="string">&quot;/about&quot;</span> <span class="attr">element</span>=<span class="string">&#123;</span>&lt;<span class="attr">About</span> /&gt;</span>&#125; /&gt;</span></span><br><span class="line"><span class="language-xml">        <span class="tag">&lt;<span class="name">Route</span> <span class="attr">path</span>=<span class="string">&quot;*&quot;</span> <span class="attr">element</span>=<span class="string">&#123;</span>&lt;<span class="attr">NotFound</span> /&gt;</span>&#125; /&gt;</span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;/<span class="name">Routes</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">    <span class="tag">&lt;/<span class="name">BrowserRouter</span>&gt;</span></span></span><br><span class="line">  )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Unlike v5, you use the <code>element</code> prop instead of <code>component</code>, and<br><code>Switch</code> is replaced by <code>Routes</code>.</p>
+<h2 id="Links-and-Programmatic-Navigation"><a href="#Links-and-Programmatic-Navigation" class="headerlink" title="Links and Programmatic Navigation"></a>Links and Programmatic Navigation</h2><p>Page transitions are done with <code>&lt;Link&gt;</code> or the <code>useNavigate</code> hook.</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; <span class="title class_">Link</span>, useNavigate &#125; <span class="keyword">from</span> <span class="string">&#x27;react-router-dom&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">Nav</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> navigate = <span class="title function_">useNavigate</span>()</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    <span class="language-xml"><span class="tag">&lt;<span class="name">nav</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;<span class="name">Link</span> <span class="attr">to</span>=<span class="string">&quot;/&quot;</span>&gt;</span>Home<span class="tag">&lt;/<span class="name">Link</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;<span class="name">Link</span> <span class="attr">to</span>=<span class="string">&quot;/about&quot;</span>&gt;</span>About<span class="tag">&lt;/<span class="name">Link</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;<span class="name">button</span> <span class="attr">onClick</span>=<span class="string">&#123;()</span> =&gt;</span> navigate(&#x27;/login&#x27;)&#125;&gt;Login<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;<span class="name">button</span> <span class="attr">onClick</span>=<span class="string">&#123;()</span> =&gt;</span> navigate(-1)&#125;&gt;Back<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">    <span class="tag">&lt;/<span class="name">nav</span>&gt;</span></span></span><br><span class="line">  )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>If you need active-state styling, use <code>&lt;NavLink&gt;</code>.</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="title class_">NavLink</span></span><br><span class="line">  to=<span class="string">&quot;/about&quot;</span></span><br><span class="line">  className=&#123;<span class="function">(<span class="params">&#123; isActive &#125;</span>) =&gt;</span> isActive ? <span class="string">&#x27;active&#x27;</span> : <span class="string">&#x27;&#x27;</span>&#125;</span><br><span class="line">&gt;</span><br><span class="line">  <span class="title class_">About</span></span><br><span class="line">&lt;/<span class="title class_">NavLink</span>&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Dynamic-Routes-and-Queries"><a href="#Dynamic-Routes-and-Queries" class="headerlink" title="Dynamic Routes and Queries"></a>Dynamic Routes and Queries</h2><p>Define dynamic segments with the <code>:param</code> notation and read them<br>with <code>useParams</code>.</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Route definition</span></span><br><span class="line">&lt;<span class="title class_">Route</span> path=<span class="string">&quot;/posts/:id&quot;</span> element=&#123;<span class="language-xml"><span class="tag">&lt;<span class="name">PostDetail</span> /&gt;</span></span>&#125; /&gt;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Component</span></span><br><span class="line"><span class="keyword">import</span> &#123; useParams, useSearchParams &#125; <span class="keyword">from</span> <span class="string">&#x27;react-router-dom&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">PostDetail</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; id &#125; = <span class="title function_">useParams</span>()</span><br><span class="line">  <span class="keyword">const</span> [searchParams, setSearchParams] = <span class="title function_">useSearchParams</span>()</span><br><span class="line">  <span class="keyword">const</span> tab = searchParams.<span class="title function_">get</span>(<span class="string">&#x27;tab&#x27;</span>) ?? <span class="string">&#x27;overview&#x27;</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    <span class="language-xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;<span class="name">h1</span>&gt;</span>Post &#123;id&#125;<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;<span class="name">p</span>&gt;</span>Tab: &#123;tab&#125;<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;<span class="name">button</span> <span class="attr">onClick</span>=<span class="string">&#123;()</span> =&gt;</span> setSearchParams(&#123; tab: &#x27;comments&#x27; &#125;)&#125;&gt;</span></span><br><span class="line"><span class="language-xml">        View comments</span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;/<span class="name">button</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">  )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Nested-Routing-and-Outlet"><a href="#Nested-Routing-and-Outlet" class="headerlink" title="Nested Routing and Outlet"></a>Nested Routing and Outlet</h2><p>Pages that share a layout can be cleanly composed with <strong>nested<br>routes</strong>.</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="title class_">Routes</span>&gt;</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">Route</span> <span class="attr">path</span>=<span class="string">&quot;/dashboard&quot;</span> <span class="attr">element</span>=<span class="string">&#123;</span>&lt;<span class="attr">DashboardLayout</span> /&gt;</span>&#125;&gt;</span></span><br><span class="line"><span class="language-xml">    <span class="tag">&lt;<span class="name">Route</span> <span class="attr">index</span> <span class="attr">element</span>=<span class="string">&#123;</span>&lt;<span class="attr">DashboardHome</span> /&gt;</span>&#125; /&gt;</span></span><br><span class="line"><span class="language-xml">    <span class="tag">&lt;<span class="name">Route</span> <span class="attr">path</span>=<span class="string">&quot;settings&quot;</span> <span class="attr">element</span>=<span class="string">&#123;</span>&lt;<span class="attr">Settings</span> /&gt;</span>&#125; /&gt;</span></span><br><span class="line"><span class="language-xml">    <span class="tag">&lt;<span class="name">Route</span> <span class="attr">path</span>=<span class="string">&quot;users/:id&quot;</span> <span class="attr">element</span>=<span class="string">&#123;</span>&lt;<span class="attr">UserDetail</span> /&gt;</span>&#125; /&gt;</span></span><br><span class="line"><span class="language-xml">  <span class="tag">&lt;/<span class="name">Route</span>&gt;</span></span></span><br><span class="line">&lt;/<span class="title class_">Routes</span>&gt;</span><br></pre></td></tr></table></figure>
+
+<p>In the parent component, place <code>&lt;Outlet&gt;</code> where the child should<br>render.</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; <span class="title class_">Outlet</span>, <span class="title class_">Link</span> &#125; <span class="keyword">from</span> <span class="string">&#x27;react-router-dom&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">DashboardLayout</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    <span class="language-xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">className</span>=<span class="string">&quot;layout&quot;</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;<span class="name">aside</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">        <span class="tag">&lt;<span class="name">Link</span> <span class="attr">to</span>=<span class="string">&quot;/dashboard&quot;</span>&gt;</span>Home<span class="tag">&lt;/<span class="name">Link</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">        <span class="tag">&lt;<span class="name">Link</span> <span class="attr">to</span>=<span class="string">&quot;/dashboard/settings&quot;</span>&gt;</span>Settings<span class="tag">&lt;/<span class="name">Link</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;/<span class="name">aside</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;<span class="name">main</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">        <span class="tag">&lt;<span class="name">Outlet</span> /&gt;</span></span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;/<span class="name">main</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">  )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="The-Data-Router-createBrowserRouter"><a href="#The-Data-Router-createBrowserRouter" class="headerlink" title="The Data Router (createBrowserRouter)"></a>The Data Router (createBrowserRouter)</h2><p>Since v6.4, you can include data fetching and form handling in the<br>route definition via <strong>loader&#x2F;action</strong>.</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123;</span><br><span class="line">  createBrowserRouter,</span><br><span class="line">  <span class="title class_">RouterProvider</span>,</span><br><span class="line">  useLoaderData</span><br><span class="line">&#125; <span class="keyword">from</span> <span class="string">&#x27;react-router-dom&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> router = <span class="title function_">createBrowserRouter</span>([</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">path</span>: <span class="string">&#x27;/posts/:id&#x27;</span>,</span><br><span class="line">    <span class="attr">element</span>: <span class="language-xml"><span class="tag">&lt;<span class="name">PostDetail</span> /&gt;</span></span>,</span><br><span class="line">    <span class="attr">loader</span>: <span class="title function_">async</span> (&#123; params &#125;) =&gt; &#123;</span><br><span class="line">      <span class="keyword">const</span> res = <span class="keyword">await</span> <span class="title function_">fetch</span>(<span class="string">`/api/posts/<span class="subst">$&#123;params.id&#125;</span>`</span>)</span><br><span class="line">      <span class="keyword">return</span> res.<span class="title function_">json</span>()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">])</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">PostDetail</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> post = <span class="title function_">useLoaderData</span>()</span><br><span class="line">  <span class="keyword">return</span> <span class="language-xml"><span class="tag">&lt;<span class="name">article</span>&gt;</span>&#123;post.title&#125;<span class="tag">&lt;/<span class="name">article</span>&gt;</span></span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="keyword">function</span> <span class="title function_">App</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="language-xml"><span class="tag">&lt;<span class="name">RouterProvider</span> <span class="attr">router</span>=<span class="string">&#123;router&#125;</span> /&gt;</span></span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>This pattern <strong>fetches data in parallel with routing</strong> on page<br>transitions, reducing waterfall requests.</p>
+<h2 id="Protected-Routes"><a href="#Protected-Routes" class="headerlink" title="Protected Routes"></a>Protected Routes</h2><p>Handle routes that require authentication with a wrapper component.</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; <span class="title class_">Navigate</span>, useLocation &#125; <span class="keyword">from</span> <span class="string">&#x27;react-router-dom&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">RequireAuth</span>(<span class="params">&#123; children &#125;</span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; user &#125; = <span class="title function_">useAuth</span>()</span><br><span class="line">  <span class="keyword">const</span> location = <span class="title function_">useLocation</span>()</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!user) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="language-xml"><span class="tag">&lt;<span class="name">Navigate</span> <span class="attr">to</span>=<span class="string">&quot;/login&quot;</span> <span class="attr">state</span>=<span class="string">&#123;&#123;</span> <span class="attr">from:</span> <span class="attr">location</span> &#125;&#125; <span class="attr">replace</span> /&gt;</span></span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> children</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Usage</span></span><br><span class="line">&lt;<span class="title class_">Route</span></span><br><span class="line">  path=<span class="string">&quot;/mypage&quot;</span></span><br><span class="line">  element=&#123;</span><br><span class="line">    <span class="language-xml"><span class="tag">&lt;<span class="name">RequireAuth</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">      <span class="tag">&lt;<span class="name">MyPage</span> /&gt;</span></span></span><br><span class="line"><span class="language-xml">    <span class="tag">&lt;/<span class="name">RequireAuth</span>&gt;</span></span></span><br><span class="line">  &#125;</span><br><span class="line">/&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Key-Differences-from-v5"><a href="#Key-Differences-from-v5" class="headerlink" title="Key Differences from v5"></a>Key Differences from v5</h2><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>v5</th>
+<th>v6</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Route matching</td>
+<td><code>Switch</code></td>
+<td><code>Routes</code></td>
+</tr>
+<tr>
+<td>Specifying the component</td>
+<td><code>component</code></td>
+<td><code>element</code></td>
+</tr>
+<tr>
+<td>Nesting</td>
+<td>Handled manually</td>
+<td>Automatic + <code>Outlet</code></td>
+</tr>
+<tr>
+<td><code>useHistory</code></td>
+<td>Present</td>
+<td><code>useNavigate</code></td>
+</tr>
+<tr>
+<td>Data loading</td>
+<td>Separate</td>
+<td><code>loader/action</code></td>
+</tr>
+</tbody></table>
+<h2 id="Best-Practices"><a href="#Best-Practices" class="headerlink" title="Best Practices"></a>Best Practices</h2><ul>
+<li>Separate page components into a <code>pages/</code> or <code>routes/</code> directory structure.</li>
+<li>Make active use of the nested route + Outlet pattern for shared layouts.</li>
+<li>Use it with <code>React.lazy</code> for code splitting.</li>
+<li>Adopting the data router makes Suspense, error boundaries, and form handling consistent.</li>
+</ul>
+<h2 id="Wrapping-Up"><a href="#Wrapping-Up" class="headerlink" title="Wrapping Up"></a>Wrapping Up</h2><p>React Router v6 provides a well-organized API that lets you do more<br>with less code. For a small app, start with <code>BrowserRouter</code>, and as<br>data fetching and forms grow, switching to the data router is a<br>natural learning path.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/React/" rel="tag"># React</a>
+              <a href="/tags/ReactRouter/" rel="tag"># ReactRouter</a>
+              <a href="/tags/SPA/" rel="tag"># SPA</a>
+              <a href="/tags/Routing/" rel="tag"># Routing</a>
+          </div>
+
+        
+
+
+        
+      <div class="post-nav">
+        <div class="post-nav-item">
+      <a href="/en/posts/css-variables-guide/" rel="prev" title="A Guide to CSS Variables (Custom Properties)">
+        <i class="fa fa-chevron-left"></i> A Guide to CSS Variables (Custom Properties)
+      </a></div>
+        <div class="post-nav-item">
+      <a href="/en/posts/svelte-introduction/" rel="next" title="Getting Started with Svelte: A Different Approach from React">
+        Getting Started with Svelte: A Different Approach from React <i class="fa fa-chevron-right"></i>
+      </a></div>
+      </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Introducing-React-Router"><span class="nav-number">1.</span> <span class="nav-text">Introducing React Router</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Basic-Setup"><span class="nav-number">2.</span> <span class="nav-text">Basic Setup</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Links-and-Programmatic-Navigation"><span class="nav-number">3.</span> <span class="nav-text">Links and Programmatic Navigation</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Dynamic-Routes-and-Queries"><span class="nav-number">4.</span> <span class="nav-text">Dynamic Routes and Queries</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Nested-Routing-and-Outlet"><span class="nav-number">5.</span> <span class="nav-text">Nested Routing and Outlet</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Data-Router-createBrowserRouter"><span class="nav-number">6.</span> <span class="nav-text">The Data Router (createBrowserRouter)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Protected-Routes"><span class="nav-number">7.</span> <span class="nav-text">Protected Routes</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Key-Differences-from-v5"><span class="nav-number">8.</span> <span class="nav-text">Key Differences from v5</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Best-Practices"><span class="nav-number">9.</span> <span class="nav-text">Best Practices</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Wrapping-Up"><span class="nav-number">10.</span> <span class="nav-text">Wrapping Up</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">429</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">650</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="languages">
+    <label class="lang-select-label">
+      <i class="fa fa-language"></i>
+      <span>English</span>
+      <i class="fa fa-angle-up" aria-hidden="true"></i>
+    </label>
+    <select class="lang-select" data-canonical="">
+      
+        <option value="ko" data-href="/posts/react-router-guide/" selected="">
+          한국어
+        </option>
+      
+        <option value="en" data-href="/en/posts/react-router-guide/" selected="">
+          English
+        </option>
+      
+    </select>
+  </div>
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

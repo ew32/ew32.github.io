@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="How deadlocks arise in a database and the prevention and resolution methods used in practice - lock ordering, timeouts, retries.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Causes of Database Deadlocks and How to Resolve Them">
+<meta property="og:url" content="https://ew32.github.io/en/posts/database-deadlock-resolution/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="How deadlocks arise in a database and the prevention and resolution methods used in practice - lock ordering, timeouts, retries.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-04-16T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-22T14:03:12.794Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Database">
+<meta property="article:tag" content="Lock">
+<meta property="article:tag" content="Deadlock">
+<meta property="article:tag" content="Transaction">
+<meta property="article:tag" content="MySQL">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/en/posts/database-deadlock-resolution/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1041908788954754" crossorigin="anonymous"></script>
+
+  <title>Causes of Database Deadlocks and How to Resolve Them | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/database-deadlock-resolution/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Causes of Database Deadlocks and How to Resolve Them
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2026-04-16 10:00:00" itemprop="dateCreated datePublished" datetime="2026-04-16T10:00:00+09:00">2026-04-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">How deadlocks arise in a database and the prevention and resolution methods used in practice - lock ordering, timeouts, retries.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="What-Is-a-Deadlock"><a href="#What-Is-a-Deadlock" class="headerlink" title="What Is a Deadlock?"></a>What Is a Deadlock?</h2><p>A deadlock is a state where two or more transactions wait for each<br>other to release the resources they hold and end up waiting forever.<br>In databases it arises from a tangle of row locks, gap locks, table<br>locks, and the like.</p>
+<h2 id="Conditions-for-a-Deadlock-Coffman-Conditions"><a href="#Conditions-for-a-Deadlock-Coffman-Conditions" class="headerlink" title="Conditions for a Deadlock (Coffman Conditions)"></a>Conditions for a Deadlock (Coffman Conditions)</h2><p>A deadlock can occur only when all four of the following hold at once.</p>
+<ol>
+<li><strong>Mutual exclusion</strong>: a resource is held by only one transaction at a time</li>
+<li><strong>Hold and wait</strong>: a transaction holds resources while waiting for others</li>
+<li><strong>No preemption</strong>: resources can’t be forcibly taken</li>
+<li><strong>Circular wait</strong>: a cycle exists in the resource-wait graph</li>
+</ol>
+<p>Break any one of these and the deadlock can’t happen. In practice the<br>common strategy is to prevent the <strong>circular wait</strong>.</p>
+<h2 id="Typical-Deadlock-Scenarios"><a href="#Typical-Deadlock-Scenarios" class="headerlink" title="Typical Deadlock Scenarios"></a>Typical Deadlock Scenarios</h2><h3 id="Different-Lock-Orders"><a href="#Different-Lock-Orders" class="headerlink" title="Different Lock Orders"></a>Different Lock Orders</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- T1</span></span><br><span class="line"><span class="keyword">BEGIN</span>;</span><br><span class="line"><span class="keyword">UPDATE</span> accounts <span class="keyword">SET</span> balance <span class="operator">=</span> balance <span class="operator">-</span> <span class="number">100</span> <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"><span class="comment">-- T1 holds the lock on id=1</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- T2</span></span><br><span class="line"><span class="keyword">BEGIN</span>;</span><br><span class="line"><span class="keyword">UPDATE</span> accounts <span class="keyword">SET</span> balance <span class="operator">=</span> balance <span class="operator">-</span> <span class="number">50</span> <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">2</span>;</span><br><span class="line"><span class="comment">-- T2 holds the lock on id=2</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- T1</span></span><br><span class="line"><span class="keyword">UPDATE</span> accounts <span class="keyword">SET</span> balance <span class="operator">=</span> balance <span class="operator">+</span> <span class="number">100</span> <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">2</span>; <span class="comment">-- waits</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- T2</span></span><br><span class="line"><span class="keyword">UPDATE</span> accounts <span class="keyword">SET</span> balance <span class="operator">=</span> balance <span class="operator">+</span> <span class="number">50</span> <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">1</span>; <span class="comment">-- waits</span></span><br><span class="line"><span class="comment">-- Deadlock!</span></span><br></pre></td></tr></table></figure>
+
+<p>T1 tried to lock id&#x3D;1 then id&#x3D;2, T2 tried id&#x3D;2 then id&#x3D;1 — a circular<br>wait is formed.</p>
+<h3 id="Index-Gap-Lock-Deadlock-MySQL"><a href="#Index-Gap-Lock-Deadlock-MySQL" class="headerlink" title="Index Gap Lock Deadlock (MySQL)"></a>Index Gap Lock Deadlock (MySQL)</h3><p>In InnoDB’s REPEATABLE READ, gap locks add to the picture and cause<br>unexpected deadlocks.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- T1 and T2 run this concurrently</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> orders(user_id, amount) <span class="keyword">VALUES</span> (<span class="number">100</span>, <span class="number">1000</span>);</span><br><span class="line"><span class="comment">-- Possible deadlock from gap-lock conflict</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Detection-and-Handling"><a href="#Detection-and-Handling" class="headerlink" title="Detection and Handling"></a>Detection and Handling</h2><p>Most DBMSes detect a deadlock automatically and pick the least costly<br>transaction as the victim to roll back.</p>
+<h3 id="Checking-MySQL-Deadlock-Logs"><a href="#Checking-MySQL-Deadlock-Logs" class="headerlink" title="Checking MySQL Deadlock Logs"></a>Checking MySQL Deadlock Logs</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SHOW</span> ENGINE INNODB STATUS\G</span><br><span class="line"><span class="comment">-- See the LATEST DETECTED DEADLOCK section</span></span><br></pre></td></tr></table></figure>
+
+<p>PostgreSQL runs deadlock detection after <code>deadlock_timeout</code> (default<br>1s) of lock waiting and returns an error when one is found.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ERROR: deadlock detected</span><br><span class="line">DETAIL: Process 12345 waits for ShareLock on transaction 678; ...</span><br></pre></td></tr></table></figure>
+
+<h2 id="Prevention-Strategies"><a href="#Prevention-Strategies" class="headerlink" title="Prevention Strategies"></a>Prevention Strategies</h2><h3 id="1-Unify-the-Lock-Order"><a href="#1-Unify-the-Lock-Order" class="headerlink" title="1. Unify the Lock Order"></a>1. Unify the Lock Order</h3><p>The most effective method. Establish a rule that when updating<br>multiple rows, you always take locks in the same order (e.g., id<br>ascending).</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- Always lock the smaller id first</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> accounts</span><br><span class="line"><span class="keyword">WHERE</span> id <span class="keyword">IN</span> (<span class="number">1</span>, <span class="number">2</span>)</span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span> id</span><br><span class="line"><span class="keyword">FOR</span> <span class="keyword">UPDATE</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-Keep-Transactions-Short"><a href="#2-Keep-Transactions-Short" class="headerlink" title="2. Keep Transactions Short"></a>2. Keep Transactions Short</h3><p>The longer the transaction, the longer locks are held and the higher<br>the chance of conflict. Don’t put external API calls or heavy<br>computation inside a transaction.</p>
+<h3 id="3-Proper-Index-Design"><a href="#3-Proper-Index-Design" class="headerlink" title="3. Proper Index Design"></a>3. Proper Index Design</h3><p>Without indexes, full scans take locks on more rows. Make sure the<br>critical update queries have indexes.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- Without an index, every row may get locked</span></span><br><span class="line"><span class="keyword">UPDATE</span> orders <span class="keyword">SET</span> status <span class="operator">=</span> <span class="string">&#x27;paid&#x27;</span> <span class="keyword">WHERE</span> user_id <span class="operator">=</span> <span class="number">100</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-Adjust-the-Isolation-Level"><a href="#4-Adjust-the-Isolation-Level" class="headerlink" title="4. Adjust the Isolation Level"></a>4. Adjust the Isolation Level</h3><p>If REPEATABLE READ’s gap locks frequently cause problems, consider<br>lowering to READ COMMITTED. Just review the business requirements<br>first.</p>
+<h3 id="5-Set-Lock-Timeouts"><a href="#5-Set-Lock-Timeouts" class="headerlink" title="5. Set Lock Timeouts"></a>5. Set Lock Timeouts</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- MySQL</span></span><br><span class="line"><span class="keyword">SET</span> innodb_lock_wait_timeout <span class="operator">=</span> <span class="number">5</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- PostgreSQL</span></span><br><span class="line"><span class="keyword">SET</span> lock_timeout <span class="operator">=</span> <span class="string">&#x27;3s&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>A timeout that prevents indefinite waiting is important.</p>
+<h2 id="Implementing-Retry-Logic"><a href="#Implementing-Retry-Logic" class="headerlink" title="Implementing Retry Logic"></a>Implementing Retry Logic</h2><p>Since deadlocks can’t be eliminated, <strong>automatic retry</strong> in the<br>application is the standard pattern.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; T <span class="title function_">executeWithRetry</span><span class="params">(Supplier&lt;T&gt; action)</span> &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">maxAttempts</span> <span class="operator">=</span> <span class="number">3</span>;</span><br><span class="line">    <span class="type">long</span> <span class="variable">backoffMs</span> <span class="operator">=</span> <span class="number">50</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">attempt</span> <span class="operator">=</span> <span class="number">1</span>; attempt &lt;= maxAttempts; attempt++) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> action.get();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (DeadlockLoserDataAccessException e) &#123;</span><br><span class="line">            <span class="keyword">if</span> (attempt == maxAttempts) <span class="keyword">throw</span> e;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                Thread.sleep(backoffMs * attempt);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException ie) &#123;</span><br><span class="line">                Thread.currentThread().interrupt();</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(ie);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(<span class="string">&quot;unreachable&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Spring’s <code>@Retryable</code> or tools like Resilience4j work too.</p>
+<h2 id="Monitoring-Lock-Information"><a href="#Monitoring-Lock-Information" class="headerlink" title="Monitoring Lock Information"></a>Monitoring Lock Information</h2><h3 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- Current locks and waits</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> performance_schema.data_locks;</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> performance_schema.data_lock_waits;</span><br></pre></td></tr></table></figure>
+
+<h3 id="PostgreSQL"><a href="#PostgreSQL" class="headerlink" title="PostgreSQL"></a>PostgreSQL</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">  blocked_locks.pid <span class="keyword">AS</span> blocked_pid,</span><br><span class="line">  blocking_locks.pid <span class="keyword">AS</span> blocking_pid,</span><br><span class="line">  blocked_activity.query <span class="keyword">AS</span> blocked_query,</span><br><span class="line">  blocking_activity.query <span class="keyword">AS</span> blocking_query</span><br><span class="line"><span class="keyword">FROM</span> pg_locks blocked_locks</span><br><span class="line"><span class="keyword">JOIN</span> pg_stat_activity blocked_activity <span class="keyword">ON</span> blocked_activity.pid <span class="operator">=</span> blocked_locks.pid</span><br><span class="line"><span class="keyword">JOIN</span> pg_locks blocking_locks</span><br><span class="line">  <span class="keyword">ON</span> blocking_locks.locktype <span class="operator">=</span> blocked_locks.locktype</span><br><span class="line">  <span class="keyword">AND</span> blocking_locks.granted <span class="operator">=</span> <span class="literal">TRUE</span></span><br><span class="line">  <span class="keyword">AND</span> blocking_locks.pid <span class="operator">&lt;&gt;</span> blocked_locks.pid</span><br><span class="line"><span class="keyword">JOIN</span> pg_stat_activity blocking_activity <span class="keyword">ON</span> blocking_activity.pid <span class="operator">=</span> blocking_locks.pid</span><br><span class="line"><span class="keyword">WHERE</span> <span class="keyword">NOT</span> blocked_locks.granted;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Resolution-Checklist"><a href="#Resolution-Checklist" class="headerlink" title="Resolution Checklist"></a>Resolution Checklist</h2><ol>
+<li>Collect deadlock logs and analyze patterns</li>
+<li>Check the execution plan and lock behavior of the involved queries</li>
+<li>Standardize lock order</li>
+<li>Shrink transaction scope</li>
+<li>Reinforce indexes</li>
+<li>Introduce retry logic</li>
+<li>Adjust isolation level if needed</li>
+</ol>
+<h2 id="Wrapping-Up"><a href="#Wrapping-Up" class="headerlink" title="Wrapping Up"></a>Wrapping Up</h2><p>Deadlocks are unavoidable in a multi-transaction environment, but<br>consistent lock ordering, short transactions, the right indexes, and<br>retry logic let you manage them effectively. When one happens, the<br>habit of analyzing logs to find the cause and applying structural<br>improvements is what produces a stable service.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Database/" rel="tag"># Database</a>
+              <a href="/tags/Lock/" rel="tag"># Lock</a>
+              <a href="/tags/Deadlock/" rel="tag"># Deadlock</a>
+              <a href="/tags/Transaction/" rel="tag"># Transaction</a>
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+          </div>
+
+        
+
+
+        
+      <div class="post-nav">
+        <div class="post-nav-item">
+      <a href="/en/posts/cap-theorem-explained/" rel="prev" title="The CAP Theorem and PACELC - Trade-offs in Distributed Databases">
+        <i class="fa fa-chevron-left"></i> The CAP Theorem and PACELC - Trade-offs in Distributed Databases
+      </a></div>
+        <div class="post-nav-item">
+      <a href="/en/posts/elasticsearch-basics/" rel="next" title="Elasticsearch Basics - From the Inverted Index to the Query DSL">
+        Elasticsearch Basics - From the Inverted Index to the Query DSL <i class="fa fa-chevron-right"></i>
+      </a></div>
+      </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#What-Is-a-Deadlock"><span class="nav-number">1.</span> <span class="nav-text">What Is a Deadlock?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Conditions-for-a-Deadlock-Coffman-Conditions"><span class="nav-number">2.</span> <span class="nav-text">Conditions for a Deadlock (Coffman Conditions)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Typical-Deadlock-Scenarios"><span class="nav-number">3.</span> <span class="nav-text">Typical Deadlock Scenarios</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Different-Lock-Orders"><span class="nav-number">3.1.</span> <span class="nav-text">Different Lock Orders</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Index-Gap-Lock-Deadlock-MySQL"><span class="nav-number">3.2.</span> <span class="nav-text">Index Gap Lock Deadlock (MySQL)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Detection-and-Handling"><span class="nav-number">4.</span> <span class="nav-text">Detection and Handling</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Checking-MySQL-Deadlock-Logs"><span class="nav-number">4.1.</span> <span class="nav-text">Checking MySQL Deadlock Logs</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Prevention-Strategies"><span class="nav-number">5.</span> <span class="nav-text">Prevention Strategies</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Unify-the-Lock-Order"><span class="nav-number">5.1.</span> <span class="nav-text">1. Unify the Lock Order</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Keep-Transactions-Short"><span class="nav-number">5.2.</span> <span class="nav-text">2. Keep Transactions Short</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Proper-Index-Design"><span class="nav-number">5.3.</span> <span class="nav-text">3. Proper Index Design</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-Adjust-the-Isolation-Level"><span class="nav-number">5.4.</span> <span class="nav-text">4. Adjust the Isolation Level</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-Set-Lock-Timeouts"><span class="nav-number">5.5.</span> <span class="nav-text">5. Set Lock Timeouts</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Implementing-Retry-Logic"><span class="nav-number">6.</span> <span class="nav-text">Implementing Retry Logic</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Monitoring-Lock-Information"><span class="nav-number">7.</span> <span class="nav-text">Monitoring Lock Information</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MySQL"><span class="nav-number">7.1.</span> <span class="nav-text">MySQL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PostgreSQL"><span class="nav-number">7.2.</span> <span class="nav-text">PostgreSQL</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Resolution-Checklist"><span class="nav-number">8.</span> <span class="nav-text">Resolution Checklist</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Wrapping-Up"><span class="nav-number">9.</span> <span class="nav-text">Wrapping Up</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">429</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">650</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="languages">
+    <label class="lang-select-label">
+      <i class="fa fa-language"></i>
+      <span>English</span>
+      <i class="fa fa-angle-up" aria-hidden="true"></i>
+    </label>
+    <select class="lang-select" data-canonical="">
+      
+        <option value="ko" data-href="/posts/database-deadlock-resolution/" selected="">
+          한국어
+        </option>
+      
+        <option value="en" data-href="/en/posts/database-deadlock-resolution/" selected="">
+          English
+        </option>
+      
+    </select>
+  </div>
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

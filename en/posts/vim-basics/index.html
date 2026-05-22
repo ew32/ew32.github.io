@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Vim&#39;s mode concept and basic movement, editing, and visual mode usage, organized from a beginner&#39;s perspective.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vim Basics: Modes, Movement, and Editing">
+<meta property="og:url" content="https://ew32.github.io/en/posts/vim-basics/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="Vim&#39;s mode concept and basic movement, editing, and visual mode usage, organized from a beginner&#39;s perspective.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-05-28T05:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-22T14:03:12.805Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Vim">
+<meta property="article:tag" content="Editor">
+<meta property="article:tag" content="Shortcuts">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/en/posts/vim-basics/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1041908788954754" crossorigin="anonymous"></script>
+
+  <title>Vim Basics: Modes, Movement, and Editing | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/vim-basics/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Vim Basics: Modes, Movement, and Editing
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2026-05-28 14:00:00" itemprop="dateCreated datePublished" datetime="2026-05-28T14:00:00+09:00">2026-05-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/DevEnvironment/" itemprop="url" rel="index"><span itemprop="name">DevEnvironment</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">Vim's mode concept and basic movement, editing, and visual mode usage, organized from a beginner's perspective.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Why-Vim"><a href="#Why-Vim" class="headerlink" title="Why Vim?"></a>Why Vim?</h2><p><strong>Vim</strong> is a modal text editor that appeared in 1991, preinstalled<br>on almost every Unix-like system. It’s designed to let you edit text<br>efficiently with the keyboard alone, no mouse — and once you get<br>used to it, it’s so addictive you’ll seek out Vim key bindings in<br>other editors too.</p>
+<p>It’s the <strong>standard tool of the terminal environment</strong> — for remote<br>server work, Git commit messages, editing config files, and more —<br>so it’s good for any developer to learn the fundamentals.</p>
+<h2 id="Understanding-Modes"><a href="#Understanding-Modes" class="headerlink" title="Understanding Modes"></a>Understanding Modes</h2><p>Vim’s biggest characteristic is <strong>modes</strong>. The meaning of a key<br>changes by mode.</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Entry key</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Normal</strong></td>
+<td><code>Esc</code></td>
+<td>Movement, running commands (the default mode)</td>
+</tr>
+<tr>
+<td><strong>Insert</strong></td>
+<td><code>i</code>, <code>a</code>, <code>o</code></td>
+<td>Entering text</td>
+</tr>
+<tr>
+<td><strong>Visual</strong></td>
+<td><code>v</code>, <code>V</code>, <code>Ctrl+v</code></td>
+<td>Selecting a region</td>
+</tr>
+<tr>
+<td><strong>Command</strong></td>
+<td><code>:</code></td>
+<td>Entering ex commands</td>
+</tr>
+<tr>
+<td><strong>Replace</strong></td>
+<td><code>R</code></td>
+<td>Overwriting</td>
+</tr>
+</tbody></table>
+<p>The biggest difference from other editors is that <strong>Normal mode is<br>the default</strong>. To type, you must explicitly enter Insert mode.</p>
+<h2 id="Basic-Movement"><a href="#Basic-Movement" class="headerlink" title="Basic Movement"></a>Basic Movement</h2><p>In Normal mode, use <code>hjkl</code> instead of the arrow keys.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">      ↑</span><br><span class="line">      k</span><br><span class="line">← h       l →</span><br><span class="line">      j</span><br><span class="line">      ↓</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>w</code></td>
+<td>To the start of the next word</td>
+</tr>
+<tr>
+<td><code>b</code></td>
+<td>To the start of the previous word</td>
+</tr>
+<tr>
+<td><code>e</code></td>
+<td>To the end of the word</td>
+</tr>
+<tr>
+<td><code>0</code></td>
+<td>To the start of the line</td>
+</tr>
+<tr>
+<td><code>^</code></td>
+<td>To the first non-blank character of the line</td>
+</tr>
+<tr>
+<td><code>$</code></td>
+<td>To the end of the line</td>
+</tr>
+<tr>
+<td><code>gg</code></td>
+<td>To the start of the file</td>
+</tr>
+<tr>
+<td><code>G</code></td>
+<td>To the end of the file</td>
+</tr>
+<tr>
+<td><code>42G</code></td>
+<td>To line 42</td>
+</tr>
+<tr>
+<td><code>Ctrl+d</code></td>
+<td>Half a page down</td>
+</tr>
+<tr>
+<td><code>Ctrl+u</code></td>
+<td>Half a page up</td>
+</tr>
+</tbody></table>
+<h2 id="Entering-Insert-Mode"><a href="#Entering-Insert-Mode" class="headerlink" title="Entering Insert Mode"></a>Entering Insert Mode</h2><table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>i</code></td>
+<td>Insert at the cursor position</td>
+</tr>
+<tr>
+<td><code>I</code></td>
+<td>Insert at the start of the line</td>
+</tr>
+<tr>
+<td><code>a</code></td>
+<td>Insert after the cursor</td>
+</tr>
+<tr>
+<td><code>A</code></td>
+<td>Insert at the end of the line</td>
+</tr>
+<tr>
+<td><code>o</code></td>
+<td>Create a new line below and insert</td>
+</tr>
+<tr>
+<td><code>O</code></td>
+<td>Create a new line above and insert</td>
+</tr>
+</tbody></table>
+<p>When done inserting, always return to Normal mode with <code>Esc</code>.</p>
+<h2 id="Editing-Commands"><a href="#Editing-Commands" class="headerlink" title="Editing Commands"></a>Editing Commands</h2><p>The power of Vim editing comes from the <strong>operator + motion</strong><br>combination.</p>
+<table>
+<thead>
+<tr>
+<th>Operator</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>d</code></td>
+<td>Delete</td>
+</tr>
+<tr>
+<td><code>c</code></td>
+<td>Change (delete then insert)</td>
+</tr>
+<tr>
+<td><code>y</code></td>
+<td>Yank (copy)</td>
+</tr>
+<tr>
+<td><code>p</code></td>
+<td>Paste</td>
+</tr>
+</tbody></table>
+<p>You combine these with a motion.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">dw    - delete to the next word</span><br><span class="line">d$    - delete to the end of the line</span><br><span class="line">dd    - delete one line</span><br><span class="line">3dd   - delete 3 lines</span><br><span class="line">ciw   - change inner word (select a word and edit it)</span><br><span class="line">yy    - copy one line</span><br><span class="line">p     - paste after the cursor</span><br></pre></td></tr></table></figure>
+
+<p><strong>Text objects</strong> enable more precise target selection.</p>
+<table>
+<thead>
+<tr>
+<th>Object</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>iw</code></td>
+<td>inner word</td>
+</tr>
+<tr>
+<td><code>aw</code></td>
+<td>a word (including whitespace)</td>
+</tr>
+<tr>
+<td><code>i&quot;</code></td>
+<td>inside quotes</td>
+</tr>
+<tr>
+<td><code>a&quot;</code></td>
+<td>including quotes</td>
+</tr>
+<tr>
+<td><code>ip</code></td>
+<td>inside a paragraph</td>
+</tr>
+<tr>
+<td><code>i&#123;</code></td>
+<td>inside a brace block</td>
+</tr>
+</tbody></table>
+<p>For example, <code>ci&quot;</code> erases everything inside the quotes and enters<br>insert mode.</p>
+<h2 id="Undo-and-Redo"><a href="#Undo-and-Redo" class="headerlink" title="Undo and Redo"></a>Undo and Redo</h2><table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>u</code></td>
+<td>undo</td>
+</tr>
+<tr>
+<td><code>Ctrl+r</code></td>
+<td>redo</td>
+</tr>
+<tr>
+<td><code>.</code></td>
+<td>repeat the last command</td>
+</tr>
+</tbody></table>
+<p>The <code>.</code> command is where Vim’s true value shows — it lets you<br>quickly apply the same edit at multiple locations.</p>
+<h2 id="Visual-Mode"><a href="#Visual-Mode" class="headerlink" title="Visual Mode"></a>Visual Mode</h2><p>If you’re used to selecting and then editing, use Visual mode.</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>v</code></td>
+<td>Character-wise selection</td>
+</tr>
+<tr>
+<td><code>V</code></td>
+<td>Line-wise selection</td>
+</tr>
+<tr>
+<td><code>Ctrl+v</code></td>
+<td>Block (rectangular) selection</td>
+</tr>
+</tbody></table>
+<p>After selecting, you can apply operators like <code>d</code>, <code>y</code>, and <code>c</code>.<br>Block mode is useful for inserting the same text across multiple<br>lines.</p>
+<h2 id="Search-and-Substitution"><a href="#Search-and-Substitution" class="headerlink" title="Search and Substitution"></a>Search and Substitution</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">/pattern    search downward</span><br><span class="line">?pattern    search upward</span><br><span class="line">n           next match</span><br><span class="line">N           previous match</span><br><span class="line">*           search for the word under the cursor</span><br><span class="line"></span><br><span class="line">:%s/old/new/g       substitute across the whole file</span><br><span class="line">:%s/old/new/gc      substitute with confirmation</span><br><span class="line">:5,20s/old/new/g    substitute only on lines 5–20</span><br></pre></td></tr></table></figure>
+
+<h2 id="File-and-Command-Mode"><a href="#File-and-Command-Mode" class="headerlink" title="File and Command Mode"></a>File and Command Mode</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">:w          save</span><br><span class="line">:q          quit</span><br><span class="line">:wq or :x   save and quit</span><br><span class="line">:q!         force quit without saving</span><br><span class="line">:e file     open a file</span><br><span class="line">:vs file    open in a vertical split</span><br><span class="line">:sp file    open in a horizontal split</span><br></pre></td></tr></table></figure>
+
+<h2 id="Basic-Configuration-vimrc"><a href="#Basic-Configuration-vimrc" class="headerlink" title="Basic Configuration (.vimrc)"></a>Basic Configuration (.vimrc)</h2><p>You customize Vim’s behavior with <code>.vimrc</code> in your home directory.</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">syntax</span> <span class="keyword">on</span></span><br><span class="line"><span class="keyword">set</span> <span class="keyword">number</span></span><br><span class="line"><span class="keyword">set</span> relativenumber</span><br><span class="line"><span class="keyword">set</span> tabstop=<span class="number">4</span></span><br><span class="line"><span class="keyword">set</span> <span class="built_in">shiftwidth</span>=<span class="number">4</span></span><br><span class="line"><span class="keyword">set</span> expandtab</span><br><span class="line"><span class="keyword">set</span> autoindent</span><br><span class="line"><span class="keyword">set</span> incsearch</span><br><span class="line"><span class="keyword">set</span> hlsearch</span><br><span class="line"><span class="keyword">set</span> ignorecase</span><br><span class="line"><span class="keyword">set</span> smartcase</span><br></pre></td></tr></table></figure>
+
+<h2 id="Learning-Tips"><a href="#Learning-Tips" class="headerlink" title="Learning Tips"></a>Learning Tips</h2><ul>
+<li>Run the official 30-minute tutorial with the <strong><code>vimtutor</code></strong> command</li>
+<li>For the first week, deliberately cut down on using other editors and use only Vim</li>
+<li>Forbidding the arrow keys makes <code>hjkl</code> quickly become second nature</li>
+<li>Don’t memorize every command at once; add 3–5 each week</li>
+</ul>
+<h2 id="Wrapping-Up"><a href="#Wrapping-Up" class="headerlink" title="Wrapping Up"></a>Wrapping Up</h2><p>Vim’s learning curve is steep, but once you understand the<br>consistent grammar of <strong>mode + operator + motion</strong>, you get used to<br>it surprisingly fast. Installing a Vim key-binding plugin in your<br>familiar IDE to adopt it gradually is also a good approach. Once it’s<br>in your hands, it’s a lifelong weapon.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/Vim/" rel="tag"># Vim</a>
+              <a href="/tags/Editor/" rel="tag"># Editor</a>
+              <a href="/tags/Shortcuts/" rel="tag"># Shortcuts</a>
+          </div>
+
+        
+
+
+        
+      <div class="post-nav">
+        <div class="post-nav-item">
+      <a href="/en/posts/tmux-guide/" rel="prev" title="Using tmux: An Intro to the Terminal Multiplexer">
+        <i class="fa fa-chevron-left"></i> Using tmux: An Intro to the Terminal Multiplexer
+      </a></div>
+        <div class="post-nav-item">
+      <a href="/en/posts/vscode-shortcuts-extensions/" rel="next" title="Essential VSCode Shortcuts and Extensions">
+        Essential VSCode Shortcuts and Extensions <i class="fa fa-chevron-right"></i>
+      </a></div>
+      </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Why-Vim"><span class="nav-number">1.</span> <span class="nav-text">Why Vim?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Understanding-Modes"><span class="nav-number">2.</span> <span class="nav-text">Understanding Modes</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Basic-Movement"><span class="nav-number">3.</span> <span class="nav-text">Basic Movement</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Entering-Insert-Mode"><span class="nav-number">4.</span> <span class="nav-text">Entering Insert Mode</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Editing-Commands"><span class="nav-number">5.</span> <span class="nav-text">Editing Commands</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Undo-and-Redo"><span class="nav-number">6.</span> <span class="nav-text">Undo and Redo</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Visual-Mode"><span class="nav-number">7.</span> <span class="nav-text">Visual Mode</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Search-and-Substitution"><span class="nav-number">8.</span> <span class="nav-text">Search and Substitution</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#File-and-Command-Mode"><span class="nav-number">9.</span> <span class="nav-text">File and Command Mode</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Basic-Configuration-vimrc"><span class="nav-number">10.</span> <span class="nav-text">Basic Configuration (.vimrc)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Learning-Tips"><span class="nav-number">11.</span> <span class="nav-text">Learning Tips</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Wrapping-Up"><span class="nav-number">12.</span> <span class="nav-text">Wrapping Up</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">429</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">650</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="languages">
+    <label class="lang-select-label">
+      <i class="fa fa-language"></i>
+      <span>English</span>
+      <i class="fa fa-angle-up" aria-hidden="true"></i>
+    </label>
+    <select class="lang-select" data-canonical="">
+      
+        <option value="ko" data-href="/posts/vim-basics/" selected="">
+          한국어
+        </option>
+      
+        <option value="en" data-href="/en/posts/vim-basics/" selected="">
+          English
+        </option>
+      
+    </select>
+  </div>
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

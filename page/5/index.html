@@ -209,7 +209,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/css-container-queries/">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/kubernetes-deployment-strategies/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -223,7 +223,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/posts/css-container-queries/" class="post-title-link" itemprop="url">CSS Container Queries 사용법</a>
+            <a href="/posts/kubernetes-deployment-strategies/" class="post-title-link" itemprop="url">Kubernetes 배포 전략 - Rolling, Blue-Green, Canary</a>
         </h2>
 
         <div class="post-meta">
@@ -233,14 +233,14 @@
               </span>
               <span class="post-meta-item-text">작성일</span>
 
-              <time title="Post created: 2026-06-11 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-11T10:00:00+09:00">2026-06-11</time>
+              <time title="Post created: 2026-06-28 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-28T10:00:00+09:00">2026-06-28</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-20 12:50:02" itemprop="dateModified" datetime="2026-05-20T12:50:02+09:00">2026-05-20</time>
+                <time title="Updated at: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -248,11 +248,11 @@
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
+                  <a href="/categories/Cloud/" itemprop="url" rel="index"><span itemprop="name">Cloud</span></a>
                 </span>
                   , 
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/CSS/" itemprop="url" rel="index"><span itemprop="name">CSS</span></a>
+                  <a href="/categories/Cloud/Infrastructure/" itemprop="url" rel="index"><span itemprop="name">Infrastructure</span></a>
                 </span>
             </span>
 
@@ -267,10 +267,95 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>뷰포트가 아닌 부모 컨테이너 크기에 반응하는 Container Queries의 문법과 활용 패턴을 정리합니다.</p>
+          <p>Kubernetes에서 무중단 배포를 구현하는 Rolling Update, Blue-Green, Canary 전략의 동작 원리와 실전 적용 방법을 비교합니다.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/posts/css-container-queries/">
+              <a class="btn" href="/posts/kubernetes-deployment-strategies/">
+                더 읽어보기 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/kubernetes-deployment-strategies/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/en/posts/kubernetes-deployment-strategies/" class="post-title-link" itemprop="url">Kubernetes Deployment Strategies - Rolling, Blue-Green, Canary</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-06-28 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-28T10:00:00+09:00">2026-06-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Cloud/" itemprop="url" rel="index"><span itemprop="name">Cloud</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Cloud/Infrastructure/" itemprop="url" rel="index"><span itemprop="name">Infrastructure</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>A comparison of how Rolling Update, Blue-Green, and Canary strategies work for zero-downtime deployment in Kubernetes, and how to apply each.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/en/posts/kubernetes-deployment-strategies/">
                 더 읽어보기 &raquo;
               </a>
             </div>
@@ -294,7 +379,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/css-grid-advanced-techniques/">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/docker-image-optimization/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -308,7 +393,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/posts/css-grid-advanced-techniques/" class="post-title-link" itemprop="url">CSS Grid 고급 기법</a>
+            <a href="/posts/docker-image-optimization/" class="post-title-link" itemprop="url">Docker 이미지 사이즈 최적화 전략</a>
         </h2>
 
         <div class="post-meta">
@@ -318,14 +403,14 @@
               </span>
               <span class="post-meta-item-text">작성일</span>
 
-              <time title="Post created: 2026-06-10 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-10T10:00:00+09:00">2026-06-10</time>
+              <time title="Post created: 2026-06-27 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-27T10:00:00+09:00">2026-06-27</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-20 12:50:02" itemprop="dateModified" datetime="2026-05-20T12:50:02+09:00">2026-05-20</time>
+                <time title="Updated at: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -333,11 +418,11 @@
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
+                  <a href="/categories/Cloud/" itemprop="url" rel="index"><span itemprop="name">Cloud</span></a>
                 </span>
                   , 
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/CSS/" itemprop="url" rel="index"><span itemprop="name">CSS</span></a>
+                  <a href="/categories/Cloud/Infrastructure/" itemprop="url" rel="index"><span itemprop="name">Infrastructure</span></a>
                 </span>
             </span>
 
@@ -352,10 +437,95 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>subgrid, named lines, auto-fit/auto-fill, grid-template-areas 등 CSS Grid의 실전 고급 기법을 정리합니다.</p>
+          <p>멀티스테이지 빌드, 베이스 이미지 선택, 레이어 캐시 활용 등 Docker 이미지를 가볍고 빠르게 만드는 실전 기법을 소개합니다.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/posts/css-grid-advanced-techniques/">
+              <a class="btn" href="/posts/docker-image-optimization/">
+                더 읽어보기 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/docker-image-optimization/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/en/posts/docker-image-optimization/" class="post-title-link" itemprop="url">Strategies for Optimizing Docker Image Size</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-06-27 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-27T10:00:00+09:00">2026-06-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Cloud/" itemprop="url" rel="index"><span itemprop="name">Cloud</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Cloud/Infrastructure/" itemprop="url" rel="index"><span itemprop="name">Infrastructure</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Practical techniques for slim, fast Docker images - multi-stage builds, choosing a base image, and using layer cache effectively.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/en/posts/docker-image-optimization/">
                 더 읽어보기 &raquo;
               </a>
             </div>
@@ -379,7 +549,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/nextjs-data-fetching-strategies/">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/docker-compose-guide/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -393,7 +563,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/posts/nextjs-data-fetching-strategies/" class="post-title-link" itemprop="url">Next.js 데이터 패칭 전략 - SSR, SSG, ISR, CSR</a>
+            <a href="/posts/docker-compose-guide/" class="post-title-link" itemprop="url">Docker Compose 완벽 가이드</a>
         </h2>
 
         <div class="post-meta">
@@ -403,14 +573,14 @@
               </span>
               <span class="post-meta-item-text">작성일</span>
 
-              <time title="Post created: 2026-06-09 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-09T10:00:00+09:00">2026-06-09</time>
+              <time title="Post created: 2026-06-26 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-26T10:00:00+09:00">2026-06-26</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-20 12:50:02" itemprop="dateModified" datetime="2026-05-20T12:50:02+09:00">2026-05-20</time>
+                <time title="Updated at: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -418,11 +588,11 @@
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
+                  <a href="/categories/Cloud/" itemprop="url" rel="index"><span itemprop="name">Cloud</span></a>
                 </span>
                   , 
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
+                  <a href="/categories/Cloud/Infrastructure/" itemprop="url" rel="index"><span itemprop="name">Infrastructure</span></a>
                 </span>
             </span>
 
@@ -437,10 +607,95 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Next.js에서 페이지를 만드는 네 가지 렌더링 전략과 App Router 환경에서의 선택 기준을 정리합니다.</p>
+          <p>여러 컨테이너로 구성된 애플리케이션을 한 번에 정의하고 실행하는 Docker Compose 사용법과 실전 패턴을 정리합니다.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/posts/nextjs-data-fetching-strategies/">
+              <a class="btn" href="/posts/docker-compose-guide/">
+                더 읽어보기 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/docker-compose-guide/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/en/posts/docker-compose-guide/" class="post-title-link" itemprop="url">A Complete Docker Compose Guide</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-06-26 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-26T10:00:00+09:00">2026-06-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Cloud/" itemprop="url" rel="index"><span itemprop="name">Cloud</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Cloud/Infrastructure/" itemprop="url" rel="index"><span itemprop="name">Infrastructure</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>How to define and run a multi-container application as a single unit with Docker Compose, plus practical patterns.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/en/posts/docker-compose-guide/">
                 더 읽어보기 &raquo;
               </a>
             </div>
@@ -464,7 +719,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/vue3-pinia-state-management/">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/graphql-query-optimization/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -478,7 +733,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/posts/vue3-pinia-state-management/" class="post-title-link" itemprop="url">Vue 3에서 Pinia로 상태 관리하기</a>
+            <a href="/posts/graphql-query-optimization/" class="post-title-link" itemprop="url">GraphQL 쿼리 최적화 - N+1 문제와 DataLoader</a>
         </h2>
 
         <div class="post-meta">
@@ -488,524 +743,14 @@
               </span>
               <span class="post-meta-item-text">작성일</span>
 
-              <time title="Post created: 2026-06-08 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-08T10:00:00+09:00">2026-06-08</time>
+              <time title="Post created: 2026-06-25 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-25T10:00:00+09:00">2026-06-25</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-20 12:50:02" itemprop="dateModified" datetime="2026-05-20T12:50:02+09:00">2026-05-20</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Vuex의 공식 후속인 Pinia의 핵심 개념과 Composition API 기반 사용법, Vuex와의 차이를 정리합니다.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/vue3-pinia-state-management/">
-                더 읽어보기 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/react-testing-library-guide/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="EW32">
-      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="EW32 Tech Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/react-testing-library-guide/" class="post-title-link" itemprop="url">React Testing Library로 컴포넌트 테스트하기</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">작성일</span>
-
-              <time title="Post created: 2026-06-07 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-07T10:00:00+09:00">2026-06-07</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-20 12:50:02" itemprop="dateModified" datetime="2026-05-20T12:50:02+09:00">2026-05-20</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>React Testing Library(RTL)의 철학과 자주 쓰는 쿼리, 사용자 인터랙션 테스트 패턴을 정리합니다.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/react-testing-library-guide/">
-                더 읽어보기 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/react-memo-and-usememo/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="EW32">
-      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="EW32 Tech Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/react-memo-and-usememo/" class="post-title-link" itemprop="url">React.memo / useMemo / useCallback 제대로 쓰기</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">작성일</span>
-
-              <time title="Post created: 2026-06-06 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-06T10:00:00+09:00">2026-06-06</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-20 12:50:02" itemprop="dateModified" datetime="2026-05-20T12:50:02+09:00">2026-05-20</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>React 렌더링 최적화 도구인 React.memo, useMemo, useCallback의 차이와 올바른 사용 시점을 정리합니다.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/react-memo-and-usememo/">
-                더 읽어보기 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/react-suspense-and-error-boundaries/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="EW32">
-      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="EW32 Tech Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/react-suspense-and-error-boundaries/" class="post-title-link" itemprop="url">React Suspense와 Error Boundary 패턴</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">작성일</span>
-
-              <time title="Post created: 2026-06-05 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-05T10:00:00+09:00">2026-06-05</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-20 12:50:02" itemprop="dateModified" datetime="2026-05-20T12:50:02+09:00">2026-05-20</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>비동기 UI를 안전하게 다루기 위한 Suspense와 Error Boundary의 조합 패턴을 정리합니다.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/react-suspense-and-error-boundaries/">
-                더 읽어보기 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/react-server-components/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="EW32">
-      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="EW32 Tech Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/react-server-components/" class="post-title-link" itemprop="url">React Server Components 이해하기</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">작성일</span>
-
-              <time title="Post created: 2026-06-04 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-04T10:00:00+09:00">2026-06-04</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-20 12:50:02" itemprop="dateModified" datetime="2026-05-20T12:50:02+09:00">2026-05-20</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>React Server Components(RSC)의 동작 원리와 클라이언트 컴포넌트와의 차이, 도입 시 주의점을 정리합니다.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/react-server-components/">
-                더 읽어보기 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/javascript-functional-programming/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="EW32">
-      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="EW32 Tech Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/javascript-functional-programming/" class="post-title-link" itemprop="url">JavaScript 함수형 프로그래밍 입문</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">작성일</span>
-
-              <time title="Post created: 2026-06-03 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-03T10:00:00+09:00">2026-06-03</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-20 12:50:02" itemprop="dateModified" datetime="2026-05-20T12:50:02+09:00">2026-05-20</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>순수 함수, 불변성, 고차 함수, 합성, 커링 등 JavaScript에서 함수형 패러다임을 적용하는 방법을 정리합니다.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/javascript-functional-programming/">
-                더 읽어보기 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/nodejs-streams-guide/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="EW32">
-      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="EW32 Tech Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/nodejs-streams-guide/" class="post-title-link" itemprop="url">Node.js Streams 가이드 - Readable, Writable, Transform</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">작성일</span>
-
-              <time title="Post created: 2026-06-02 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-02T10:00:00+09:00">2026-06-02</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-20 12:50:02" itemprop="dateModified" datetime="2026-05-20T12:50:02+09:00">2026-05-20</time>
+                <time title="Updated at: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1028,10 +773,261 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Node.js 스트림의 4가지 종류와 backpressure, pipeline 활용법을 실전 예제로 정리합니다.</p>
+          <p>GraphQL의 고질적인 N+1 문제를 DataLoader로 해결하고, 쿼리 복잡도와 캐싱까지 최적화하는 방법을 다룹니다.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/posts/nodejs-streams-guide/">
+              <a class="btn" href="/posts/graphql-query-optimization/">
+                더 읽어보기 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/graphql-query-optimization/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/en/posts/graphql-query-optimization/" class="post-title-link" itemprop="url">GraphQL Query Optimization - The N+1 Problem and DataLoader</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-06-25 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-25T10:00:00+09:00">2026-06-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Solving the classic GraphQL N+1 problem with DataLoader, plus optimizing query complexity and caching.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/en/posts/graphql-query-optimization/">
+                더 읽어보기 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/websocket-vs-sse-vs-polling/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/posts/websocket-vs-sse-vs-polling/" class="post-title-link" itemprop="url">WebSocket vs SSE vs Polling - 실시간 전송 기법 비교</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-06-24 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-24T10:00:00+09:00">2026-06-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/HTTP/" itemprop="url" rel="index"><span itemprop="name">HTTP</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>폴링, 롱폴링, SSE, WebSocket의 동작 원리와 선택 기준을 실전 관점에서 비교합니다.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/posts/websocket-vs-sse-vs-polling/">
+                더 읽어보기 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/websocket-vs-sse-vs-polling/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/en/posts/websocket-vs-sse-vs-polling/" class="post-title-link" itemprop="url">WebSocket vs SSE vs Polling: Comparing Real-Time Transport Techniques</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-06-24 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-24T10:00:00+09:00">2026-06-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/HTTP/" itemprop="url" rel="index"><span itemprop="name">HTTP</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>A practical comparison of the operating principles and selection criteria of polling, long polling, SSE, and WebSocket.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/en/posts/websocket-vs-sse-vs-polling/">
                 더 읽어보기 &raquo;
               </a>
             </div>
@@ -1054,7 +1050,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left" aria-label="이전 페이지"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><span class="space">&hellip;</span><a class="page-number" href="/page/23/">23</a><a class="extend next" rel="next" href="/page/6/"><i class="fa fa-angle-right" aria-label="다음 페이지"></i></a>
+    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left" aria-label="이전 페이지"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><span class="space">&hellip;</span><a class="page-number" href="/page/43/">43</a><a class="extend next" rel="next" href="/page/6/"><i class="fa fa-angle-right" aria-label="다음 페이지"></i></a>
   </nav>
 
 
@@ -1120,20 +1116,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">225</span>
+          <span class="site-state-item-count">429</span>
           <span class="site-state-item-name">포스트</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-count">29</span>
         <span class="site-state-item-name">카테고리</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">517</span>
+        <span class="site-state-item-count">650</span>
         <span class="site-state-item-name">태그</span></a>
       </div>
   </nav>

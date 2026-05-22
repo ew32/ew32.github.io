@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="PostgreSQL&#39;s MVCC structure, how VACUUM works, autovacuum tuning, and how to resolve dead tuple and bloat problems, from a practical standpoint.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mastering PostgreSQL VACUUM - Everything About MVCC and autovacuum">
+<meta property="og:url" content="https://ew32.github.io/en/posts/postgresql-vacuum-explained/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="PostgreSQL&#39;s MVCC structure, how VACUUM works, autovacuum tuning, and how to resolve dead tuple and bloat problems, from a practical standpoint.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-04-13T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-22T14:03:12.801Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Database">
+<meta property="article:tag" content="MVCC">
+<meta property="article:tag" content="PostgreSQL">
+<meta property="article:tag" content="Performance">
+<meta property="article:tag" content="VACUUM">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/en/posts/postgresql-vacuum-explained/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1041908788954754" crossorigin="anonymous"></script>
+
+  <title>Mastering PostgreSQL VACUUM - Everything About MVCC and autovacuum | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/postgresql-vacuum-explained/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Mastering PostgreSQL VACUUM - Everything About MVCC and autovacuum
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2026-04-13 10:00:00" itemprop="dateCreated datePublished" datetime="2026-04-13T10:00:00+09:00">2026-04-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">PostgreSQL's MVCC structure, how VACUUM works, autovacuum tuning, and how to resolve dead tuple and bloat problems, from a practical standpoint.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="PostgreSQL-and-MVCC"><a href="#PostgreSQL-and-MVCC" class="headerlink" title="PostgreSQL and MVCC"></a>PostgreSQL and MVCC</h2><p>PostgreSQL controls concurrency through <strong>MVCC (Multi-Version<br>Concurrency Control)</strong>. Under MVCC, modifying or deleting a row<br>doesn’t remove it immediately — a new version of the tuple is<br>created to ensure isolation between transactions. This has the<br>advantage that reads and writes don’t block each other, but it<br>produces a byproduct called the <strong>dead tuple</strong>.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- An update is effectively adding a new tuple</span></span><br><span class="line"><span class="keyword">UPDATE</span> users <span class="keyword">SET</span> name <span class="operator">=</span> <span class="string">&#x27;John&#x27;</span> <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"><span class="comment">-- The old tuple becomes a dead tuple and remains on disk</span></span><br></pre></td></tr></table></figure>
+
+<p>If you don’t clean up these dead tuples, the table bloats,<br>performance degrades, and eventually you can hit the fatal problem<br>of transaction ID exhaustion.</p>
+<h2 id="What-Is-VACUUM"><a href="#What-Is-VACUUM" class="headerlink" title="What Is VACUUM?"></a>What Is VACUUM?</h2><p>VACUUM is PostgreSQL’s core maintenance operation that reclaims dead<br>tuples and makes space reusable. Its main roles:</p>
+<ol>
+<li><strong>Reclaim dead tuples</strong>: remove tuples no transaction can see anymore</li>
+<li><strong>Update the Visibility Map</strong>: enable Index Only Scans</li>
+<li><strong>Update the Free Space Map</strong>: used to decide where to insert new data</li>
+<li><strong>Prevent Transaction ID Wraparound</strong>: perform freezing to prevent XID exhaustion</li>
+<li><strong>Gather statistics (VACUUM ANALYZE)</strong>: refresh statistics for the optimizer</li>
+</ol>
+<h2 id="Types-of-VACUUM"><a href="#Types-of-VACUUM" class="headerlink" title="Types of VACUUM"></a>Types of VACUUM</h2><h3 id="1-VACUUM-lazy-vacuum"><a href="#1-VACUUM-lazy-vacuum" class="headerlink" title="1. VACUUM (lazy vacuum)"></a>1. VACUUM (lazy vacuum)</h3><p>Plain VACUUM reclaims dead tuples but doesn’t return disk space to<br>the OS. That is, the table size doesn’t shrink — only internal<br>space is made reusable.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">VACUUM users;</span><br><span class="line">VACUUM VERBOSE users;  <span class="comment">-- detailed log output</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-VACUUM-FULL"><a href="#2-VACUUM-FULL" class="headerlink" title="2. VACUUM FULL"></a>2. VACUUM FULL</h3><p>Rewrites the whole table, fully removing dead tuples and reclaiming<br>disk space. But it takes an <strong>ACCESS EXCLUSIVE lock</strong>, so be careful<br>using it on a live system.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">VACUUM <span class="keyword">FULL</span> users;</span><br></pre></td></tr></table></figure>
+
+<p>In production, an extension like <code>pg_repack</code> lets you reorganize a<br>table without a lock.</p>
+<h3 id="3-VACUUM-ANALYZE"><a href="#3-VACUUM-ANALYZE" class="headerlink" title="3. VACUUM ANALYZE"></a>3. VACUUM ANALYZE</h3><p>Performs VACUUM and also collects statistics.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">VACUUM ANALYZE users;</span><br></pre></td></tr></table></figure>
+
+<h2 id="How-Autovacuum-Works"><a href="#How-Autovacuum-Works" class="headerlink" title="How Autovacuum Works"></a>How Autovacuum Works</h2><p>PostgreSQL has <strong>autovacuum</strong> enabled by default to run VACUUM and<br>ANALYZE automatically. The autovacuum launcher spawns worker<br>processes that check, per table, whether thresholds have been<br>reached.</p>
+<h3 id="Trigger-Conditions"><a href="#Trigger-Conditions" class="headerlink" title="Trigger Conditions"></a>Trigger Conditions</h3><p>The VACUUM trigger threshold:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">threshold = autovacuum_vacuum_threshold</span><br><span class="line">          + autovacuum_vacuum_scale_factor * row count</span><br></pre></td></tr></table></figure>
+
+<p>With defaults, for a 10,000-row table, automatic VACUUM runs once<br>dead tuples exceed about 2,050.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- Check current settings</span></span><br><span class="line"><span class="keyword">SHOW</span> autovacuum_vacuum_scale_factor;  <span class="comment">-- default 0.2</span></span><br><span class="line"><span class="keyword">SHOW</span> autovacuum_vacuum_threshold;     <span class="comment">-- default 50</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- Per-table override</span></span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> big_table <span class="keyword">SET</span> (</span><br><span class="line">  autovacuum_vacuum_scale_factor <span class="operator">=</span> <span class="number">0.05</span>,</span><br><span class="line">  autovacuum_vacuum_threshold <span class="operator">=</span> <span class="number">1000</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<h2 id="Monitoring-Dead-Tuples-and-Bloat"><a href="#Monitoring-Dead-Tuples-and-Bloat" class="headerlink" title="Monitoring Dead Tuples and Bloat"></a>Monitoring Dead Tuples and Bloat</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">  schemaname,</span><br><span class="line">  relname,</span><br><span class="line">  n_live_tup,</span><br><span class="line">  n_dead_tup,</span><br><span class="line">  round(n_dead_tup::<span class="type">numeric</span> <span class="operator">/</span> <span class="built_in">NULLIF</span>(n_live_tup, <span class="number">0</span>), <span class="number">3</span>) <span class="keyword">AS</span> dead_ratio,</span><br><span class="line">  last_autovacuum,</span><br><span class="line">  last_vacuum</span><br><span class="line"><span class="keyword">FROM</span> pg_stat_user_tables</span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span> n_dead_tup <span class="keyword">DESC</span></span><br><span class="line">LIMIT <span class="number">10</span>;</span><br></pre></td></tr></table></figure>
+
+<p>Large tables with a dead_ratio above 0.1 (10%) become tuning<br>targets.</p>
+<h2 id="The-Transaction-ID-Wraparound-Problem"><a href="#The-Transaction-ID-Wraparound-Problem" class="headerlink" title="The Transaction ID Wraparound Problem"></a>The Transaction ID Wraparound Problem</h2><p>PostgreSQL’s transaction ID is limited to 32 bits (~4 billion) and<br>has a circular (wraparound) structure. To prevent this, VACUUM marks<br>old tuples’ XIDs as <strong>frozen</strong>.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- Check the max age per database</span></span><br><span class="line"><span class="keyword">SELECT</span> datname, age(datfrozenxid)</span><br><span class="line"><span class="keyword">FROM</span> pg_database</span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span> age(datfrozenxid) <span class="keyword">DESC</span>;</span><br></pre></td></tr></table></figure>
+
+<p>When <code>autovacuum_freeze_max_age</code> (default 200 million) is reached,<br>an anti-wraparound VACUUM runs forcibly, and at that point the user<br>can’t even stop it with a <code>VACUUM</code> command.</p>
+<h2 id="A-Practical-Tuning-Guide"><a href="#A-Practical-Tuning-Guide" class="headerlink" title="A Practical Tuning Guide"></a>A Practical Tuning Guide</h2><h3 id="Example-of-Reinforced-autovacuum-Settings"><a href="#Example-of-Reinforced-autovacuum-Settings" class="headerlink" title="Example of Reinforced autovacuum Settings"></a>Example of Reinforced autovacuum Settings</h3><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># postgresql.conf</span></span><br><span class="line"><span class="attr">autovacuum_max_workers</span> = <span class="number">5</span></span><br><span class="line"><span class="attr">autovacuum_naptime</span> = <span class="number">30</span>s</span><br><span class="line"><span class="attr">autovacuum_vacuum_cost_limit</span> = <span class="number">2000</span></span><br><span class="line"><span class="attr">autovacuum_vacuum_cost_delay</span> = <span class="number">2</span>ms</span><br></pre></td></tr></table></figure>
+
+<h3 id="Settings-Specific-to-Large-Tables"><a href="#Settings-Specific-to-Large-Tables" class="headerlink" title="Settings Specific to Large Tables"></a>Settings Specific to Large Tables</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> events <span class="keyword">SET</span> (</span><br><span class="line">  autovacuum_vacuum_scale_factor <span class="operator">=</span> <span class="number">0.02</span>,</span><br><span class="line">  autovacuum_analyze_scale_factor <span class="operator">=</span> <span class="number">0.01</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<h3 id="Common-Problems-and-Fixes"><a href="#Common-Problems-and-Fixes" class="headerlink" title="Common Problems and Fixes"></a>Common Problems and Fixes</h3><ul>
+<li><strong>Long-running transactions</strong>: a long-open transaction prevents VACUUM from removing dead tuples. Track them in <code>pg_stat_activity</code></li>
+<li><strong>Unused replication slots</strong>: a forgotten slot holding WAL causes a similar problem</li>
+<li><strong>Accumulated bloat</strong>: measure exact bloat with the <code>pgstattuple</code> extension</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- Find old transactions</span></span><br><span class="line"><span class="keyword">SELECT</span> pid, now() <span class="operator">-</span> xact_start <span class="keyword">AS</span> duration, state, query</span><br><span class="line"><span class="keyword">FROM</span> pg_stat_activity</span><br><span class="line"><span class="keyword">WHERE</span> state <span class="operator">&lt;&gt;</span> <span class="string">&#x27;idle&#x27;</span></span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span> xact_start</span><br><span class="line">LIMIT <span class="number">5</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Debugging-When-VACUUM-Doesn’t-Work"><a href="#Debugging-When-VACUUM-Doesn’t-Work" class="headerlink" title="Debugging When VACUUM Doesn’t Work"></a>Debugging When VACUUM Doesn’t Work</h2><p>Check these items in order.</p>
+<ol>
+<li>Whether there are old transactions (<code>pg_stat_activity</code>)</li>
+<li>Unused replication slots (<code>pg_replication_slots</code>)</li>
+<li>Prepared transactions (<code>pg_prepared_xacts</code>)</li>
+<li>A standby with the hot_standby_feedback option on</li>
+</ol>
+<h2 id="Wrapping-Up"><a href="#Wrapping-Up" class="headerlink" title="Wrapping Up"></a>Wrapping Up</h2><p>VACUUM is the essential tool that underpins PostgreSQL’s MVCC.<br>Understanding how autovacuum behaves, steadily watching monitoring<br>metrics, and applying tuning suited to a table’s characteristics<br>lets you prevent problems like bloat and XID wraparound in advance.<br>Remember the saying: “PostgreSQL is happy when it gets to VACUUM<br>often.”</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Database/" rel="tag"># Database</a>
+              <a href="/tags/MVCC/" rel="tag"># MVCC</a>
+              <a href="/tags/PostgreSQL/" rel="tag"># PostgreSQL</a>
+              <a href="/tags/Performance/" rel="tag"># Performance</a>
+              <a href="/tags/VACUUM/" rel="tag"># VACUUM</a>
+          </div>
+
+        
+
+
+        
+      <div class="post-nav">
+        <div class="post-nav-item">
+      <a href="/en/posts/database-isolation-levels/" rel="prev" title="Transaction Isolation Levels - From Read Uncommitted to Serializable">
+        <i class="fa fa-chevron-left"></i> Transaction Isolation Levels - From Read Uncommitted to Serializable
+      </a></div>
+        <div class="post-nav-item">
+      <a href="/en/posts/mysql-replication-strategies/" rel="next" title="A Complete Guide to MySQL Replication - From Master-Slave to Group Replication">
+        A Complete Guide to MySQL Replication - From Master-Slave to Group Replication <i class="fa fa-chevron-right"></i>
+      </a></div>
+      </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#PostgreSQL-and-MVCC"><span class="nav-number">1.</span> <span class="nav-text">PostgreSQL and MVCC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#What-Is-VACUUM"><span class="nav-number">2.</span> <span class="nav-text">What Is VACUUM?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Types-of-VACUUM"><span class="nav-number">3.</span> <span class="nav-text">Types of VACUUM</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-VACUUM-lazy-vacuum"><span class="nav-number">3.1.</span> <span class="nav-text">1. VACUUM (lazy vacuum)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-VACUUM-FULL"><span class="nav-number">3.2.</span> <span class="nav-text">2. VACUUM FULL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-VACUUM-ANALYZE"><span class="nav-number">3.3.</span> <span class="nav-text">3. VACUUM ANALYZE</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#How-Autovacuum-Works"><span class="nav-number">4.</span> <span class="nav-text">How Autovacuum Works</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Trigger-Conditions"><span class="nav-number">4.1.</span> <span class="nav-text">Trigger Conditions</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Monitoring-Dead-Tuples-and-Bloat"><span class="nav-number">5.</span> <span class="nav-text">Monitoring Dead Tuples and Bloat</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Transaction-ID-Wraparound-Problem"><span class="nav-number">6.</span> <span class="nav-text">The Transaction ID Wraparound Problem</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#A-Practical-Tuning-Guide"><span class="nav-number">7.</span> <span class="nav-text">A Practical Tuning Guide</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Example-of-Reinforced-autovacuum-Settings"><span class="nav-number">7.1.</span> <span class="nav-text">Example of Reinforced autovacuum Settings</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Settings-Specific-to-Large-Tables"><span class="nav-number">7.2.</span> <span class="nav-text">Settings Specific to Large Tables</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Common-Problems-and-Fixes"><span class="nav-number">7.3.</span> <span class="nav-text">Common Problems and Fixes</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Debugging-When-VACUUM-Doesn%E2%80%99t-Work"><span class="nav-number">8.</span> <span class="nav-text">Debugging When VACUUM Doesn’t Work</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Wrapping-Up"><span class="nav-number">9.</span> <span class="nav-text">Wrapping Up</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">429</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">650</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="languages">
+    <label class="lang-select-label">
+      <i class="fa fa-language"></i>
+      <span>English</span>
+      <i class="fa fa-angle-up" aria-hidden="true"></i>
+    </label>
+    <select class="lang-select" data-canonical="">
+      
+        <option value="ko" data-href="/posts/postgresql-vacuum-explained/" selected="">
+          한국어
+        </option>
+      
+        <option value="en" data-href="/en/posts/postgresql-vacuum-explained/" selected="">
+          English
+        </option>
+      
+    </select>
+  </div>
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

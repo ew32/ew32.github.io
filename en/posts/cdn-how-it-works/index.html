@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="The architecture of a CDN that delivers content quickly to users worldwide, plus caching strategies.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How a CDN Works and How to Use It">
+<meta property="og:url" content="https://ew32.github.io/en/posts/cdn-how-it-works/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="The architecture of a CDN that delivers content quickly to users worldwide, plus caching strategies.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-05-24T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-22T14:03:12.793Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="CDN">
+<meta property="article:tag" content="Performance">
+<meta property="article:tag" content="Cache">
+<meta property="article:tag" content="Network">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/en/posts/cdn-how-it-works/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1041908788954754" crossorigin="anonymous"></script>
+
+  <title>How a CDN Works and How to Use It | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/cdn-how-it-works/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          How a CDN Works and How to Use It
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2026-05-24 11:00:00" itemprop="dateCreated datePublished" datetime="2026-05-24T11:00:00+09:00">2026-05-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/Theory/" itemprop="url" rel="index"><span itemprop="name">Theory</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">The architecture of a CDN that delivers content quickly to users worldwide, plus caching strategies.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="What-Is-a-CDN"><a href="#What-Is-a-CDN" class="headerlink" title="What Is a CDN?"></a>What Is a CDN?</h2><p>A <strong>CDN (Content Delivery Network)</strong> is a network of servers distributed<br>across many regions worldwide that delivers content to users from a<br>location that is geographically close to them. Beyond static assets,<br>modern CDNs have expanded into dynamic content, APIs, and edge computing.</p>
+<p>Using a CDN gives you the following benefits.</p>
+<ul>
+<li><strong>Lower latency</strong>: responses served from an edge close to the user</li>
+<li><strong>Less origin load</strong>: cache hits protect the origin server</li>
+<li><strong>Lower bandwidth cost</strong>: compression and caching at the edge</li>
+<li><strong>Higher availability</strong>: cached content is still served even when the origin is down</li>
+<li><strong>Better security</strong>: DDoS protection, WAF, bot blocking</li>
+</ul>
+<h2 id="CDN-Architecture"><a href="#CDN-Architecture" class="headerlink" title="CDN Architecture"></a>CDN Architecture</h2><p>A CDN is broadly made up of two tiers.</p>
+<h3 id="1-The-Origin-Server"><a href="#1-The-Origin-Server" class="headerlink" title="1. The Origin Server"></a>1. The Origin Server</h3><p>The server that holds the original content. Users don’t access it<br>directly; content is only delivered through the CDN.</p>
+<h3 id="2-Edge-Servers-Edge-PoP"><a href="#2-Edge-Servers-Edge-PoP" class="headerlink" title="2. Edge Servers (Edge &#x2F; PoP)"></a>2. Edge Servers (Edge &#x2F; PoP)</h3><p>Cache servers placed in major cities around the world. Also called<br><strong>PoPs (Points of Presence)</strong>. A user’s request is routed to the<br>closest PoP.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">User (Seoul) -&gt; Edge (Seoul PoP) -&gt; [respond immediately on cache hit]</span><br><span class="line">                                  -&gt; [on cache miss, fetch from origin (US)]</span><br></pre></td></tr></table></figure>
+
+<h2 id="Routing-User-Requests"><a href="#Routing-User-Requests" class="headerlink" title="Routing User Requests"></a>Routing User Requests</h2><p>There are two main ways a user gets routed to the nearest edge.</p>
+<h3 id="DNS-Based-Routing"><a href="#DNS-Based-Routing" class="headerlink" title="DNS-Based Routing"></a>DNS-Based Routing</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">User -&gt; DNS query to CDN -&gt; IP response based on user location</span><br></pre></td></tr></table></figure>
+
+<p>GeoDNS returns different edge IPs based on region.</p>
+<h3 id="Anycast-Routing"><a href="#Anycast-Routing" class="headerlink" title="Anycast Routing"></a>Anycast Routing</h3><p>The same IP address is advertised via BGP from many locations worldwide.<br>The routing protocol automatically forwards traffic to the closest one.<br>Cloudflare and parts of AWS CloudFront use this approach.</p>
+<h2 id="How-Caching-Works"><a href="#How-Caching-Works" class="headerlink" title="How Caching Works"></a>How Caching Works</h2><p>Cache is the heart of a CDN. Cache behavior is controlled by HTTP headers.</p>
+<h3 id="Key-Cache-Headers"><a href="#Key-Cache-Headers" class="headerlink" title="Key Cache Headers"></a>Key Cache Headers</h3><table>
+<thead>
+<tr>
+<th>Header</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Cache-Control</code></td>
+<td>Cache policy (max-age, public, private, etc.)</td>
+</tr>
+<tr>
+<td><code>Expires</code></td>
+<td>Expiration time (older mechanism)</td>
+</tr>
+<tr>
+<td><code>ETag</code></td>
+<td>Content identifier (for conditional requests)</td>
+</tr>
+<tr>
+<td><code>Last-Modified</code></td>
+<td>Last modification time</td>
+</tr>
+<tr>
+<td><code>Vary</code></td>
+<td>Headers to include in the cache key</td>
+</tr>
+</tbody></table>
+<h3 id="Cache-Policy-Examples"><a href="#Cache-Policy-Examples" class="headerlink" title="Cache Policy Examples"></a>Cache Policy Examples</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 1-year cache (images, JS, CSS - hashed filenames)</span><br><span class="line">Cache-Control: public, max-age=31536000, immutable</span><br><span class="line"></span><br><span class="line"># Short cache (HTML, APIs)</span><br><span class="line">Cache-Control: public, max-age=60, s-maxage=300</span><br><span class="line"></span><br><span class="line"># Don&#x27;t cache (personal data)</span><br><span class="line">Cache-Control: no-store</span><br></pre></td></tr></table></figure>
+
+<p><code>s-maxage</code> is a TTL specifically for shared caches like CDNs.</p>
+<h2 id="Cache-Keys-and-Vary"><a href="#Cache-Keys-and-Vary" class="headerlink" title="Cache Keys and Vary"></a>Cache Keys and Vary</h2><p>A CDN uses the URL as the default cache key, but if the same URL should<br>yield different responses depending on a header, indicate that with a<br><code>Vary</code> header.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Vary: Accept-Encoding, Accept-Language</span><br></pre></td></tr></table></figure>
+
+<p>The response above gets separate cache entries per compression method and<br>per language.</p>
+<h2 id="Cache-Hit-Rate-and-Invalidation"><a href="#Cache-Hit-Rate-and-Invalidation" class="headerlink" title="Cache Hit Rate and Invalidation"></a>Cache Hit Rate and Invalidation</h2><p>If the cache hit rate stays above 90%, origin traffic drops to less than<br>1&#x2F;10 of total traffic.</p>
+<h3 id="Ways-to-Invalidate-Cache"><a href="#Ways-to-Invalidate-Cache" class="headerlink" title="Ways to Invalidate Cache"></a>Ways to Invalidate Cache</h3><ol>
+<li><strong>Wait for TTL to expire</strong>: simplest, but immediate updates are hard</li>
+<li><strong>Purge API</strong>: explicitly invalidate via the CDN</li>
+<li><strong>Versioned URLs</strong>: <code>app.js?v=2</code> or <code>app.abc123.js</code> (recommended)</li>
+<li><strong>Soft Purge</strong>: mark as expired but keep serving stale until refresh</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Cloudflare Purge example</span></span><br><span class="line">curl -X POST <span class="string">&quot;https://api.cloudflare.com/client/v4/zones/&#123;zone&#125;/purge_cache&quot;</span> \</span><br><span class="line">  -H <span class="string">&quot;Authorization: Bearer &#123;token&#125;&quot;</span> \</span><br><span class="line">  -H <span class="string">&quot;Content-Type: application/json&quot;</span> \</span><br><span class="line">  --data <span class="string">&#x27;&#123;&quot;files&quot;:[&quot;https://example.com/app.js&quot;]&#125;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Dynamic-Content-and-Edge-Computing"><a href="#Dynamic-Content-and-Edge-Computing" class="headerlink" title="Dynamic Content and Edge Computing"></a>Dynamic Content and Edge Computing</h2><p>Traditional CDNs focused on static assets, but modern CDNs accelerate<br>dynamic content too.</p>
+<h3 id="Techniques-for-Accelerating-Dynamic-Content"><a href="#Techniques-for-Accelerating-Dynamic-Content" class="headerlink" title="Techniques for Accelerating Dynamic Content"></a>Techniques for Accelerating Dynamic Content</h3><ul>
+<li><strong>Connection reuse</strong>: keep-alive between edge and origin</li>
+<li><strong>TCP optimization</strong>: congestion control like BBR at the edge</li>
+<li><strong>TLS termination</strong>: TLS handled at the edge; the origin sees plaintext or mTLS</li>
+<li><strong>Enabling HTTP&#x2F;3</strong>: applying it just on the user-to-edge segment already pays off</li>
+</ul>
+<h3 id="Edge-Computing"><a href="#Edge-Computing" class="headerlink" title="Edge Computing"></a>Edge Computing</h3><p>Running code directly at CDN edges has become commonplace.</p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Runtime</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cloudflare Workers</td>
+<td>V8 isolate</td>
+</tr>
+<tr>
+<td>AWS Lambda@Edge</td>
+<td>Node.js, Python</td>
+</tr>
+<tr>
+<td>Vercel Edge Functions</td>
+<td>V8 isolate</td>
+</tr>
+<tr>
+<td>Fastly Compute@Edge</td>
+<td>WebAssembly</td>
+</tr>
+</tbody></table>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Cloudflare Workers example - A/B test</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> &#123;</span><br><span class="line">  <span class="keyword">async</span> <span class="title function_">fetch</span>(<span class="params">request</span>) &#123;</span><br><span class="line">    <span class="keyword">const</span> variant = <span class="title class_">Math</span>.<span class="title function_">random</span>() &lt; <span class="number">0.5</span> ? <span class="string">&#x27;A&#x27;</span> : <span class="string">&#x27;B&#x27;</span>;</span><br><span class="line">    <span class="keyword">const</span> url = <span class="keyword">new</span> <span class="title function_">URL</span>(request.<span class="property">url</span>);</span><br><span class="line">    url.<span class="property">pathname</span> = <span class="string">`/variants/<span class="subst">$&#123;variant&#125;</span><span class="subst">$&#123;url.pathname&#125;</span>`</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="title function_">fetch</span>(url, request);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Considerations-When-Adopting-a-CDN"><a href="#Considerations-When-Adopting-a-CDN" class="headerlink" title="Considerations When Adopting a CDN"></a>Considerations When Adopting a CDN</h2><h3 id="Identifying-Cacheable-Content"><a href="#Identifying-Cacheable-Content" class="headerlink" title="Identifying Cacheable Content"></a>Identifying Cacheable Content</h3><table>
+<thead>
+<tr>
+<th>Content</th>
+<th>Cache Suitability</th>
+<th>Recommended TTL</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Images, video</td>
+<td>Highly suitable</td>
+<td>1 year</td>
+</tr>
+<tr>
+<td>CSS, JS (hashed)</td>
+<td>Highly suitable</td>
+<td>1 year immutable</td>
+</tr>
+<tr>
+<td>HTML</td>
+<td>Moderate</td>
+<td>1–5 minutes</td>
+</tr>
+<tr>
+<td>Public GET API</td>
+<td>Possible</td>
+<td>1–60 seconds</td>
+</tr>
+<tr>
+<td>API POST&#x2F;PUT</td>
+<td>Unsuitable</td>
+<td>no-store</td>
+</tr>
+<tr>
+<td>Personalized pages</td>
+<td>Unsuitable</td>
+<td>no-store</td>
+</tr>
+</tbody></table>
+<h3 id="Security-Considerations"><a href="#Security-Considerations" class="headerlink" title="Security Considerations"></a>Security Considerations</h3><ul>
+<li><strong>Don’t forget cache headers on personal-data responses</strong>: <code>Cache-Control: private</code> is mandatory</li>
+<li><strong>Be careful with caching authenticated responses</strong>: use <code>Vary: Authorization</code> or exclude from cache</li>
+<li><strong>TLS certificate management</strong>: the CDN automates issuance and renewal</li>
+</ul>
+<h2 id="Major-CDN-Services"><a href="#Major-CDN-Services" class="headerlink" title="Major CDN Services"></a>Major CDN Services</h2><table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Strengths</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cloudflare</td>
+<td>Price, DDoS protection</td>
+<td>Free plan, Workers</td>
+</tr>
+<tr>
+<td>AWS CloudFront</td>
+<td>AWS integration</td>
+<td>Lambda@Edge</td>
+</tr>
+<tr>
+<td>Fastly</td>
+<td>Real-time invalidation</td>
+<td>VCL, Compute@Edge</td>
+</tr>
+<tr>
+<td>Akamai</td>
+<td>Global coverage</td>
+<td>Enterprise</td>
+</tr>
+<tr>
+<td>KT, LG U+ CDN</td>
+<td>Optimized for Korea</td>
+<td>Domestic PoPs</td>
+</tr>
+</tbody></table>
+<h2 id="Measuring-Performance"><a href="#Measuring-Performance" class="headerlink" title="Measuring Performance"></a>Measuring Performance</h2><p>CDN impact is measured with the following metrics.</p>
+<ul>
+<li><strong>TTFB (Time To First Byte)</strong>: drops sharply once you adopt the edge</li>
+<li><strong>Cache hit rate</strong>: aim for over 90%</li>
+<li><strong>Origin bandwidth</strong>: how much is saved by cache</li>
+<li><strong>Error rate</strong>: ratio of 5xx responses</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Check cache status from response headers</span></span><br><span class="line">curl -I https://example.com/app.js</span><br><span class="line"><span class="comment"># CF-Cache-Status: HIT</span></span><br><span class="line"><span class="comment"># Age: 3600</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Wrapping-Up"><a href="#Wrapping-Up" class="headerlink" title="Wrapping Up"></a>Wrapping Up</h2><p>A CDN has evolved from a tool that just delivers static files faster<br>into <strong>infrastructure that gives global users consistent performance and<br>availability</strong>. Designing the right cache headers, choosing TTLs per<br>content type, and adopting edge computing together can cut cost while<br>significantly improving user experience.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/CDN/" rel="tag"># CDN</a>
+              <a href="/tags/Performance/" rel="tag"># Performance</a>
+              <a href="/tags/Cache/" rel="tag"># Cache</a>
+              <a href="/tags/Network/" rel="tag"># Network</a>
+          </div>
+
+        
+
+
+        
+      <div class="post-nav">
+        <div class="post-nav-item">
+      <a href="/en/posts/process-vs-thread/" rel="prev" title="The Difference Between Processes and Threads">
+        <i class="fa fa-chevron-left"></i> The Difference Between Processes and Threads
+      </a></div>
+        <div class="post-nav-item">
+      <a href="/en/posts/typescript-advanced-types/" rel="next" title="TypeScript Advanced Types: Conditional, Mapped, and Template Literal Types">
+        TypeScript Advanced Types: Conditional, Mapped, and Template Literal Types <i class="fa fa-chevron-right"></i>
+      </a></div>
+      </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#What-Is-a-CDN"><span class="nav-number">1.</span> <span class="nav-text">What Is a CDN?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CDN-Architecture"><span class="nav-number">2.</span> <span class="nav-text">CDN Architecture</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-The-Origin-Server"><span class="nav-number">2.1.</span> <span class="nav-text">1. The Origin Server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Edge-Servers-Edge-PoP"><span class="nav-number">2.2.</span> <span class="nav-text">2. Edge Servers (Edge &#x2F; PoP)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Routing-User-Requests"><span class="nav-number">3.</span> <span class="nav-text">Routing User Requests</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DNS-Based-Routing"><span class="nav-number">3.1.</span> <span class="nav-text">DNS-Based Routing</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Anycast-Routing"><span class="nav-number">3.2.</span> <span class="nav-text">Anycast Routing</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#How-Caching-Works"><span class="nav-number">4.</span> <span class="nav-text">How Caching Works</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Key-Cache-Headers"><span class="nav-number">4.1.</span> <span class="nav-text">Key Cache Headers</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Cache-Policy-Examples"><span class="nav-number">4.2.</span> <span class="nav-text">Cache Policy Examples</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cache-Keys-and-Vary"><span class="nav-number">5.</span> <span class="nav-text">Cache Keys and Vary</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cache-Hit-Rate-and-Invalidation"><span class="nav-number">6.</span> <span class="nav-text">Cache Hit Rate and Invalidation</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Ways-to-Invalidate-Cache"><span class="nav-number">6.1.</span> <span class="nav-text">Ways to Invalidate Cache</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Dynamic-Content-and-Edge-Computing"><span class="nav-number">7.</span> <span class="nav-text">Dynamic Content and Edge Computing</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Techniques-for-Accelerating-Dynamic-Content"><span class="nav-number">7.1.</span> <span class="nav-text">Techniques for Accelerating Dynamic Content</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Edge-Computing"><span class="nav-number">7.2.</span> <span class="nav-text">Edge Computing</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Considerations-When-Adopting-a-CDN"><span class="nav-number">8.</span> <span class="nav-text">Considerations When Adopting a CDN</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Identifying-Cacheable-Content"><span class="nav-number">8.1.</span> <span class="nav-text">Identifying Cacheable Content</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Security-Considerations"><span class="nav-number">8.2.</span> <span class="nav-text">Security Considerations</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Major-CDN-Services"><span class="nav-number">9.</span> <span class="nav-text">Major CDN Services</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Measuring-Performance"><span class="nav-number">10.</span> <span class="nav-text">Measuring Performance</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Wrapping-Up"><span class="nav-number">11.</span> <span class="nav-text">Wrapping Up</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">429</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">650</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="languages">
+    <label class="lang-select-label">
+      <i class="fa fa-language"></i>
+      <span>English</span>
+      <i class="fa fa-angle-up" aria-hidden="true"></i>
+    </label>
+    <select class="lang-select" data-canonical="">
+      
+        <option value="ko" data-href="/posts/cdn-how-it-works/" selected="">
+          한국어
+        </option>
+      
+        <option value="en" data-href="/en/posts/cdn-how-it-works/" selected="">
+          English
+        </option>
+      
+    </select>
+  </div>
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

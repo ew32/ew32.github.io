@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="A summary of the core concepts and practical usage of managing infrastructure as code with HashiCorp Terraform.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Terraform Basics: Managing Infrastructure with IaC">
+<meta property="og:url" content="https://ew32.github.io/en/posts/terraform-basics/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="A summary of the core concepts and practical usage of managing infrastructure as code with HashiCorp Terraform.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-05-26T05:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-22T14:03:12.804Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="AWS">
+<meta property="article:tag" content="DevOps">
+<meta property="article:tag" content="IaC">
+<meta property="article:tag" content="Terraform">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/en/posts/terraform-basics/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1041908788954754" crossorigin="anonymous"></script>
+
+  <title>Terraform Basics: Managing Infrastructure with IaC | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/terraform-basics/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Terraform Basics: Managing Infrastructure with IaC
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2026-05-26 14:00:00" itemprop="dateCreated datePublished" datetime="2026-05-26T14:00:00+09:00">2026-05-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Cloud/" itemprop="url" rel="index"><span itemprop="name">Cloud</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Cloud/Infrastructure/" itemprop="url" rel="index"><span itemprop="name">Infrastructure</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">A summary of the core concepts and practical usage of managing infrastructure as code with HashiCorp Terraform.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><p>As cloud infrastructure grows more complex, managing resources<br>manually in the console becomes inefficient and risky. <strong>IaC<br>(Infrastructure as Code)</strong> is the practice of defining and managing<br>infrastructure as code, and <strong>Terraform</strong> is its representative<br>tool. It supports multi-cloud, is intuitive with declarative syntax,<br>and has a huge ecosystem.</p>
+<h2 id="Why-IaC-Is-Needed"><a href="#Why-IaC-Is-Needed" class="headerlink" title="Why IaC Is Needed"></a>Why IaC Is Needed</h2><ul>
+<li><strong>Reproducibility</strong>: you can create the same environment multiple times</li>
+<li><strong>Version control</strong>: track infrastructure change history with Git</li>
+<li><strong>Automation</strong>: integrate with CI&#x2F;CD pipelines</li>
+<li><strong>Documentation</strong>: the code itself is the infrastructure spec</li>
+<li><strong>Collaboration</strong>: review changes through code review</li>
+</ul>
+<h2 id="Characteristics-of-Terraform"><a href="#Characteristics-of-Terraform" class="headerlink" title="Characteristics of Terraform"></a>Characteristics of Terraform</h2><ul>
+<li><strong>A declarative language (HCL)</strong>: you describe only the desired state</li>
+<li><strong>Multi-cloud support</strong>: AWS, GCP, Azure, K8s, and more</li>
+<li><strong>State management</strong>: keeps the mapping between actual infrastructure and code</li>
+<li><strong>Plan and apply separated</strong>: you can preview changes in advance</li>
+</ul>
+<h2 id="Installation-and-a-First-Run"><a href="#Installation-and-a-First-Run" class="headerlink" title="Installation and a First Run"></a>Installation and a First Run</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># macOS</span></span><br><span class="line">brew install terraform</span><br><span class="line"></span><br><span class="line"><span class="comment"># Linux</span></span><br><span class="line">wget https://releases.hashicorp.com/terraform/1.9.0/terraform_1.9.0_linux_amd64.zip</span><br><span class="line">unzip terraform_1.9.0_linux_amd64.zip</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">mv</span> terraform /usr/local/bin/</span><br><span class="line"></span><br><span class="line"><span class="comment"># Check the version</span></span><br><span class="line">terraform version</span><br></pre></td></tr></table></figure>
+
+<h2 id="The-Basic-Workflow"><a href="#The-Basic-Workflow" class="headerlink" title="The Basic Workflow"></a>The Basic Workflow</h2><ol>
+<li><code>terraform init</code>: install providers</li>
+<li><code>terraform plan</code>: preview changes</li>
+<li><code>terraform apply</code>: apply to the infrastructure</li>
+<li><code>terraform destroy</code>: delete resources</li>
+</ol>
+<h2 id="Your-First-Terraform-Code"><a href="#Your-First-Terraform-Code" class="headerlink" title="Your First Terraform Code"></a>Your First Terraform Code</h2><p>An example that creates an AWS EC2 instance.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">terraform &#123;</span><br><span class="line">  required_providers &#123;</span><br><span class="line">    aws = &#123;</span><br><span class="line">      source  = &quot;hashicorp/aws&quot;</span><br><span class="line">      version = &quot;~&gt; 5.0&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">provider &quot;aws&quot; &#123;</span><br><span class="line">  region = &quot;ap-northeast-2&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">resource &quot;aws_instance&quot; &quot;web&quot; &#123;</span><br><span class="line">  ami           = &quot;ami-0abcdef1234567890&quot;</span><br><span class="line">  instance_type = &quot;t3.micro&quot;</span><br><span class="line"></span><br><span class="line">  tags = &#123;</span><br><span class="line">    Name        = &quot;WebServer&quot;</span><br><span class="line">    Environment = &quot;dev&quot;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Run it:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">terraform init</span><br><span class="line">terraform plan</span><br><span class="line">terraform apply</span><br></pre></td></tr></table></figure>
+
+<h2 id="Variables-and-Outputs"><a href="#Variables-and-Outputs" class="headerlink" title="Variables and Outputs"></a>Variables and Outputs</h2><h3 id="Defining-Variables"><a href="#Defining-Variables" class="headerlink" title="Defining Variables"></a>Defining Variables</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">variable &quot;region&quot; &#123;</span><br><span class="line">  description = &quot;AWS region&quot;</span><br><span class="line">  type        = string</span><br><span class="line">  default     = &quot;ap-northeast-2&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">variable &quot;instance_count&quot; &#123;</span><br><span class="line">  type    = number</span><br><span class="line">  default = 2</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">variable &quot;tags&quot; &#123;</span><br><span class="line">  type = map(string)</span><br><span class="line">  default = &#123;</span><br><span class="line">    Owner = &quot;DevOps&quot;</span><br><span class="line">    Env   = &quot;prod&quot;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Using-Variables"><a href="#Using-Variables" class="headerlink" title="Using Variables"></a>Using Variables</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">provider &quot;aws&quot; &#123;</span><br><span class="line">  region = var.region</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">resource &quot;aws_instance&quot; &quot;web&quot; &#123;</span><br><span class="line">  count         = var.instance_count</span><br><span class="line">  ami           = &quot;ami-0abcdef1234567890&quot;</span><br><span class="line">  instance_type = &quot;t3.micro&quot;</span><br><span class="line">  tags          = var.tags</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Outputs"><a href="#Outputs" class="headerlink" title="Outputs"></a>Outputs</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">output &quot;instance_ips&quot; &#123;</span><br><span class="line">  description = &quot;Public IPs of web servers&quot;</span><br><span class="line">  value       = aws_instance.web[*].public_ip</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="The-State-File-and-Backends"><a href="#The-State-File-and-Backends" class="headerlink" title="The State File and Backends"></a>The State File and Backends</h2><p>Terraform uses a <strong>state file (<code>terraform.tfstate</code>)</strong> to map actual<br>infrastructure to code. Storing it locally makes collaboration<br>hard, so you usually use a <strong>remote backend</strong> (S3 + DynamoDB).</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">terraform &#123;</span><br><span class="line">  backend &quot;s3&quot; &#123;</span><br><span class="line">    bucket         = &quot;my-terraform-state&quot;</span><br><span class="line">    key            = &quot;prod/terraform.tfstate&quot;</span><br><span class="line">    region         = &quot;ap-northeast-2&quot;</span><br><span class="line">    dynamodb_table = &quot;terraform-locks&quot;</span><br><span class="line">    encrypt        = true</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>DynamoDB is used for <strong>state locking</strong>, preventing multiple people<br>from applying at the same time.</p>
+<h2 id="Improving-Reusability-with-Modules"><a href="#Improving-Reusability-with-Modules" class="headerlink" title="Improving Reusability with Modules"></a>Improving Reusability with Modules</h2><p>Repeated infrastructure can be split into <strong>modules</strong>.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">project/</span><br><span class="line">├── main.tf</span><br><span class="line">├── variables.tf</span><br><span class="line">└── modules/</span><br><span class="line">    └── vpc/</span><br><span class="line">        ├── main.tf</span><br><span class="line">        ├── variables.tf</span><br><span class="line">        └── outputs.tf</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># main.tf</span><br><span class="line">module &quot;vpc&quot; &#123;</span><br><span class="line">  source = &quot;./modules/vpc&quot;</span><br><span class="line"></span><br><span class="line">  cidr_block = &quot;10.0.0.0/16&quot;</span><br><span class="line">  name       = &quot;production-vpc&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>You can also find and use public modules from the<br><a target="_blank" rel="noopener" href="https://registry.terraform.io/">Terraform Registry</a>.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">module &quot;vpc&quot; &#123;</span><br><span class="line">  source  = &quot;terraform-aws-modules/vpc/aws&quot;</span><br><span class="line">  version = &quot;5.0.0&quot;</span><br><span class="line"></span><br><span class="line">  name = &quot;my-vpc&quot;</span><br><span class="line">  cidr = &quot;10.0.0.0/16&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Data-Source-Referencing-Existing-Resources"><a href="#Data-Source-Referencing-Existing-Resources" class="headerlink" title="Data Source: Referencing Existing Resources"></a>Data Source: Referencing Existing Resources</h2><p>Use this when referencing already-existing resources from your<br>code.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">data &quot;aws_ami&quot; &quot;ubuntu&quot; &#123;</span><br><span class="line">  most_recent = true</span><br><span class="line">  owners      = [&quot;099720109477&quot;]  # Canonical</span><br><span class="line"></span><br><span class="line">  filter &#123;</span><br><span class="line">    name   = &quot;name&quot;</span><br><span class="line">    values = [&quot;ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*&quot;]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">resource &quot;aws_instance&quot; &quot;web&quot; &#123;</span><br><span class="line">  ami           = data.aws_ami.ubuntu.id</span><br><span class="line">  instance_type = &quot;t3.micro&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Separating-Environments-with-Workspaces"><a href="#Separating-Environments-with-Workspaces" class="headerlink" title="Separating Environments with Workspaces"></a>Separating Environments with Workspaces</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">terraform workspace new dev</span><br><span class="line">terraform workspace new prod</span><br><span class="line"></span><br><span class="line">terraform workspace <span class="keyword">select</span> prod</span><br><span class="line">terraform apply</span><br></pre></td></tr></table></figure>
+
+<p>In practice, many teams prefer <strong>directory separation</strong> over<br>workspaces.</p>
+<h2 id="Frequently-Used-Commands"><a href="#Frequently-Used-Commands" class="headerlink" title="Frequently Used Commands"></a>Frequently Used Commands</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">terraform <span class="built_in">fmt</span>          <span class="comment"># format the code</span></span><br><span class="line">terraform validate     <span class="comment"># validate syntax</span></span><br><span class="line">terraform plan -out=plan.tfplan</span><br><span class="line">terraform apply plan.tfplan</span><br><span class="line">terraform state list                    <span class="comment"># list managed resources</span></span><br><span class="line">terraform state show aws_instance.web   <span class="comment"># resource details</span></span><br><span class="line">terraform import aws_instance.web i-1234567890abcdef0  <span class="comment"># import an existing resource</span></span><br><span class="line">terraform destroy</span><br></pre></td></tr></table></figure>
+
+<h2 id="Best-Practices"><a href="#Best-Practices" class="headerlink" title="Best Practices"></a>Best Practices</h2><ul>
+<li>Always store the state file in a <strong>remote backend</strong></li>
+<li>Use environment variables or a Secret Manager for <strong>sensitive info</strong> (not directly in code)</li>
+<li>Separate directories per environment (<code>dev/</code>, <code>staging/</code>, <code>prod/</code>)</li>
+<li>Ensure <strong>reusability</strong> with modules</li>
+<li>Attach the <code>terraform plan</code> result to a PR for review</li>
+<li>Apply security scanners like <strong>tfsec, Checkov</strong></li>
+</ul>
+<h2 id="Wrapping-Up"><a href="#Wrapping-Up" class="headerlink" title="Wrapping Up"></a>Wrapping Up</h2><p>Terraform is a powerful tool that lets you safely manage cloud<br>infrastructure as code. Once you learn features like variables,<br>modules, remote backends, and data sources, you can operate<br>everything from a small project to a large multi-cloud environment<br>in a consistent way. I recommend starting with a simple EC2<br>instance and gradually growing toward adding modules and CI&#x2F;CD<br>pipelines.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/AWS/" rel="tag"># AWS</a>
+              <a href="/tags/DevOps/" rel="tag"># DevOps</a>
+              <a href="/tags/IaC/" rel="tag"># IaC</a>
+              <a href="/tags/Terraform/" rel="tag"># Terraform</a>
+          </div>
+
+        
+
+
+        
+      <div class="post-nav">
+        <div class="post-nav-item">
+      <a href="/en/posts/github-actions-getting-started/" rel="prev" title="Getting Started with CI/CD via GitHub Actions">
+        <i class="fa fa-chevron-left"></i> Getting Started with CI/CD via GitHub Actions
+      </a></div>
+        <div class="post-nav-item">
+      <a href="/en/posts/aws-ec2-ecs-eks-comparison/" rel="next" title="AWS EC2 vs ECS vs EKS">
+        AWS EC2 vs ECS vs EKS <i class="fa fa-chevron-right"></i>
+      </a></div>
+      </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Why-IaC-Is-Needed"><span class="nav-number">2.</span> <span class="nav-text">Why IaC Is Needed</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Characteristics-of-Terraform"><span class="nav-number">3.</span> <span class="nav-text">Characteristics of Terraform</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Installation-and-a-First-Run"><span class="nav-number">4.</span> <span class="nav-text">Installation and a First Run</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Basic-Workflow"><span class="nav-number">5.</span> <span class="nav-text">The Basic Workflow</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Your-First-Terraform-Code"><span class="nav-number">6.</span> <span class="nav-text">Your First Terraform Code</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Variables-and-Outputs"><span class="nav-number">7.</span> <span class="nav-text">Variables and Outputs</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Defining-Variables"><span class="nav-number">7.1.</span> <span class="nav-text">Defining Variables</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Using-Variables"><span class="nav-number">7.2.</span> <span class="nav-text">Using Variables</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Outputs"><span class="nav-number">7.3.</span> <span class="nav-text">Outputs</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-State-File-and-Backends"><span class="nav-number">8.</span> <span class="nav-text">The State File and Backends</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Improving-Reusability-with-Modules"><span class="nav-number">9.</span> <span class="nav-text">Improving Reusability with Modules</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Data-Source-Referencing-Existing-Resources"><span class="nav-number">10.</span> <span class="nav-text">Data Source: Referencing Existing Resources</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Separating-Environments-with-Workspaces"><span class="nav-number">11.</span> <span class="nav-text">Separating Environments with Workspaces</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Frequently-Used-Commands"><span class="nav-number">12.</span> <span class="nav-text">Frequently Used Commands</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Best-Practices"><span class="nav-number">13.</span> <span class="nav-text">Best Practices</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Wrapping-Up"><span class="nav-number">14.</span> <span class="nav-text">Wrapping Up</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">429</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">650</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="languages">
+    <label class="lang-select-label">
+      <i class="fa fa-language"></i>
+      <span>English</span>
+      <i class="fa fa-angle-up" aria-hidden="true"></i>
+    </label>
+    <select class="lang-select" data-canonical="">
+      
+        <option value="ko" data-href="/posts/terraform-basics/" selected="">
+          한국어
+        </option>
+      
+        <option value="en" data-href="/en/posts/terraform-basics/" selected="">
+          English
+        </option>
+      
+    </select>
+  </div>
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

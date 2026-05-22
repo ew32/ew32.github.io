@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="An introduction to the Linux development environment for Windows, covering the concept, advantages, installation, and usage points of WSL2.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="A Complete WSL2 Guide: Using Linux on Windows">
+<meta property="og:url" content="https://ew32.github.io/en/posts/windows-subsystem-for-linux-guide/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="An introduction to the Linux development environment for Windows, covering the concept, advantages, installation, and usage points of WSL2.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-12-17T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-22T14:03:12.805Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Ubuntu">
+<meta property="article:tag" content="WSL">
+<meta property="article:tag" content="Windows">
+<meta property="article:tag" content="WSL2">
+<meta property="article:tag" content="Virtualization">
+<meta property="article:tag" content="DevEnvironment">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/en/posts/windows-subsystem-for-linux-guide/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1041908788954754" crossorigin="anonymous"></script>
+
+  <title>A Complete WSL2 Guide: Using Linux on Windows | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/windows-subsystem-for-linux-guide/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          A Complete WSL2 Guide: Using Linux on Windows
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2025-12-17 11:00:00" itemprop="dateCreated datePublished" datetime="2025-12-17T11:00:00+09:00">2025-12-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/DevEnvironment/" itemprop="url" rel="index"><span itemprop="name">DevEnvironment</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/DevEnvironment/System/" itemprop="url" rel="index"><span itemprop="name">System</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">An introduction to the Linux development environment for Windows, covering the concept, advantages, installation, and usage points of WSL2.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="What-Is-WSL"><a href="#What-Is-WSL" class="headerlink" title="What Is WSL?"></a>What Is WSL?</h2><p>WSL (Windows Subsystem for Linux) is a compatibility layer that<br>lets you run Linux binary executables natively on Windows 10 and<br>Windows 11. It lets you use a Linux environment on Windows without<br>a virtual machine or dual boot, making it a very useful tool for<br>developers.</p>
+<h2 id="WSL1-vs-WSL2"><a href="#WSL1-vs-WSL2" class="headerlink" title="WSL1 vs WSL2"></a>WSL1 vs WSL2</h2><h3 id="WSL1"><a href="#WSL1" class="headerlink" title="WSL1"></a>WSL1</h3><ul>
+<li>Translates system calls to the Windows kernel</li>
+<li>Fast file system performance (when accessing Windows files)</li>
+<li>Lower memory usage</li>
+</ul>
+<h3 id="WSL2-recommended"><a href="#WSL2-recommended" class="headerlink" title="WSL2 (recommended)"></a>WSL2 (recommended)</h3><ul>
+<li>A lightweight virtual machine using a real Linux kernel</li>
+<li>Full system call compatibility</li>
+<li>Better performance (especially for I&#x2F;O work)</li>
+<li>Perfect Linux compatibility</li>
+<li>Fast speed</li>
+</ul>
+<p><strong>In most cases, WSL2 is recommended.</strong></p>
+<h2 id="Advantages-of-WSL"><a href="#Advantages-of-WSL" class="headerlink" title="Advantages of WSL"></a>Advantages of WSL</h2><h3 id="1-Integrated-Dev-Environment"><a href="#1-Integrated-Dev-Environment" class="headerlink" title="1. Integrated Dev Environment"></a>1. Integrated Dev Environment</h3><p>You can use Windows GUI applications and Linux command-line tools<br>together.</p>
+<h3 id="2-Resource-Efficiency"><a href="#2-Resource-Efficiency" class="headerlink" title="2. Resource Efficiency"></a>2. Resource Efficiency</h3><p>It uses far fewer resources than a virtual machine and has almost<br>no boot time.</p>
+<h3 id="3-File-System-Access"><a href="#3-File-System-Access" class="headerlink" title="3. File System Access"></a>3. File System Access</h3><p>Mutual access between the Windows and Linux file systems is<br>possible.</p>
+<h3 id="4-IDE-Integration"><a href="#4-IDE-Integration" class="headerlink" title="4. IDE Integration"></a>4. IDE Integration</h3><p>Major IDEs such as Visual Studio Code and IntelliJ support WSL<br>directly.</p>
+<h3 id="5-A-Full-Linux-Experience"><a href="#5-A-Full-Linux-Experience" class="headerlink" title="5. A Full Linux Experience"></a>5. A Full Linux Experience</h3><p>You can use package managers (apt, yum, etc.) and all Linux tools<br>as-is.</p>
+<h2 id="How-to-Install-WSL2"><a href="#How-to-Install-WSL2" class="headerlink" title="How to Install WSL2"></a>How to Install WSL2</h2><h3 id="Prerequisites"><a href="#Prerequisites" class="headerlink" title="Prerequisites"></a>Prerequisites</h3><ul>
+<li>Windows 10 version 2004 or later (build 19041 or later), or Windows 11</li>
+<li>A 64-bit processor</li>
+<li>Virtualization enabled (set in the BIOS)</li>
+</ul>
+<h3 id="Method-1-Simple-Install-Windows-11-recent-Windows-10"><a href="#Method-1-Simple-Install-Windows-11-recent-Windows-10" class="headerlink" title="Method 1: Simple Install (Windows 11 &amp; recent Windows 10)"></a>Method 1: Simple Install (Windows 11 &amp; recent Windows 10)</h3><p><strong>1. Run PowerShell as administrator</strong></p>
+<p><strong>2. Run the WSL install command</strong></p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wsl <span class="literal">--install</span></span><br></pre></td></tr></table></figure>
+
+<p>This command automatically:</p>
+<ul>
+<li>Enables the WSL feature</li>
+<li>Enables the Virtual Machine Platform</li>
+<li>Updates the Linux kernel</li>
+<li>Sets WSL2 as the default version</li>
+<li>Installs the Ubuntu distribution</li>
+</ul>
+<p><strong>3. Reboot the system</strong></p>
+<p><strong>4. Initial Ubuntu setup</strong><br>After rebooting, Ubuntu runs automatically and you set a username<br>and password.</p>
+<h3 id="Method-2-Manual-Install"><a href="#Method-2-Manual-Install" class="headerlink" title="Method 2: Manual Install"></a>Method 2: Manual Install</h3><p><strong>1. Enable the WSL feature</strong></p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dism.exe /online /<span class="built_in">enable-feature</span> /featurename:Microsoft<span class="literal">-Windows-Subsystem-Linux</span> /all /norestart</span><br></pre></td></tr></table></figure>
+
+<p><strong>2. Enable the Virtual Machine feature</strong></p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dism.exe /online /<span class="built_in">enable-feature</span> /featurename:VirtualMachinePlatform /all /norestart</span><br></pre></td></tr></table></figure>
+
+<p><strong>3. Reboot the system</strong></p>
+<p><strong>4. Download and install the Linux kernel update package</strong><br>Download and install the <a target="_blank" rel="noopener" href="https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi">WSL2 Linux kernel update package</a>.</p>
+<p><strong>5. Set WSL2 as the default version</strong></p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wsl <span class="literal">--set-default-version</span> <span class="number">2</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>6. Install a Linux distribution</strong><br>Search for and install the distribution you want from the Microsoft<br>Store:</p>
+<ul>
+<li><strong>Ubuntu</strong> (most popular)</li>
+<li><strong>Debian</strong></li>
+<li><strong>Kali Linux</strong></li>
+<li><strong>openSUSE</strong></li>
+<li><strong>Fedora</strong></li>
+<li><strong>Alpine Linux</strong></li>
+</ul>
+<h3 id="Installing-with-Chocolatey"><a href="#Installing-with-Chocolatey" class="headerlink" title="Installing with Chocolatey"></a>Installing with Chocolatey</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Install WSL2</span></span><br><span class="line">choco install wsl2 <span class="literal">-y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Install Ubuntu 22.04</span></span><br><span class="line">choco install wsl<span class="literal">-ubuntu-2204</span> <span class="literal">-y</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Basic-WSL-Commands"><a href="#Basic-WSL-Commands" class="headerlink" title="Basic WSL Commands"></a>Basic WSL Commands</h2><h3 id="Checking-Installed-Distributions"><a href="#Checking-Installed-Distributions" class="headerlink" title="Checking Installed Distributions"></a>Checking Installed Distributions</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">wsl <span class="literal">--list</span> <span class="literal">--verbose</span></span><br><span class="line"><span class="comment"># or</span></span><br><span class="line">wsl <span class="literal">-l</span> <span class="literal">-v</span></span><br></pre></td></tr></table></figure>
+
+<p>Example output:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">  NAME            STATE           VERSION</span><br><span class="line">* Ubuntu-22.04    Running         2</span><br><span class="line">  Ubuntu-20.04    Stopped         2</span><br></pre></td></tr></table></figure>
+
+<h3 id="Running-WSL"><a href="#Running-WSL" class="headerlink" title="Running WSL"></a>Running WSL</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Run the default distribution</span></span><br><span class="line">wsl</span><br><span class="line"></span><br><span class="line"><span class="comment"># Run a specific distribution</span></span><br><span class="line">wsl <span class="literal">-d</span> Ubuntu<span class="literal">-22</span>.<span class="number">04</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Run as a specific user</span></span><br><span class="line">wsl <span class="literal">-u</span> root</span><br></pre></td></tr></table></figure>
+
+<h3 id="Setting-the-Default-Distribution"><a href="#Setting-the-Default-Distribution" class="headerlink" title="Setting the Default Distribution"></a>Setting the Default Distribution</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wsl <span class="literal">--set-default</span> Ubuntu<span class="literal">-22</span>.<span class="number">04</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Shutting-Down-WSL"><a href="#Shutting-Down-WSL" class="headerlink" title="Shutting Down WSL"></a>Shutting Down WSL</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Shut down all distributions</span></span><br><span class="line">wsl <span class="literal">--shutdown</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Terminate a specific distribution</span></span><br><span class="line">wsl <span class="literal">--terminate</span> Ubuntu<span class="literal">-22</span>.<span class="number">04</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Removing-a-Distribution"><a href="#Removing-a-Distribution" class="headerlink" title="Removing a Distribution"></a>Removing a Distribution</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wsl <span class="literal">--unregister</span> Ubuntu<span class="literal">-22</span>.<span class="number">04</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Updating-the-WSL-Version"><a href="#Updating-the-WSL-Version" class="headerlink" title="Updating the WSL Version"></a>Updating the WSL Version</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wsl <span class="literal">--update</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Checking-the-WSL-Version"><a href="#Checking-the-WSL-Version" class="headerlink" title="Checking the WSL Version"></a>Checking the WSL Version</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wsl <span class="literal">--version</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Checking-WSL-Status"><a href="#Checking-WSL-Status" class="headerlink" title="Checking WSL Status"></a>Checking WSL Status</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wsl <span class="literal">--status</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Changing-the-WSL-Version-WSL1-↔-WSL2"><a href="#Changing-the-WSL-Version-WSL1-↔-WSL2" class="headerlink" title="Changing the WSL Version (WSL1 ↔ WSL2)"></a>Changing the WSL Version (WSL1 ↔ WSL2)</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Change WSL1 to WSL2</span></span><br><span class="line">wsl <span class="literal">--set-version</span> Ubuntu<span class="literal">-22</span>.<span class="number">04</span> <span class="number">2</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Change WSL2 to WSL1</span></span><br><span class="line">wsl <span class="literal">--set-version</span> Ubuntu<span class="literal">-22</span>.<span class="number">04</span> <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="File-System-Access"><a href="#File-System-Access" class="headerlink" title="File System Access"></a>File System Access</h2><h3 id="Accessing-Linux-Files-from-Windows"><a href="#Accessing-Linux-Files-from-Windows" class="headerlink" title="Accessing Linux Files from Windows"></a>Accessing Linux Files from Windows</h3><p><strong>Access in Explorer:</strong></p>
+<ul>
+<li>Enter <code>\\wsl$</code> in the address bar</li>
+<li>Or <code>\\wsl$\Ubuntu-22.04\home\username</code></li>
+</ul>
+<p><strong>Access in PowerShell:</strong></p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> \\wsl<span class="variable">$</span>\Ubuntu<span class="literal">-22</span>.<span class="number">04</span>\home\username</span><br></pre></td></tr></table></figure>
+
+<p><strong>Pin to the Explorer sidebar:</strong><br>In Explorer, right-click <code>\\wsl$\Ubuntu-22.04</code> → “Pin to Quick<br>access”</p>
+<h3 id="Accessing-Windows-Files-from-Linux"><a href="#Accessing-Windows-Files-from-Linux" class="headerlink" title="Accessing Windows Files from Linux"></a>Accessing Windows Files from Linux</h3><p>Windows drives are mounted under the <code>/mnt/</code> directory:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Access the C drive</span></span><br><span class="line"><span class="built_in">cd</span> /mnt/c/Users/username/Documents</span><br><span class="line"></span><br><span class="line"><span class="comment"># Access the D drive</span></span><br><span class="line"><span class="built_in">cd</span> /mnt/d/</span><br><span class="line"></span><br><span class="line"><span class="comment"># List Windows files</span></span><br><span class="line"><span class="built_in">ls</span> /mnt/c/</span><br></pre></td></tr></table></figure>
+
+<h3 id="Copying-Files"><a href="#Copying-Files" class="headerlink" title="Copying Files"></a>Copying Files</h3><p><strong>Windows → Linux:</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cp</span> /mnt/c/Users/username/file.txt ~/</span><br></pre></td></tr></table></figure>
+
+<p><strong>Linux → Windows:</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cp</span> ~/file.txt /mnt/c/Users/username/</span><br></pre></td></tr></table></figure>
+
+<h2 id="Integrating-Visual-Studio-Code-with-WSL"><a href="#Integrating-Visual-Studio-Code-with-WSL" class="headerlink" title="Integrating Visual Studio Code with WSL"></a>Integrating Visual Studio Code with WSL</h2><h3 id="Installing-the-WSL-Extension"><a href="#Installing-the-WSL-Extension" class="headerlink" title="Installing the WSL Extension"></a>Installing the WSL Extension</h3><ol>
+<li>Run VS Code</li>
+<li>Search Extensions for: “WSL”</li>
+<li>Install the “WSL” extension (provided by Microsoft)</li>
+</ol>
+<h3 id="Opening-VS-Code-from-WSL"><a href="#Opening-VS-Code-from-WSL" class="headerlink" title="Opening VS Code from WSL"></a>Opening VS Code from WSL</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Open the current directory in VS Code</span></span><br><span class="line">code .</span><br><span class="line"></span><br><span class="line"><span class="comment"># Open a specific file</span></span><br><span class="line">code file.txt</span><br><span class="line"></span><br><span class="line"><span class="comment"># Open in a new window</span></span><br><span class="line">code -n .</span><br></pre></td></tr></table></figure>
+
+<h3 id="Connecting-to-WSL-in-VS-Code"><a href="#Connecting-to-WSL-in-VS-Code" class="headerlink" title="Connecting to WSL in VS Code"></a>Connecting to WSL in VS Code</h3><ol>
+<li>Click “Open a Remote Window” at the bottom left (&gt;&lt;)</li>
+<li>Choose “Connect to WSL”</li>
+<li>Choose the distribution</li>
+</ol>
+<h3 id="The-VS-Code-WSL-Workflow"><a href="#The-VS-Code-WSL-Workflow" class="headerlink" title="The VS Code WSL Workflow"></a>The VS Code WSL Workflow</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Move to the project directory</span></span><br><span class="line"><span class="built_in">cd</span> ~/projects/myapp</span><br><span class="line"></span><br><span class="line"><span class="comment"># Run VS Code</span></span><br><span class="line">code .</span><br><span class="line"></span><br><span class="line"><span class="comment"># VS Code opens in WSL mode, and</span></span><br><span class="line"><span class="comment"># all terminal and file work runs in the Linux environment</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Using-WSL-with-Windows-Terminal"><a href="#Using-WSL-with-Windows-Terminal" class="headerlink" title="Using WSL with Windows Terminal"></a>Using WSL with Windows Terminal</h2><h3 id="Installing-Windows-Terminal"><a href="#Installing-Windows-Terminal" class="headerlink" title="Installing Windows Terminal"></a>Installing Windows Terminal</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">choco install microsoft<span class="literal">-windows-terminal</span> <span class="literal">-y</span></span><br></pre></td></tr></table></figure>
+
+<p>Or search for “Windows Terminal” in the Microsoft Store and install<br>it</p>
+<h3 id="Setting-WSL-as-the-Default-Profile"><a href="#Setting-WSL-as-the-Default-Profile" class="headerlink" title="Setting WSL as the Default Profile"></a>Setting WSL as the Default Profile</h3><ol>
+<li>Run Windows Terminal</li>
+<li>Settings (Ctrl + ,)</li>
+<li>“Startup” → “Default profile” → choose Ubuntu</li>
+<li>Save</li>
+</ol>
+<h3 id="Useful-Shortcuts"><a href="#Useful-Shortcuts" class="headerlink" title="Useful Shortcuts"></a>Useful Shortcuts</h3><table>
+<thead>
+<tr>
+<th>Shortcut</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Ctrl + Shift + T</code></td>
+<td>Open a new tab</td>
+</tr>
+<tr>
+<td><code>Ctrl + Shift + W</code></td>
+<td>Close a tab</td>
+</tr>
+<tr>
+<td><code>Ctrl + Tab</code></td>
+<td>Switch to the next tab</td>
+</tr>
+<tr>
+<td><code>Ctrl + Shift + Tab</code></td>
+<td>Switch to the previous tab</td>
+</tr>
+<tr>
+<td><code>Alt + Shift + -</code></td>
+<td>Split pane (horizontal)</td>
+</tr>
+<tr>
+<td><code>Alt + Shift + +</code></td>
+<td>Split pane (vertical)</td>
+</tr>
+<tr>
+<td><code>Alt + arrow keys</code></td>
+<td>Move between split panes</td>
+</tr>
+<tr>
+<td><code>Ctrl + ,</code></td>
+<td>Open settings</td>
+</tr>
+<tr>
+<td><code>Ctrl + Shift + P</code></td>
+<td>Command palette</td>
+</tr>
+</tbody></table>
+<h3 id="Customizing-the-Terminal-Profile"><a href="#Customizing-the-Terminal-Profile" class="headerlink" title="Customizing the Terminal Profile"></a>Customizing the Terminal Profile</h3><p>Edit the WSL profile in the settings file:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;profiles&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;list&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">            <span class="punctuation">&#123;</span></span><br><span class="line">                <span class="attr">&quot;guid&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&#123;...&#125;&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Ubuntu-22.04&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;source&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Windows.Terminal.Wsl&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;startingDirectory&quot;</span><span class="punctuation">:</span> <span class="string">&quot;~&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;colorScheme&quot;</span><span class="punctuation">:</span> <span class="string">&quot;One Half Dark&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;fontSize&quot;</span><span class="punctuation">:</span> <span class="number">11</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;fontFace&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Cascadia Code&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;opacity&quot;</span><span class="punctuation">:</span> <span class="number">95</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;useAcrylic&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">            <span class="punctuation">&#125;</span></span><br><span class="line">        <span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="WSL-Configuration-and-Optimization"><a href="#WSL-Configuration-and-Optimization" class="headerlink" title="WSL Configuration and Optimization"></a>WSL Configuration and Optimization</h2><h3 id="1-Setting-a-Memory-Limit"><a href="#1-Setting-a-Memory-Limit" class="headerlink" title="1. Setting a Memory Limit"></a>1. Setting a Memory Limit</h3><p>To limit the memory WSL2 uses, create a <code>.wslconfig</code> file:</p>
+<p><strong>Location:</strong> <code>C:\Users\username\.wslconfig</code></p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[wsl2]</span></span><br><span class="line"><span class="comment"># Maximum memory allocation (default: 50% of total memory)</span></span><br><span class="line"><span class="attr">memory</span>=<span class="number">4</span>GB</span><br><span class="line"></span><br><span class="line"><span class="comment"># Number of processor cores (default: all cores)</span></span><br><span class="line"><span class="attr">processors</span>=<span class="number">2</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Swap memory size</span></span><br><span class="line"><span class="attr">swap</span>=<span class="number">2</span>GB</span><br><span class="line"></span><br><span class="line"><span class="comment"># Enable localhost port forwarding</span></span><br><span class="line"><span class="attr">localhostForwarding</span>=<span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Virtual disk size limit (in TB)</span></span><br><span class="line"><span class="comment"># vmIdleTimeout=60000</span></span><br></pre></td></tr></table></figure>
+
+<p>Apply the settings:</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wsl <span class="literal">--shutdown</span></span><br></pre></td></tr></table></figure>
+
+<p>The new settings take effect on the next start.</p>
+<h3 id="2-Per-Distribution-Settings-etc-wsl-conf"><a href="#2-Per-Distribution-Settings-etc-wsl-conf" class="headerlink" title="2. Per-Distribution Settings (/etc/wsl.conf)"></a>2. Per-Distribution Settings (<code>/etc/wsl.conf</code>)</h3><p>You can make per-distribution settings by creating an<br><code>/etc/wsl.conf</code> file inside each distribution:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nano /etc/wsl.conf</span><br></pre></td></tr></table></figure>
+
+<p>Contents:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[boot]</span></span><br><span class="line"><span class="comment"># Use systemd (Ubuntu 22.04 and later)</span></span><br><span class="line"><span class="attr">systemd</span>=<span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="section">[automount]</span></span><br><span class="line"><span class="comment"># Auto-mount Windows drives</span></span><br><span class="line"><span class="attr">enabled</span> = <span class="literal">true</span></span><br><span class="line"><span class="attr">options</span> = <span class="string">&quot;metadata,umask=22,fmask=11&quot;</span></span><br><span class="line"><span class="attr">mountFsTab</span> = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Mount path (default: /mnt/)</span></span><br><span class="line"><span class="attr">root</span> = /mnt/</span><br><span class="line"></span><br><span class="line"><span class="section">[network]</span></span><br><span class="line"><span class="comment"># Auto-generate /etc/hosts</span></span><br><span class="line"><span class="attr">generateHosts</span> = <span class="literal">true</span></span><br><span class="line"><span class="comment"># Auto-generate /etc/resolv.conf</span></span><br><span class="line"><span class="attr">generateResolvConf</span> = <span class="literal">true</span></span><br><span class="line"><span class="comment"># Hostname</span></span><br><span class="line"><span class="attr">hostname</span> = wsl-ubuntu</span><br><span class="line"></span><br><span class="line"><span class="section">[interop]</span></span><br><span class="line"><span class="comment"># Allow running Windows programs</span></span><br><span class="line"><span class="attr">enabled</span> = <span class="literal">true</span></span><br><span class="line"><span class="comment"># Append the Windows PATH</span></span><br><span class="line"><span class="attr">appendWindowsPath</span> = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="section">[user]</span></span><br><span class="line"><span class="comment"># Default user setting</span></span><br><span class="line"><span class="attr">default</span> = username</span><br></pre></td></tr></table></figure>
+
+<p>Apply:</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wsl <span class="literal">--shutdown</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3-Changing-the-Default-User"><a href="#3-Changing-the-Default-User" class="headerlink" title="3. Changing the Default User"></a>3. Changing the Default User</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Start Ubuntu as root</span></span><br><span class="line">ubuntu config <span class="literal">--default-user</span> root</span><br><span class="line"></span><br><span class="line"><span class="comment"># Change back to a regular user</span></span><br><span class="line">ubuntu config <span class="literal">--default-user</span> username</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-Running-Windows-Commands"><a href="#4-Running-Windows-Commands" class="headerlink" title="4. Running Windows Commands"></a>4. Running Windows Commands</h3><p>Running Windows programs from WSL:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Open Explorer</span></span><br><span class="line">explorer.exe .</span><br><span class="line"></span><br><span class="line"><span class="comment"># Open Notepad</span></span><br><span class="line">notepad.exe file.txt</span><br><span class="line"></span><br><span class="line"><span class="comment"># Run a PowerShell command</span></span><br><span class="line">powershell.exe -Command <span class="string">&quot;Get-Process&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Run a cmd command</span></span><br><span class="line">cmd.exe /c <span class="built_in">dir</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Run a specific program</span></span><br><span class="line"><span class="string">&quot;/mnt/c/Program Files/Google/Chrome/Application/chrome.exe&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="WSL-Backup-and-Restore"><a href="#WSL-Backup-and-Restore" class="headerlink" title="WSL Backup and Restore"></a>WSL Backup and Restore</h2><h3 id="Backup-Export"><a href="#Backup-Export" class="headerlink" title="Backup (Export)"></a>Backup (Export)</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Back up a specific distribution</span></span><br><span class="line">wsl <span class="literal">--export</span> Ubuntu<span class="literal">-22</span>.<span class="number">04</span> D:\backup\ubuntu<span class="literal">-backup</span>.tar</span><br><span class="line"></span><br><span class="line"><span class="comment"># Compressed backup (gzip)</span></span><br><span class="line">wsl <span class="literal">--export</span> Ubuntu<span class="literal">-22</span>.<span class="number">04</span> D:\backup\ubuntu<span class="literal">-backup</span>.tar.gz</span><br></pre></td></tr></table></figure>
+
+<h3 id="Restore-Import"><a href="#Restore-Import" class="headerlink" title="Restore (Import)"></a>Restore (Import)</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Restore under a new name</span></span><br><span class="line">wsl <span class="literal">--import</span> Ubuntu<span class="literal">-Restored</span> D:\WSL\Ubuntu<span class="literal">-Restored</span> D:\backup\ubuntu<span class="literal">-backup</span>.tar</span><br><span class="line"></span><br><span class="line"><span class="comment"># Set as the default distribution</span></span><br><span class="line">wsl <span class="literal">--set-default</span> Ubuntu<span class="literal">-Restored</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Moving-a-Backed-Up-Distribution-to-Another-Computer"><a href="#Moving-a-Backed-Up-Distribution-to-Another-Computer" class="headerlink" title="Moving a Backed-Up Distribution to Another Computer"></a>Moving a Backed-Up Distribution to Another Computer</h3><ol>
+<li>Copy the tar file to a USB drive or the cloud</li>
+<li>Use the <code>wsl --import</code> command on the other computer</li>
+<li>The identical environment is restored right away</li>
+</ol>
+<h2 id="Performance-Optimization"><a href="#Performance-Optimization" class="headerlink" title="Performance Optimization"></a>Performance Optimization</h2><h3 id="1-Use-the-Linux-File-System"><a href="#1-Use-the-Linux-File-System" class="headerlink" title="1. Use the Linux File System"></a>1. Use the Linux File System</h3><p><strong>Recommended:</strong> Keep project files in the Linux file system (<code>~/</code>)</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">~/projects/myapp</span><br></pre></td></tr></table></figure>
+
+<p><strong>Not recommended:</strong> Using the Windows file system directly</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/mnt/c/Users/username/projects/myapp</span><br></pre></td></tr></table></figure>
+
+<p>The Linux file system is much faster in WSL2 (5–10x or more).</p>
+<h3 id="2-Add-Windows-Defender-Exclusions"><a href="#2-Add-Windows-Defender-Exclusions" class="headerlink" title="2. Add Windows Defender Exclusions"></a>2. Add Windows Defender Exclusions</h3><p>If Windows Defender real-time scans WSL files, performance drops.</p>
+<p><strong>Run PowerShell as administrator:</strong></p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Add a WSL file system exclusion</span></span><br><span class="line"><span class="built_in">Add-MpPreference</span> <span class="literal">-ExclusionPath</span> <span class="string">&quot;C:\Users\username\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu*\LocalState&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Add WSL process exclusions</span></span><br><span class="line"><span class="built_in">Add-MpPreference</span> <span class="literal">-ExclusionProcess</span> <span class="string">&quot;wsl.exe&quot;</span></span><br><span class="line"><span class="built_in">Add-MpPreference</span> <span class="literal">-ExclusionProcess</span> <span class="string">&quot;wslhost.exe&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3-Reclaiming-Disk-Space"><a href="#3-Reclaiming-Disk-Space" class="headerlink" title="3. Reclaiming Disk Space"></a>3. Reclaiming Disk Space</h3><p>WSL2 doesn’t automatically return used disk space. Reclaim it<br>manually:</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Shut down WSL</span></span><br><span class="line">wsl <span class="literal">--shutdown</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Run diskpart (as administrator)</span></span><br><span class="line">diskpart</span><br></pre></td></tr></table></figure>
+
+<p>Inside diskpart:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># Select the vhdx file (adjust the path to your environment)</span><br><span class="line">select vdisk file=&quot;C:\Users\username\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu22.04LTS_79rhkp1fndgsc\LocalState\ext4.vhdx&quot;</span><br><span class="line"></span><br><span class="line"># Compact the disk</span><br><span class="line">compact vdisk</span><br><span class="line"></span><br><span class="line"># Exit</span><br><span class="line">exit</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-Improving-Network-Performance"><a href="#4-Improving-Network-Performance" class="headerlink" title="4. Improving Network Performance"></a>4. Improving Network Performance</h3><p>Add the following settings to <code>.wslconfig</code>:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[wsl2]</span></span><br><span class="line"><span class="attr">networkingMode</span>=mirrored</span><br><span class="line"><span class="attr">dnsTunneling</span>=<span class="literal">true</span></span><br><span class="line"><span class="attr">firewall</span>=<span class="literal">true</span></span><br><span class="line"><span class="attr">autoProxy</span>=<span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Managing-Multiple-Distributions"><a href="#Managing-Multiple-Distributions" class="headerlink" title="Managing Multiple Distributions"></a>Managing Multiple Distributions</h2><h3 id="Using-Multiple-Distributions-at-Once"><a href="#Using-Multiple-Distributions-at-Once" class="headerlink" title="Using Multiple Distributions at Once"></a>Using Multiple Distributions at Once</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Run Ubuntu 22.04</span></span><br><span class="line">wsl <span class="literal">-d</span> Ubuntu<span class="literal">-22</span>.<span class="number">04</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Run Debian (in a new window)</span></span><br><span class="line">wsl <span class="literal">-d</span> Debian</span><br><span class="line"></span><br><span class="line"><span class="comment"># Distribution list</span></span><br><span class="line">wsl <span class="literal">-l</span> <span class="literal">-v</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Separating-Distributions-by-Purpose"><a href="#Separating-Distributions-by-Purpose" class="headerlink" title="Separating Distributions by Purpose"></a>Separating Distributions by Purpose</h3><ul>
+<li><strong>For development</strong>: Ubuntu 22.04</li>
+<li><strong>For testing</strong>: Ubuntu 20.04</li>
+<li><strong>Security testing</strong>: Kali Linux</li>
+<li><strong>A lightweight environment</strong>: Alpine Linux</li>
+</ul>
+<h3 id="Cloning-a-Distribution"><a href="#Cloning-a-Distribution" class="headerlink" title="Cloning a Distribution"></a>Cloning a Distribution</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. Back up the existing distribution</span></span><br><span class="line">wsl <span class="literal">--export</span> Ubuntu<span class="literal">-22</span>.<span class="number">04</span> D:\temp\ubuntu<span class="literal">-template</span>.tar</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. Import under new names</span></span><br><span class="line">wsl <span class="literal">--import</span> Ubuntu<span class="literal">-Dev</span> D:\WSL\Ubuntu<span class="literal">-Dev</span> D:\temp\ubuntu<span class="literal">-template</span>.tar</span><br><span class="line">wsl <span class="literal">--import</span> Ubuntu<span class="literal">-Test</span> D:\WSL\Ubuntu<span class="literal">-Test</span> D:\temp\ubuntu<span class="literal">-template</span>.tar</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. Use each distribution independently</span></span><br><span class="line">wsl <span class="literal">-d</span> Ubuntu<span class="literal">-Dev</span></span><br><span class="line">wsl <span class="literal">-d</span> Ubuntu<span class="literal">-Test</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Common-Troubleshooting"><a href="#Common-Troubleshooting" class="headerlink" title="Common Troubleshooting"></a>Common Troubleshooting</h2><h3 id="1-“WSL-2-requires-an-update-to-its-kernel-component”"><a href="#1-“WSL-2-requires-an-update-to-its-kernel-component”" class="headerlink" title="1. “WSL 2 requires an update to its kernel component”"></a>1. “WSL 2 requires an update to its kernel component”</h3><p>Manually install the Linux kernel update package:<br><a target="_blank" rel="noopener" href="https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi">Download link</a></p>
+<h3 id="2-Virtualization-Is-Not-Enabled"><a href="#2-Virtualization-Is-Not-Enabled" class="headerlink" title="2. Virtualization Is Not Enabled"></a>2. Virtualization Is Not Enabled</h3><p><strong>How to check:</strong></p>
+<ul>
+<li>Task Manager → Performance → CPU → check “Virtualization: Enabled”</li>
+</ul>
+<p><strong>How to fix:</strong></p>
+<ul>
+<li>Enter the BIOS&#x2F;UEFI (usually the Del, F2, or F10 key)</li>
+<li>Enable the Intel VT-x or AMD-V feature</li>
+<li>Check that Hyper-V is enabled</li>
+</ul>
+<h3 id="3-Network-Connection-Problems"><a href="#3-Network-Connection-Problems" class="headerlink" title="3. Network Connection Problems"></a>3. Network Connection Problems</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Restart WSL</span></span><br><span class="line">wsl <span class="literal">--shutdown</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Reset the network stack (as administrator)</span></span><br><span class="line">netsh winsock reset</span><br><span class="line">netsh int ip reset</span><br><span class="line">ipconfig /flushdns</span><br></pre></td></tr></table></figure>
+
+<p>Check after rebooting the system</p>
+<h3 id="4-DNS-Resolution-Failure"><a href="#4-DNS-Resolution-Failure" class="headerlink" title="4. DNS Resolution Failure"></a>4. DNS Resolution Failure</h3><p>Inside WSL:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Edit resolv.conf</span></span><br><span class="line"><span class="built_in">sudo</span> nano /etc/resolv.conf</span><br></pre></td></tr></table></figure>
+
+<p>Contents:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nameserver 8.8.8.8</span><br><span class="line">nameserver 8.8.4.4</span><br></pre></td></tr></table></figure>
+
+<p>Make it permanent:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> chattr +i /etc/resolv.conf</span><br></pre></td></tr></table></figure>
+
+<p>Or in <code>/etc/wsl.conf</code>:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[network]</span></span><br><span class="line"><span class="attr">generateResolvConf</span> = <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="5-“The-referenced-object-type-is-not-supported”"><a href="#5-“The-referenced-object-type-is-not-supported”" class="headerlink" title="5. “The referenced object type is not supported”"></a>5. “The referenced object type is not supported”</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># PowerShell as administrator</span></span><br><span class="line">netsh winsock reset</span><br></pre></td></tr></table></figure>
+
+<p>Reboot</p>
+<h3 id="6-WSL-Starts-Slowly"><a href="#6-WSL-Starts-Slowly" class="headerlink" title="6. WSL Starts Slowly"></a>6. WSL Starts Slowly</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Restart the WSL service</span></span><br><span class="line">wsl <span class="literal">--shutdown</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Reboot Windows</span></span><br></pre></td></tr></table></figure>
+
+<p>Check the memory&#x2F;processor limits in <code>.wslconfig</code></p>
+<h3 id="7-The-Port-Is-Already-in-Use"><a href="#7-The-Port-Is-Already-in-Use" class="headerlink" title="7. The Port Is Already in Use"></a>7. The Port Is Already in Use</h3><p>This occurs when Windows and WSL use the same port:</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Check port usage</span></span><br><span class="line">netstat <span class="literal">-ano</span> | findstr :port<span class="literal">-number</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Terminate the process</span></span><br><span class="line">taskkill /PID <span class="keyword">process</span><span class="literal">-id</span> /F</span><br></pre></td></tr></table></figure>
+
+<h2 id="Advanced-Usage"><a href="#Advanced-Usage" class="headerlink" title="Advanced Usage"></a>Advanced Usage</h2><h3 id="Running-an-SSH-Server-in-WSL"><a href="#Running-an-SSH-Server-in-WSL" class="headerlink" title="Running an SSH Server in WSL"></a>Running an SSH Server in WSL</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Install the SSH server</span></span><br><span class="line"><span class="built_in">sudo</span> apt install openssh-server -y</span><br><span class="line"></span><br><span class="line"><span class="comment"># Start the SSH service</span></span><br><span class="line"><span class="built_in">sudo</span> service ssh start</span><br><span class="line"></span><br><span class="line"><span class="comment"># Check the port</span></span><br><span class="line"><span class="built_in">sudo</span> service ssh status</span><br></pre></td></tr></table></figure>
+
+<p>Connect from Windows:</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh username@localhost</span><br></pre></td></tr></table></figure>
+
+<h3 id="Checking-and-Fixing-the-WSL-IP-Address"><a href="#Checking-and-Fixing-the-WSL-IP-Address" class="headerlink" title="Checking and Fixing the WSL IP Address"></a>Checking and Fixing the WSL IP Address</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Check the WSL IP</span></span><br><span class="line">hostname -I</span><br><span class="line"></span><br><span class="line"><span class="comment"># Or</span></span><br><span class="line">ip addr show eth0</span><br></pre></td></tr></table></figure>
+
+<p>Access a WSL service from Windows:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://localhost:port-number</span><br></pre></td></tr></table></figure>
+
+<p>WSL2 automatically supports localhost port forwarding.</p>
+<h3 id="Running-GUI-Applications-WSLg"><a href="#Running-GUI-Applications-WSLg" class="headerlink" title="Running GUI Applications (WSLg)"></a>Running GUI Applications (WSLg)</h3><p>On Windows 11, WSLg is supported by default:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Install a GUI app</span></span><br><span class="line"><span class="built_in">sudo</span> apt install gedit -y</span><br><span class="line"></span><br><span class="line"><span class="comment"># Run it (opens as a GUI on Windows)</span></span><br><span class="line">gedit</span><br><span class="line"></span><br><span class="line"><span class="comment"># Install a browser</span></span><br><span class="line"><span class="built_in">sudo</span> apt install firefox -y</span><br><span class="line">firefox</span><br></pre></td></tr></table></figure>
+
+<h2 id="Wrapping-Up"><a href="#Wrapping-Up" class="headerlink" title="Wrapping Up"></a>Wrapping Up</h2><p>WSL2 is the most efficient way to build a Linux development<br>environment on Windows. It provides both the full isolation of a<br>virtual machine and near-native performance, and it’s perfectly<br>compatible with most Linux tools.</p>
+<p>Since you can leverage the convenience of Windows and the power of<br>Linux at the same time, it’s ideal for cross-platform development<br>or testing server environments. Once set up, you can move smoothly<br>between Windows and Linux, greatly improving productivity.</p>
+<p>In particular, the integration with Visual Studio Code, the<br>excellent UX of Windows Terminal, and the two-way file system<br>accessibility make WSL2 an essential tool for developers.</p>
+<h3 id="References"><a href="#References" class="headerlink" title="References"></a>References</h3><ul>
+<li><a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/wsl/">WSL official documentation</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/microsoft/WSL">WSL GitHub</a></li>
+<li><a target="_blank" rel="noopener" href="https://ubuntu.com/wsl">Ubuntu WSL guide</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/terminal/">Windows Terminal documentation</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/Ubuntu/" rel="tag"># Ubuntu</a>
+              <a href="/tags/WSL/" rel="tag"># WSL</a>
+              <a href="/tags/Windows/" rel="tag"># Windows</a>
+              <a href="/tags/WSL2/" rel="tag"># WSL2</a>
+              <a href="/tags/Virtualization/" rel="tag"># Virtualization</a>
+              <a href="/tags/DevEnvironment/" rel="tag"># DevEnvironment</a>
+          </div>
+
+        
+
+
+        
+      <div class="post-nav">
+        <div class="post-nav-item">
+      <a href="/en/posts/java-record-class-guide/" rel="prev" title="A Complete Guide to Java Record Classes">
+        <i class="fa fa-chevron-left"></i> A Complete Guide to Java Record Classes
+      </a></div>
+        <div class="post-nav-item">
+      <a href="/en/posts/windows-package-manager-chocolatey/" rel="next" title="A Complete Guide to the Windows Package Manager Chocolatey">
+        A Complete Guide to the Windows Package Manager Chocolatey <i class="fa fa-chevron-right"></i>
+      </a></div>
+      </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#What-Is-WSL"><span class="nav-number">1.</span> <span class="nav-text">What Is WSL?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL1-vs-WSL2"><span class="nav-number">2.</span> <span class="nav-text">WSL1 vs WSL2</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL1"><span class="nav-number">2.1.</span> <span class="nav-text">WSL1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL2-recommended"><span class="nav-number">2.2.</span> <span class="nav-text">WSL2 (recommended)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Advantages-of-WSL"><span class="nav-number">3.</span> <span class="nav-text">Advantages of WSL</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Integrated-Dev-Environment"><span class="nav-number">3.1.</span> <span class="nav-text">1. Integrated Dev Environment</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Resource-Efficiency"><span class="nav-number">3.2.</span> <span class="nav-text">2. Resource Efficiency</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-File-System-Access"><span class="nav-number">3.3.</span> <span class="nav-text">3. File System Access</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-IDE-Integration"><span class="nav-number">3.4.</span> <span class="nav-text">4. IDE Integration</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-A-Full-Linux-Experience"><span class="nav-number">3.5.</span> <span class="nav-text">5. A Full Linux Experience</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#How-to-Install-WSL2"><span class="nav-number">4.</span> <span class="nav-text">How to Install WSL2</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Prerequisites"><span class="nav-number">4.1.</span> <span class="nav-text">Prerequisites</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Method-1-Simple-Install-Windows-11-recent-Windows-10"><span class="nav-number">4.2.</span> <span class="nav-text">Method 1: Simple Install (Windows 11 &amp; recent Windows 10)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Method-2-Manual-Install"><span class="nav-number">4.3.</span> <span class="nav-text">Method 2: Manual Install</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Installing-with-Chocolatey"><span class="nav-number">4.4.</span> <span class="nav-text">Installing with Chocolatey</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Basic-WSL-Commands"><span class="nav-number">5.</span> <span class="nav-text">Basic WSL Commands</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Checking-Installed-Distributions"><span class="nav-number">5.1.</span> <span class="nav-text">Checking Installed Distributions</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Running-WSL"><span class="nav-number">5.2.</span> <span class="nav-text">Running WSL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Setting-the-Default-Distribution"><span class="nav-number">5.3.</span> <span class="nav-text">Setting the Default Distribution</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Shutting-Down-WSL"><span class="nav-number">5.4.</span> <span class="nav-text">Shutting Down WSL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Removing-a-Distribution"><span class="nav-number">5.5.</span> <span class="nav-text">Removing a Distribution</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Updating-the-WSL-Version"><span class="nav-number">5.6.</span> <span class="nav-text">Updating the WSL Version</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Checking-the-WSL-Version"><span class="nav-number">5.7.</span> <span class="nav-text">Checking the WSL Version</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Checking-WSL-Status"><span class="nav-number">5.8.</span> <span class="nav-text">Checking WSL Status</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Changing-the-WSL-Version-WSL1-%E2%86%94-WSL2"><span class="nav-number">5.9.</span> <span class="nav-text">Changing the WSL Version (WSL1 ↔ WSL2)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#File-System-Access"><span class="nav-number">6.</span> <span class="nav-text">File System Access</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Accessing-Linux-Files-from-Windows"><span class="nav-number">6.1.</span> <span class="nav-text">Accessing Linux Files from Windows</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Accessing-Windows-Files-from-Linux"><span class="nav-number">6.2.</span> <span class="nav-text">Accessing Windows Files from Linux</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Copying-Files"><span class="nav-number">6.3.</span> <span class="nav-text">Copying Files</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Integrating-Visual-Studio-Code-with-WSL"><span class="nav-number">7.</span> <span class="nav-text">Integrating Visual Studio Code with WSL</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Installing-the-WSL-Extension"><span class="nav-number">7.1.</span> <span class="nav-text">Installing the WSL Extension</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Opening-VS-Code-from-WSL"><span class="nav-number">7.2.</span> <span class="nav-text">Opening VS Code from WSL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Connecting-to-WSL-in-VS-Code"><span class="nav-number">7.3.</span> <span class="nav-text">Connecting to WSL in VS Code</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#The-VS-Code-WSL-Workflow"><span class="nav-number">7.4.</span> <span class="nav-text">The VS Code WSL Workflow</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Using-WSL-with-Windows-Terminal"><span class="nav-number">8.</span> <span class="nav-text">Using WSL with Windows Terminal</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Installing-Windows-Terminal"><span class="nav-number">8.1.</span> <span class="nav-text">Installing Windows Terminal</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Setting-WSL-as-the-Default-Profile"><span class="nav-number">8.2.</span> <span class="nav-text">Setting WSL as the Default Profile</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Useful-Shortcuts"><span class="nav-number">8.3.</span> <span class="nav-text">Useful Shortcuts</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Customizing-the-Terminal-Profile"><span class="nav-number">8.4.</span> <span class="nav-text">Customizing the Terminal Profile</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL-Configuration-and-Optimization"><span class="nav-number">9.</span> <span class="nav-text">WSL Configuration and Optimization</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Setting-a-Memory-Limit"><span class="nav-number">9.1.</span> <span class="nav-text">1. Setting a Memory Limit</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Per-Distribution-Settings-etc-wsl-conf"><span class="nav-number">9.2.</span> <span class="nav-text">2. Per-Distribution Settings (&#x2F;etc&#x2F;wsl.conf)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Changing-the-Default-User"><span class="nav-number">9.3.</span> <span class="nav-text">3. Changing the Default User</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-Running-Windows-Commands"><span class="nav-number">9.4.</span> <span class="nav-text">4. Running Windows Commands</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WSL-Backup-and-Restore"><span class="nav-number">10.</span> <span class="nav-text">WSL Backup and Restore</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Backup-Export"><span class="nav-number">10.1.</span> <span class="nav-text">Backup (Export)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Restore-Import"><span class="nav-number">10.2.</span> <span class="nav-text">Restore (Import)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Moving-a-Backed-Up-Distribution-to-Another-Computer"><span class="nav-number">10.3.</span> <span class="nav-text">Moving a Backed-Up Distribution to Another Computer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Performance-Optimization"><span class="nav-number">11.</span> <span class="nav-text">Performance Optimization</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Use-the-Linux-File-System"><span class="nav-number">11.1.</span> <span class="nav-text">1. Use the Linux File System</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Add-Windows-Defender-Exclusions"><span class="nav-number">11.2.</span> <span class="nav-text">2. Add Windows Defender Exclusions</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Reclaiming-Disk-Space"><span class="nav-number">11.3.</span> <span class="nav-text">3. Reclaiming Disk Space</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-Improving-Network-Performance"><span class="nav-number">11.4.</span> <span class="nav-text">4. Improving Network Performance</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Managing-Multiple-Distributions"><span class="nav-number">12.</span> <span class="nav-text">Managing Multiple Distributions</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Using-Multiple-Distributions-at-Once"><span class="nav-number">12.1.</span> <span class="nav-text">Using Multiple Distributions at Once</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Separating-Distributions-by-Purpose"><span class="nav-number">12.2.</span> <span class="nav-text">Separating Distributions by Purpose</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Cloning-a-Distribution"><span class="nav-number">12.3.</span> <span class="nav-text">Cloning a Distribution</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Common-Troubleshooting"><span class="nav-number">13.</span> <span class="nav-text">Common Troubleshooting</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E2%80%9CWSL-2-requires-an-update-to-its-kernel-component%E2%80%9D"><span class="nav-number">13.1.</span> <span class="nav-text">1. “WSL 2 requires an update to its kernel component”</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Virtualization-Is-Not-Enabled"><span class="nav-number">13.2.</span> <span class="nav-text">2. Virtualization Is Not Enabled</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Network-Connection-Problems"><span class="nav-number">13.3.</span> <span class="nav-text">3. Network Connection Problems</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-DNS-Resolution-Failure"><span class="nav-number">13.4.</span> <span class="nav-text">4. DNS Resolution Failure</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E2%80%9CThe-referenced-object-type-is-not-supported%E2%80%9D"><span class="nav-number">13.5.</span> <span class="nav-text">5. “The referenced object type is not supported”</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-WSL-Starts-Slowly"><span class="nav-number">13.6.</span> <span class="nav-text">6. WSL Starts Slowly</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-The-Port-Is-Already-in-Use"><span class="nav-number">13.7.</span> <span class="nav-text">7. The Port Is Already in Use</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Advanced-Usage"><span class="nav-number">14.</span> <span class="nav-text">Advanced Usage</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Running-an-SSH-Server-in-WSL"><span class="nav-number">14.1.</span> <span class="nav-text">Running an SSH Server in WSL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Checking-and-Fixing-the-WSL-IP-Address"><span class="nav-number">14.2.</span> <span class="nav-text">Checking and Fixing the WSL IP Address</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Running-GUI-Applications-WSLg"><span class="nav-number">14.3.</span> <span class="nav-text">Running GUI Applications (WSLg)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Wrapping-Up"><span class="nav-number">15.</span> <span class="nav-text">Wrapping Up</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#References"><span class="nav-number">15.1.</span> <span class="nav-text">References</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">429</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">650</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="languages">
+    <label class="lang-select-label">
+      <i class="fa fa-language"></i>
+      <span>English</span>
+      <i class="fa fa-angle-up" aria-hidden="true"></i>
+    </label>
+    <select class="lang-select" data-canonical="">
+      
+        <option value="ko" data-href="/posts/windows-subsystem-for-linux-guide/" selected="">
+          한국어
+        </option>
+      
+        <option value="en" data-href="/en/posts/windows-subsystem-for-linux-guide/" selected="">
+          English
+        </option>
+      
+    </select>
+  </div>
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

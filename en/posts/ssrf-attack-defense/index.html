@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="How SSRF works, real-world damage cases like cloud metadata theft, and a robust defense strategy that even blocks DNS Rebinding.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SSRF Attacks and Defense: Request Forgery Targeting the Internal Network">
+<meta property="og:url" content="https://ew32.github.io/en/posts/ssrf-attack-defense/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="How SSRF works, real-world damage cases like cloud metadata theft, and a robust defense strategy that even blocks DNS Rebinding.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-04-27T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-22T14:03:12.803Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Web Security">
+<meta property="article:tag" content="SSRF">
+<meta property="article:tag" content="Cloud Security">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/en/posts/ssrf-attack-defense/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1041908788954754" crossorigin="anonymous"></script>
+
+  <title>SSRF Attacks and Defense: Request Forgery Targeting the Internal Network | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/ssrf-attack-defense/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SSRF Attacks and Defense: Request Forgery Targeting the Internal Network
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2026-04-27 10:00:00" itemprop="dateCreated datePublished" datetime="2026-04-27T10:00:00+09:00">2026-04-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Security/" itemprop="url" rel="index"><span itemprop="name">Security</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Security/Cryptography/" itemprop="url" rel="index"><span itemprop="name">Cryptography</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">How SSRF works, real-world damage cases like cloud metadata theft, and a robust defense strategy that even blocks DNS Rebinding.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="What-Is-SSRF"><a href="#What-Is-SSRF" class="headerlink" title="What Is SSRF?"></a>What Is SSRF?</h2><p>SSRF (Server-Side Request Forgery) is a vulnerability where an<br>attacker tricks a server-side application into sending an HTTP<br>request to an arbitrary URL. The common pattern arises when the<br>server fetches a user-supplied URL as-is.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Vulnerable code</span></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/preview&#x27;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">preview</span>():</span><br><span class="line">    url = request.args.get(<span class="string">&#x27;url&#x27;</span>)</span><br><span class="line">    response = requests.get(url)  <span class="comment"># uses user input directly</span></span><br><span class="line">    <span class="keyword">return</span> response.text</span><br></pre></td></tr></table></figure>
+
+<p>An attacker can point at an internal metadata endpoint like<br><code>?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/</code><br>to steal AWS credentials.</p>
+<h2 id="A-Real-World-Damage-Case"><a href="#A-Real-World-Damage-Case" class="headerlink" title="A Real-World Damage Case"></a>A Real-World Damage Case</h2><p>The 2019 Capital One incident is the canonical example: an SSRF<br>stole an IAM token from EC2 IMDSv1 and leaked over 100 million<br>records from S3 buckets. It was shocking proof that a single SSRF<br>can expose an entire cloud infrastructure.</p>
+<p>SSRF attacks aim at varied targets.</p>
+<ul>
+<li>Cloud metadata (<code>169.254.169.254</code>, the GCP&#x2F;Azure equivalent endpoints)</li>
+<li>Internal management APIs (Consul, etcd — e.g. <code>http://localhost:8500/v1/kv/...</code>)</li>
+<li>Intranet services (<code>http://10.0.0.5/admin</code>)</li>
+<li>The file protocol (<code>file:///etc/passwd</code>)</li>
+</ul>
+<h2 id="Basic-Defense-—-An-Insufficient-Approach"><a href="#Basic-Defense-—-An-Insufficient-Approach" class="headerlink" title="Basic Defense — An Insufficient Approach"></a>Basic Defense — An Insufficient Approach</h2><p>A commonly attempted defense is to parse the URL and check whether<br>the host is a private IP.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> ipaddress</span><br><span class="line"><span class="keyword">from</span> urllib.parse <span class="keyword">import</span> urlparse</span><br><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">is_safe_url</span>(<span class="params">url</span>):</span><br><span class="line">    parsed = urlparse(url)</span><br><span class="line">    <span class="keyword">if</span> parsed.scheme <span class="keyword">not</span> <span class="keyword">in</span> (<span class="string">&#x27;http&#x27;</span>, <span class="string">&#x27;https&#x27;</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">    host = parsed.hostname</span><br><span class="line">    ip = ipaddress.ip_address(socket.gethostbyname(host))</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">not</span> (ip.is_private <span class="keyword">or</span> ip.is_loopback <span class="keyword">or</span> ip.is_link_local <span class="keyword">or</span> ip.is_reserved)</span><br></pre></td></tr></table></figure>
+
+<p>There are two problems.</p>
+<ol>
+<li><strong>TOCTOU</strong>: the DNS result at check time may differ from the<br>result at request time (DNS Rebinding).</li>
+<li><strong>Bypass techniques</strong>: decimal IPs (<code>http://2852039166/</code>), IPv6<br>mapping, redirect chaining, and more.</li>
+</ol>
+<h2 id="A-Robust-Defense-Strategy"><a href="#A-Robust-Defense-Strategy" class="headerlink" title="A Robust Defense Strategy"></a>A Robust Defense Strategy</h2><p>You need layered defense.</p>
+<h3 id="1-An-Allowlist"><a href="#1-An-Allowlist" class="headerlink" title="1. An Allowlist"></a>1. An Allowlist</h3><p>If possible, explicitly limit the domains you can call. An allowlist<br>is always safer than a blocklist.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ALLOWED_HOSTS = &#123;<span class="string">&#x27;images.example.com&#x27;</span>, <span class="string">&#x27;cdn.example.com&#x27;</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">is_allowed</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="keyword">return</span> urlparse(url).hostname <span class="keyword">in</span> ALLOWED_HOSTS</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-Pinning-the-DNS-Result"><a href="#2-Pinning-the-DNS-Result" class="headerlink" title="2. Pinning the DNS Result"></a>2. Pinning the DNS Result</h3><p>To stop DNS Rebinding, resolve the IP yourself, then make the<br>connection to that IP and set only the Host header to the original<br>hostname.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> urllib3.util <span class="keyword">import</span> connection</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">patched_resolve</span>(<span class="params">host, *args, **kwargs</span>):</span><br><span class="line">    ip = safe_resolve(host)  <span class="comment"># raises if private/reserved IP</span></span><br><span class="line">    <span class="keyword">return</span> ip</span><br></pre></td></tr></table></figure>
+
+<p>For Python’s <code>requests</code>, you hook <code>urllib3</code>‘s connection pool.</p>
+<h3 id="3-Handling-Redirects"><a href="#3-Handling-Redirects" class="headerlink" title="3. Handling Redirects"></a>3. Handling Redirects</h3><p>If the server responds with a 30x redirect, the client re-requests<br>the new URL. So you must repeat the same validation on every<br>redirect.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">session = requests.Session()</span><br><span class="line">session.max_redirects = <span class="number">3</span></span><br><span class="line">response = session.get(url, allow_redirects=<span class="literal">False</span>)</span><br><span class="line"><span class="keyword">while</span> response.is_redirect:</span><br><span class="line">    next_url = response.headers[<span class="string">&#x27;Location&#x27;</span>]</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> is_allowed(next_url):</span><br><span class="line">        <span class="keyword">raise</span> Exception(<span class="string">&#x27;Blocked redirect&#x27;</span>)</span><br><span class="line">    response = session.get(next_url, allow_redirects=<span class="literal">False</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-Protecting-Metadata"><a href="#4-Protecting-Metadata" class="headerlink" title="4. Protecting Metadata"></a>4. Protecting Metadata</h3><p>On AWS you should use IMDSv2 (session-token based). IMDSv2 requires<br>obtaining a token via a PUT request and including the token header<br>on GET requests, so a simple SSRF can’t easily steal credentials.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Enforce IMDSv2</span></span><br><span class="line">aws ec2 modify-instance-metadata-options \</span><br><span class="line">  --instance-id i-xxx --http-tokens required --http-endpoint enabled</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-Network-Isolation"><a href="#5-Network-Isolation" class="headerlink" title="5. Network Isolation"></a>5. Network Isolation</h3><p>The strongest defense is at the network level. Place a dedicated<br>proxy for outbound calls, and block egress from the application<br>subnet to internal metadata&#x2F;management IPs. Enforcing this with<br>security groups and VPC routing prevents damage even when there’s a<br>code bug.</p>
+<h2 id="A-Review-Checklist"><a href="#A-Review-Checklist" class="headerlink" title="A Review Checklist"></a>A Review Checklist</h2><ul>
+<li>Do you avoid directly fetching user-input URLs?</li>
+<li>Do you block private&#x2F;link-local&#x2F;reserved IPs?</li>
+<li>Is there a DNS Rebinding countermeasure?</li>
+<li>Do you re-validate on every redirect?</li>
+<li>Are you enforcing IMDSv2?</li>
+<li>Is there an egress policy for outbound calls?</li>
+</ul>
+<h2 id="Wrapping-Up"><a href="#Wrapping-Up" class="headerlink" title="Wrapping Up"></a>Wrapping Up</h2><p>SSRF is a powerful vulnerability that can start from a simple URL<br>parameter and threaten an entire cloud. Only when you apply<br>code-level validation, network segmentation, and cloud<br>configuration (IMDSv2) together are you truly safe.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Web-Security/" rel="tag"># Web Security</a>
+              <a href="/tags/SSRF/" rel="tag"># SSRF</a>
+              <a href="/tags/Cloud-Security/" rel="tag"># Cloud Security</a>
+          </div>
+
+        
+
+
+        
+      <div class="post-nav">
+        <div class="post-nav-item">
+      <a href="/en/posts/xxe-attack-prevention/" rel="prev" title="XXE Attacks and Defense: Safe XML Parser Configuration">
+        <i class="fa fa-chevron-left"></i> XXE Attacks and Defense: Safe XML Parser Configuration
+      </a></div>
+        <div class="post-nav-item">
+      <a href="/en/posts/rbac-vs-abac/" rel="next" title="RBAC vs ABAC - Role-Based vs Attribute-Based Access Control">
+        RBAC vs ABAC - Role-Based vs Attribute-Based Access Control <i class="fa fa-chevron-right"></i>
+      </a></div>
+      </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#What-Is-SSRF"><span class="nav-number">1.</span> <span class="nav-text">What Is SSRF?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#A-Real-World-Damage-Case"><span class="nav-number">2.</span> <span class="nav-text">A Real-World Damage Case</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Basic-Defense-%E2%80%94-An-Insufficient-Approach"><span class="nav-number">3.</span> <span class="nav-text">Basic Defense — An Insufficient Approach</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#A-Robust-Defense-Strategy"><span class="nav-number">4.</span> <span class="nav-text">A Robust Defense Strategy</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-An-Allowlist"><span class="nav-number">4.1.</span> <span class="nav-text">1. An Allowlist</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Pinning-the-DNS-Result"><span class="nav-number">4.2.</span> <span class="nav-text">2. Pinning the DNS Result</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Handling-Redirects"><span class="nav-number">4.3.</span> <span class="nav-text">3. Handling Redirects</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-Protecting-Metadata"><span class="nav-number">4.4.</span> <span class="nav-text">4. Protecting Metadata</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-Network-Isolation"><span class="nav-number">4.5.</span> <span class="nav-text">5. Network Isolation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#A-Review-Checklist"><span class="nav-number">5.</span> <span class="nav-text">A Review Checklist</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Wrapping-Up"><span class="nav-number">6.</span> <span class="nav-text">Wrapping Up</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">429</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">650</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="languages">
+    <label class="lang-select-label">
+      <i class="fa fa-language"></i>
+      <span>English</span>
+      <i class="fa fa-angle-up" aria-hidden="true"></i>
+    </label>
+    <select class="lang-select" data-canonical="">
+      
+        <option value="ko" data-href="/posts/ssrf-attack-defense/" selected="">
+          한국어
+        </option>
+      
+        <option value="en" data-href="/en/posts/ssrf-attack-defense/" selected="">
+          English
+        </option>
+      
+    </select>
+  </div>
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

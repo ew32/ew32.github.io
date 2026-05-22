@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="A comprehensive guide to maximizing web performance through modern image formats and loading strategies.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Web Image Optimization Strategies - WebP, AVIF, and Lazy Loading">
+<meta property="og:url" content="https://ew32.github.io/en/posts/image-optimization-strategies/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="A comprehensive guide to maximizing web performance through modern image formats and loading strategies.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-05-22T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-22T14:03:12.797Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Performance">
+<meta property="article:tag" content="WebP">
+<meta property="article:tag" content="AVIF">
+<meta property="article:tag" content="Image Optimization">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/en/posts/image-optimization-strategies/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1041908788954754" crossorigin="anonymous"></script>
+
+  <title>Web Image Optimization Strategies - WebP, AVIF, and Lazy Loading | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/image-optimization-strategies/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Web Image Optimization Strategies - WebP, AVIF, and Lazy Loading
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2026-05-22 11:00:00 / Modified: 23:03:12" itemprop="dateCreated datePublished" datetime="2026-05-22T11:00:00+09:00">2026-05-22</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Frontend/HTML/" itemprop="url" rel="index"><span itemprop="name">HTML</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">A comprehensive guide to maximizing web performance through modern image formats and loading strategies.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Why-Image-Optimization-Matters"><a href="#Why-Image-Optimization-Matters" class="headerlink" title="Why Image Optimization Matters"></a>Why Image Optimization Matters</h2><p>On average, <strong>over half</strong> of a web page’s transferred bytes are<br>images. HTTP Archive stats put the average image payload per page<br>above 1MB — the single biggest contributor to LCP. Image optimization<br>is the area with the highest performance gain per unit of effort.</p>
+<h2 id="Next-Generation-Image-Formats"><a href="#Next-Generation-Image-Formats" class="headerlink" title="Next-Generation Image Formats"></a>Next-Generation Image Formats</h2><h3 id="WebP"><a href="#WebP" class="headerlink" title="WebP"></a>WebP</h3><p>A format Google released in 2010, offering 25–35% smaller files than<br>JPEG.</p>
+<ul>
+<li><strong>Pros</strong>: supported in every modern browser (96%+), lossy&#x2F;lossless both, alpha channel</li>
+<li><strong>Cons</strong>: not supported in some older browsers</li>
+</ul>
+<h3 id="AVIF"><a href="#AVIF" class="headerlink" title="AVIF"></a>AVIF</h3><p>A newer format based on the AV1 codec, roughly 20–30% smaller than<br>WebP.</p>
+<ul>
+<li><strong>Pros</strong>: best compression, HDR support, wide color gamut</li>
+<li><strong>Cons</strong>: slow to encode, not in all browsers yet</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Avg size (vs JPEG)</th>
+<th>Browser support</th>
+<th>Alpha channel</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>JPEG</td>
+<td>100%</td>
+<td>100%</td>
+<td>No</td>
+</tr>
+<tr>
+<td>WebP</td>
+<td>70%</td>
+<td>96%</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>AVIF</td>
+<td>50%</td>
+<td>90%</td>
+<td>Yes</td>
+</tr>
+</tbody></table>
+<h2 id="Format-Fallback-with-picture"><a href="#Format-Fallback-with-picture" class="headerlink" title="Format Fallback with picture"></a>Format Fallback with picture</h2><p>To use modern formats while keeping compatibility, use <code>&lt;picture&gt;</code>.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">picture</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">source</span> <span class="attr">srcset</span>=<span class="string">&quot;/image.avif&quot;</span> <span class="attr">type</span>=<span class="string">&quot;image/avif&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">source</span> <span class="attr">srcset</span>=<span class="string">&quot;/image.webp&quot;</span> <span class="attr">type</span>=<span class="string">&quot;image/webp&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">&quot;/image.jpg&quot;</span> <span class="attr">alt</span>=<span class="string">&quot;Description&quot;</span> <span class="attr">width</span>=<span class="string">&quot;800&quot;</span> <span class="attr">height</span>=<span class="string">&quot;600&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">picture</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>The browser walks top-down and picks the first format it supports —<br>falling back to the trailing <code>&lt;img&gt;</code> if none are supported.</p>
+<h2 id="Responsive-Images"><a href="#Responsive-Images" class="headerlink" title="Responsive Images"></a>Responsive Images</h2><p>Serving the right size for the right screen prevents sending huge<br>images to mobile.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span></span></span><br><span class="line"><span class="tag">  <span class="attr">src</span>=<span class="string">&quot;/photo-800.jpg&quot;</span></span></span><br><span class="line"><span class="tag">  <span class="attr">srcset</span>=<span class="string">&quot;/photo-400.jpg 400w,</span></span></span><br><span class="line"><span class="string"><span class="tag">          /photo-800.jpg 800w,</span></span></span><br><span class="line"><span class="string"><span class="tag">          /photo-1600.jpg 1600w&quot;</span></span></span><br><span class="line"><span class="tag">  <span class="attr">sizes</span>=<span class="string">&quot;(max-width: 600px) 100vw,</span></span></span><br><span class="line"><span class="string"><span class="tag">         (max-width: 1200px) 50vw,</span></span></span><br><span class="line"><span class="string"><span class="tag">         800px&quot;</span></span></span><br><span class="line"><span class="tag">  <span class="attr">alt</span>=<span class="string">&quot;Responsive image example&quot;</span></span></span><br><span class="line"><span class="tag">  <span class="attr">width</span>=<span class="string">&quot;800&quot;</span> <span class="attr">height</span>=<span class="string">&quot;600&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>srcset</strong>: candidate images with their intrinsic widths</li>
+<li><strong>sizes</strong>: the actual display size at each viewport</li>
+</ul>
+<h2 id="Lazy-Loading"><a href="#Lazy-Loading" class="headerlink" title="Lazy Loading"></a>Lazy Loading</h2><p>Defer images that aren’t on-screen to speed up initial load.</p>
+<h3 id="Native-Lazy-Loading"><a href="#Native-Lazy-Loading" class="headerlink" title="Native Lazy Loading"></a>Native Lazy Loading</h3><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">&quot;/image.jpg&quot;</span> <span class="attr">alt</span>=<span class="string">&quot;Description&quot;</span> <span class="attr">loading</span>=<span class="string">&quot;lazy&quot;</span> <span class="attr">width</span>=<span class="string">&quot;800&quot;</span> <span class="attr">height</span>=<span class="string">&quot;600&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>loading=&quot;lazy&quot;</code>: load when the image scrolls near the viewport</li>
+<li><code>loading=&quot;eager&quot;</code>: load immediately (default)</li>
+<li><strong>Never use lazy on the LCP&#x2F;above-the-fold image</strong></li>
+</ul>
+<h3 id="Using-IntersectionObserver"><a href="#Using-IntersectionObserver" class="headerlink" title="Using IntersectionObserver"></a>Using IntersectionObserver</h3><p>For finer control, use IntersectionObserver.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> observer = <span class="keyword">new</span> <span class="title class_">IntersectionObserver</span>(<span class="function">(<span class="params">entries</span>) =&gt;</span> &#123;</span><br><span class="line">  entries.<span class="title function_">forEach</span>(<span class="function"><span class="params">entry</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (entry.<span class="property">isIntersecting</span>) &#123;</span><br><span class="line">      <span class="keyword">const</span> img = entry.<span class="property">target</span>;</span><br><span class="line">      img.<span class="property">src</span> = img.<span class="property">dataset</span>.<span class="property">src</span>;</span><br><span class="line">      observer.<span class="title function_">unobserve</span>(img);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;, &#123; <span class="attr">rootMargin</span>: <span class="string">&#x27;200px&#x27;</span> &#125;);</span><br><span class="line"></span><br><span class="line"><span class="variable language_">document</span>.<span class="title function_">querySelectorAll</span>(<span class="string">&#x27;img[data-src]&#x27;</span>).<span class="title function_">forEach</span>(<span class="function"><span class="params">img</span> =&gt;</span> &#123;</span><br><span class="line">  observer.<span class="title function_">observe</span>(img);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="fetchpriority-and-preload"><a href="#fetchpriority-and-preload" class="headerlink" title="fetchpriority and preload"></a>fetchpriority and preload</h2><p>Boost critical resources like the LCP image with explicit priority.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">&quot;preload&quot;</span> <span class="attr">as</span>=<span class="string">&quot;image&quot;</span> <span class="attr">href</span>=<span class="string">&quot;/hero.webp&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">imagesrcset</span>=<span class="string">&quot;/hero-400.webp 400w, /hero-800.webp 800w&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">imagesizes</span>=<span class="string">&quot;100vw&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">&quot;/hero.webp&quot;</span> <span class="attr">alt</span>=<span class="string">&quot;Hero&quot;</span> <span class="attr">fetchpriority</span>=<span class="string">&quot;high&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Using-an-Image-CDN"><a href="#Using-an-Image-CDN" class="headerlink" title="Using an Image CDN"></a>Using an Image CDN</h2><p>An image CDN does format conversion, resizing, and compression<br>dynamically through URL parameters.</p>
+<ul>
+<li><strong>Cloudinary</strong>: <code>f_auto,q_auto,w_800</code></li>
+<li><strong>Imgix</strong>: <code>?auto=format&amp;w=800</code></li>
+<li><strong>Cloudflare Images</strong>: auto-optimization</li>
+</ul>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">&quot;https://res.cloudinary.com/demo/image/upload/f_auto,q_auto,w_800/sample.jpg&quot;</span></span></span><br><span class="line"><span class="tag">     <span class="attr">alt</span>=<span class="string">&quot;Auto-optimized image&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="SVG-and-Icon-Optimization"><a href="#SVG-and-Icon-Optimization" class="headerlink" title="SVG and Icon Optimization"></a>SVG and Icon Optimization</h2><p>Use <strong>SVG</strong> for icons whenever possible and optimize with SVGO.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npx svgo input.svg -o output.svg</span><br></pre></td></tr></table></figure>
+
+<p>Inline SVG cuts an extra request and can be colored via CSS.</p>
+<h2 id="Best-Practice-Checklist"><a href="#Best-Practice-Checklist" class="headerlink" title="Best-Practice Checklist"></a>Best-Practice Checklist</h2><ul>
+<li>Set <code>width</code> and <code>height</code> on every image (prevents CLS)</li>
+<li>Provide WebP&#x2F;AVIF with a JPEG fallback</li>
+<li>Handle responsiveness with <code>srcset</code> and <code>sizes</code></li>
+<li>LCP image: <code>fetchpriority=&quot;high&quot;</code> + preload</li>
+<li>Off-screen images: <code>loading=&quot;lazy&quot;</code></li>
+<li>Meaningful <code>alt</code> (accessibility)</li>
+<li>Consider an image CDN</li>
+</ul>
+<h2 id="Wrapping-Up"><a href="#Wrapping-Up" class="headerlink" title="Wrapping Up"></a>Wrapping Up</h2><p>Image optimization breaks into three axes: <strong>format choice, sizing,<br>and loading strategy</strong>. Combining AVIF&#x2F;WebP adoption, responsive<br>images, and lazy loading typically halves page weight and<br>dramatically improves LCP.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Performance/" rel="tag"># Performance</a>
+              <a href="/tags/WebP/" rel="tag"># WebP</a>
+              <a href="/tags/AVIF/" rel="tag"># AVIF</a>
+              <a href="/tags/Image-Optimization/" rel="tag"># Image Optimization</a>
+          </div>
+
+        
+
+
+        
+      <div class="post-nav">
+        <div class="post-nav-item">
+      <a href="/en/posts/code-splitting-guide/" rel="prev" title="A Guide to Code Splitting and Dynamic Imports">
+        <i class="fa fa-chevron-left"></i> A Guide to Code Splitting and Dynamic Imports
+      </a></div>
+        <div class="post-nav-item">
+      <a href="/en/posts/grpc-introduction/" rel="next" title="Getting Started with gRPC and Protocol Buffers">
+        Getting Started with gRPC and Protocol Buffers <i class="fa fa-chevron-right"></i>
+      </a></div>
+      </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Why-Image-Optimization-Matters"><span class="nav-number">1.</span> <span class="nav-text">Why Image Optimization Matters</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Next-Generation-Image-Formats"><span class="nav-number">2.</span> <span class="nav-text">Next-Generation Image Formats</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#WebP"><span class="nav-number">2.1.</span> <span class="nav-text">WebP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AVIF"><span class="nav-number">2.2.</span> <span class="nav-text">AVIF</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Format-Fallback-with-picture"><span class="nav-number">3.</span> <span class="nav-text">Format Fallback with picture</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Responsive-Images"><span class="nav-number">4.</span> <span class="nav-text">Responsive Images</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lazy-Loading"><span class="nav-number">5.</span> <span class="nav-text">Lazy Loading</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Native-Lazy-Loading"><span class="nav-number">5.1.</span> <span class="nav-text">Native Lazy Loading</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Using-IntersectionObserver"><span class="nav-number">5.2.</span> <span class="nav-text">Using IntersectionObserver</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fetchpriority-and-preload"><span class="nav-number">6.</span> <span class="nav-text">fetchpriority and preload</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Using-an-Image-CDN"><span class="nav-number">7.</span> <span class="nav-text">Using an Image CDN</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SVG-and-Icon-Optimization"><span class="nav-number">8.</span> <span class="nav-text">SVG and Icon Optimization</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Best-Practice-Checklist"><span class="nav-number">9.</span> <span class="nav-text">Best-Practice Checklist</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Wrapping-Up"><span class="nav-number">10.</span> <span class="nav-text">Wrapping Up</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">429</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">650</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="languages">
+    <label class="lang-select-label">
+      <i class="fa fa-language"></i>
+      <span>English</span>
+      <i class="fa fa-angle-up" aria-hidden="true"></i>
+    </label>
+    <select class="lang-select" data-canonical="">
+      
+        <option value="ko" data-href="/posts/image-optimization-strategies/" selected="">
+          한국어
+        </option>
+      
+        <option value="en" data-href="/en/posts/image-optimization-strategies/" selected="">
+          English
+        </option>
+      
+    </select>
+  </div>
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

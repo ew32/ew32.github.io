@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="The structure, basic CRUD, indexes, and data-modeling patterns of MongoDB, the representative document-oriented NoSQL database.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="A Beginner&#39;s Guide to MongoDB">
+<meta property="og:url" content="https://ew32.github.io/en/posts/mongodb-basics/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="The structure, basic CRUD, indexes, and data-modeling patterns of MongoDB, the representative document-oriented NoSQL database.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-05-10T05:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-22T14:03:12.800Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="NoSQL">
+<meta property="article:tag" content="Database">
+<meta property="article:tag" content="MongoDB">
+<meta property="article:tag" content="Document-Oriented">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/en/posts/mongodb-basics/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1041908788954754" crossorigin="anonymous"></script>
+
+  <title>A Beginner's Guide to MongoDB | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/mongodb-basics/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          A Beginner's Guide to MongoDB
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2026-05-10 14:00:00" itemprop="dateCreated datePublished" datetime="2026-05-10T14:00:00+09:00">2026-05-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">The structure, basic CRUD, indexes, and data-modeling patterns of MongoDB, the representative document-oriented NoSQL database.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="What-Is-MongoDB"><a href="#What-Is-MongoDB" class="headerlink" title="What Is MongoDB?"></a>What Is MongoDB?</h2><p><strong>MongoDB</strong> is a <strong>document-oriented NoSQL</strong> database that stores<br>BSON documents in a JSON-like format. Its flexible schema enables<br>fast development, and horizontal scaling (sharding) is built into<br>its core design.</p>
+<table>
+<thead>
+<tr>
+<th>RDBMS Term</th>
+<th>MongoDB Term</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Database</td>
+<td>Database</td>
+</tr>
+<tr>
+<td>Table</td>
+<td>Collection</td>
+</tr>
+<tr>
+<td>Row</td>
+<td>Document</td>
+</tr>
+<tr>
+<td>Column</td>
+<td>Field</td>
+</tr>
+<tr>
+<td>Join</td>
+<td>$lookup &#x2F; embedding</td>
+</tr>
+</tbody></table>
+<h2 id="Document-Structure"><a href="#Document-Structure" class="headerlink" title="Document Structure"></a>Document Structure</h2><p>Documents are stored as BSON (Binary JSON) and can freely contain<br>nested objects and arrays.</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;_id&quot;</span><span class="punctuation">:</span> ObjectId(<span class="string">&quot;507f1f77bcf86cd799439011&quot;</span>)<span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;username&quot;</span><span class="punctuation">:</span> <span class="string">&quot;kim&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;email&quot;</span><span class="punctuation">:</span> <span class="string">&quot;kim@example.com&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;addresses&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span> <span class="attr">&quot;city&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Seoul&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;zip&quot;</span><span class="punctuation">:</span> <span class="string">&quot;06000&quot;</span> <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">&#123;</span> <span class="attr">&quot;city&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Busan&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;zip&quot;</span><span class="punctuation">:</span> <span class="string">&quot;48000&quot;</span> <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;createdAt&quot;</span><span class="punctuation">:</span> ISODate(<span class="string">&quot;2026-05-10T00:00:00Z&quot;</span>)</span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>_id</code> is the auto-generated primary key, and an ObjectId is 12 bytes<br>that includes a timestamp.</p>
+<h2 id="Basic-CRUD"><a href="#Basic-CRUD" class="headerlink" title="Basic CRUD"></a>Basic CRUD</h2><h3 id="Create"><a href="#Create" class="headerlink" title="Create"></a>Create</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">db.<span class="property">users</span>.<span class="title function_">insertOne</span>(&#123;</span><br><span class="line">  <span class="attr">username</span>: <span class="string">&quot;kim&quot;</span>,</span><br><span class="line">  <span class="attr">age</span>: <span class="number">30</span>,</span><br><span class="line">  <span class="attr">tags</span>: [<span class="string">&quot;dev&quot;</span>, <span class="string">&quot;backend&quot;</span>]</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">db.<span class="property">users</span>.<span class="title function_">insertMany</span>([</span><br><span class="line">  &#123; <span class="attr">username</span>: <span class="string">&quot;lee&quot;</span>, <span class="attr">age</span>: <span class="number">25</span> &#125;,</span><br><span class="line">  &#123; <span class="attr">username</span>: <span class="string">&quot;park&quot;</span>, <span class="attr">age</span>: <span class="number">35</span> &#125;</span><br><span class="line">]);</span><br></pre></td></tr></table></figure>
+
+<h3 id="Read"><a href="#Read" class="headerlink" title="Read"></a>Read</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Find all</span></span><br><span class="line">db.<span class="property">users</span>.<span class="title function_">find</span>();</span><br><span class="line"></span><br><span class="line"><span class="comment">// Conditional find</span></span><br><span class="line">db.<span class="property">users</span>.<span class="title function_">find</span>(&#123; <span class="attr">age</span>: &#123; <span class="attr">$gte</span>: <span class="number">30</span> &#125; &#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Projection (specify returned fields)</span></span><br><span class="line">db.<span class="property">users</span>.<span class="title function_">find</span>(&#123; <span class="attr">age</span>: &#123; <span class="attr">$gte</span>: <span class="number">30</span> &#125; &#125;, &#123; <span class="attr">username</span>: <span class="number">1</span>, <span class="attr">_id</span>: <span class="number">0</span> &#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Sorting, pagination</span></span><br><span class="line">db.<span class="property">users</span>.<span class="title function_">find</span>().<span class="title function_">sort</span>(&#123; <span class="attr">age</span>: -<span class="number">1</span> &#125;).<span class="title function_">skip</span>(<span class="number">10</span>).<span class="title function_">limit</span>(<span class="number">10</span>);</span><br></pre></td></tr></table></figure>
+
+<h3 id="Update"><a href="#Update" class="headerlink" title="Update"></a>Update</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">db.<span class="property">users</span>.<span class="title function_">updateOne</span>(</span><br><span class="line">  &#123; <span class="attr">username</span>: <span class="string">&quot;kim&quot;</span> &#125;,</span><br><span class="line">  &#123; <span class="attr">$set</span>: &#123; <span class="attr">age</span>: <span class="number">31</span> &#125;, <span class="attr">$push</span>: &#123; <span class="attr">tags</span>: <span class="string">&quot;mongodb&quot;</span> &#125; &#125;</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line">db.<span class="property">users</span>.<span class="title function_">updateMany</span>(</span><br><span class="line">  &#123; <span class="attr">age</span>: &#123; <span class="attr">$lt</span>: <span class="number">20</span> &#125; &#125;,</span><br><span class="line">  &#123; <span class="attr">$set</span>: &#123; <span class="attr">status</span>: <span class="string">&quot;young&quot;</span> &#125; &#125;</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>Key update operators:</p>
+<table>
+<thead>
+<tr>
+<th>Operator</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>$set</code></td>
+<td>Set a field value</td>
+</tr>
+<tr>
+<td><code>$inc</code></td>
+<td>Increment a number</td>
+</tr>
+<tr>
+<td><code>$push</code></td>
+<td>Add to an array</td>
+</tr>
+<tr>
+<td><code>$pull</code></td>
+<td>Remove from an array</td>
+</tr>
+<tr>
+<td><code>$unset</code></td>
+<td>Remove a field</td>
+</tr>
+</tbody></table>
+<h3 id="Delete"><a href="#Delete" class="headerlink" title="Delete"></a>Delete</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">db.<span class="property">users</span>.<span class="title function_">deleteOne</span>(&#123; <span class="attr">username</span>: <span class="string">&quot;kim&quot;</span> &#125;);</span><br><span class="line">db.<span class="property">users</span>.<span class="title function_">deleteMany</span>(&#123; <span class="attr">status</span>: <span class="string">&quot;inactive&quot;</span> &#125;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="Indexes"><a href="#Indexes" class="headerlink" title="Indexes"></a>Indexes</h2><p>MongoDB also uses B-Tree indexes. Without an index, a collection<br>full scan occurs.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Single field</span></span><br><span class="line">db.<span class="property">users</span>.<span class="title function_">createIndex</span>(&#123; <span class="attr">username</span>: <span class="number">1</span> &#125;, &#123; <span class="attr">unique</span>: <span class="literal">true</span> &#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Compound index</span></span><br><span class="line">db.<span class="property">orders</span>.<span class="title function_">createIndex</span>(&#123; <span class="attr">userId</span>: <span class="number">1</span>, <span class="attr">createdAt</span>: -<span class="number">1</span> &#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Partial index</span></span><br><span class="line">db.<span class="property">users</span>.<span class="title function_">createIndex</span>(</span><br><span class="line">  &#123; <span class="attr">email</span>: <span class="number">1</span> &#125;,</span><br><span class="line">  &#123; <span class="attr">partialFilterExpression</span>: &#123; <span class="attr">isActive</span>: <span class="literal">true</span> &#125; &#125;</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"><span class="comment">// TTL index: auto-delete after a period</span></span><br><span class="line">db.<span class="property">sessions</span>.<span class="title function_">createIndex</span>(&#123; <span class="attr">createdAt</span>: <span class="number">1</span> &#125;, &#123; <span class="attr">expireAfterSeconds</span>: <span class="number">3600</span> &#125;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="Aggregation-Pipeline"><a href="#Aggregation-Pipeline" class="headerlink" title="Aggregation Pipeline"></a>Aggregation Pipeline</h2><p><code>aggregate</code> is a powerful tool that generalizes SQL’s GROUP BY.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">db.<span class="property">orders</span>.<span class="title function_">aggregate</span>([</span><br><span class="line">  &#123; <span class="attr">$match</span>: &#123; <span class="attr">status</span>: <span class="string">&quot;PAID&quot;</span> &#125; &#125;,</span><br><span class="line">  &#123; <span class="attr">$group</span>: &#123;</span><br><span class="line">      <span class="attr">_id</span>: <span class="string">&quot;$userId&quot;</span>,</span><br><span class="line">      <span class="attr">total</span>: &#123; <span class="attr">$sum</span>: <span class="string">&quot;$amount&quot;</span> &#125;,</span><br><span class="line">      <span class="attr">count</span>: &#123; <span class="attr">$sum</span>: <span class="number">1</span> &#125;</span><br><span class="line">  &#125;&#125;,</span><br><span class="line">  &#123; <span class="attr">$sort</span>: &#123; <span class="attr">total</span>: -<span class="number">1</span> &#125; &#125;,</span><br><span class="line">  &#123; <span class="attr">$limit</span>: <span class="number">10</span> &#125;</span><br><span class="line">]);</span><br></pre></td></tr></table></figure>
+
+<p>Common stages: <code>$match</code>, <code>$group</code>, <code>$project</code>, <code>$lookup</code>, <code>$unwind</code>,<br><code>$sort</code>, <code>$limit</code>.</p>
+<h2 id="Data-Modeling-Patterns"><a href="#Data-Modeling-Patterns" class="headerlink" title="Data Modeling Patterns"></a>Data Modeling Patterns</h2><h3 id="Embedding"><a href="#Embedding" class="headerlink" title="Embedding"></a>Embedding</h3><p>Store related data together in one document. Good read performance<br>and atomicity guarantees.</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;_id&quot;</span><span class="punctuation">:</span> <span class="number">1</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;title&quot;</span><span class="punctuation">:</span> <span class="string">&quot;A Post&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;comments&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span> <span class="attr">&quot;user&quot;</span><span class="punctuation">:</span> <span class="string">&quot;kim&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;text&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Nice&quot;</span> <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">&#123;</span> <span class="attr">&quot;user&quot;</span><span class="punctuation">:</span> <span class="string">&quot;lee&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;text&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Thanks&quot;</span> <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Referencing"><a href="#Referencing" class="headerlink" title="Referencing"></a>Referencing</h3><p>Store another collection’s <code>_id</code> and join with <code>$lookup</code>.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">db.<span class="property">posts</span>.<span class="title function_">aggregate</span>([</span><br><span class="line">  &#123; <span class="attr">$lookup</span>: &#123;</span><br><span class="line">      <span class="attr">from</span>: <span class="string">&quot;users&quot;</span>,</span><br><span class="line">      <span class="attr">localField</span>: <span class="string">&quot;userId&quot;</span>,</span><br><span class="line">      <span class="attr">foreignField</span>: <span class="string">&quot;_id&quot;</span>,</span><br><span class="line">      <span class="attr">as</span>: <span class="string">&quot;author&quot;</span></span><br><span class="line">  &#125;&#125;</span><br><span class="line">]);</span><br></pre></td></tr></table></figure>
+
+<h3 id="Selection-Criteria"><a href="#Selection-Criteria" class="headerlink" title="Selection Criteria"></a>Selection Criteria</h3><table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Recommended Pattern</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1:few, often read together</td>
+<td>Embedding</td>
+</tr>
+<tr>
+<td>1:many, unbounded growth</td>
+<td>Referencing</td>
+</tr>
+<tr>
+<td>Frequently updated shared data</td>
+<td>Referencing</td>
+</tr>
+<tr>
+<td>Risk of exceeding the 16MB document size</td>
+<td>Referencing</td>
+</tr>
+</tbody></table>
+<h2 id="Transactions"><a href="#Transactions" class="headerlink" title="Transactions"></a>Transactions</h2><p>Since MongoDB 4.0, multi-document ACID transactions are supported.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> session = db.<span class="title function_">getMongo</span>().<span class="title function_">startSession</span>();</span><br><span class="line">session.<span class="title function_">startTransaction</span>();</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">  db.<span class="property">accounts</span>.<span class="title function_">updateOne</span>(&#123; <span class="attr">_id</span>: <span class="number">1</span> &#125;, &#123; <span class="attr">$inc</span>: &#123; <span class="attr">balance</span>: -<span class="number">100</span> &#125; &#125;, &#123; session &#125;);</span><br><span class="line">  db.<span class="property">accounts</span>.<span class="title function_">updateOne</span>(&#123; <span class="attr">_id</span>: <span class="number">2</span> &#125;, &#123; <span class="attr">$inc</span>: &#123; <span class="attr">balance</span>: <span class="number">100</span> &#125; &#125;, &#123; session &#125;);</span><br><span class="line">  session.<span class="title function_">commitTransaction</span>();</span><br><span class="line">&#125; <span class="keyword">catch</span> (e) &#123;</span><br><span class="line">  session.<span class="title function_">abortTransaction</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Still, where possible it’s better to model with a single document<br>to obtain atomicity naturally.</p>
+<h2 id="Replication-and-Sharding"><a href="#Replication-and-Sharding" class="headerlink" title="Replication and Sharding"></a>Replication and Sharding</h2><ul>
+<li><strong>Replica Set</strong>: replicates the same data to multiple nodes, with automatic failover</li>
+<li><strong>Sharding</strong>: distributes data by a shard key for horizontal scaling</li>
+</ul>
+<h2 id="Wrapping-Up"><a href="#Wrapping-Up" class="headerlink" title="Wrapping Up"></a>Wrapping Up</h2><p>MongoDB offers a flexible schema and horizontal scalability,<br>suiting fast-changing domains. But “schemaless” means “the schema<br>must be managed by the application.” Understanding the trade-offs<br>between embedding and referencing, your index strategy, and the<br>aggregation pipeline lets you fully draw out MongoDB’s strengths.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/NoSQL/" rel="tag"># NoSQL</a>
+              <a href="/tags/Database/" rel="tag"># Database</a>
+              <a href="/tags/MongoDB/" rel="tag"># MongoDB</a>
+              <a href="/tags/Document-Oriented/" rel="tag"># Document-Oriented</a>
+          </div>
+
+        
+
+
+        
+      <div class="post-nav">
+        <div class="post-nav-item">
+      <a href="/en/posts/nosql-vs-sql/" rel="prev" title="NoSQL vs SQL - A Selection Guide">
+        <i class="fa fa-chevron-left"></i> NoSQL vs SQL - A Selection Guide
+      </a></div>
+        <div class="post-nav-item">
+      <a href="/en/posts/concurrency-control-locks/" rel="next" title="Database Concurrency Control and Locks">
+        Database Concurrency Control and Locks <i class="fa fa-chevron-right"></i>
+      </a></div>
+      </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#What-Is-MongoDB"><span class="nav-number">1.</span> <span class="nav-text">What Is MongoDB?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Document-Structure"><span class="nav-number">2.</span> <span class="nav-text">Document Structure</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Basic-CRUD"><span class="nav-number">3.</span> <span class="nav-text">Basic CRUD</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Create"><span class="nav-number">3.1.</span> <span class="nav-text">Create</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Read"><span class="nav-number">3.2.</span> <span class="nav-text">Read</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Update"><span class="nav-number">3.3.</span> <span class="nav-text">Update</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Delete"><span class="nav-number">3.4.</span> <span class="nav-text">Delete</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Indexes"><span class="nav-number">4.</span> <span class="nav-text">Indexes</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Aggregation-Pipeline"><span class="nav-number">5.</span> <span class="nav-text">Aggregation Pipeline</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Data-Modeling-Patterns"><span class="nav-number">6.</span> <span class="nav-text">Data Modeling Patterns</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Embedding"><span class="nav-number">6.1.</span> <span class="nav-text">Embedding</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Referencing"><span class="nav-number">6.2.</span> <span class="nav-text">Referencing</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Selection-Criteria"><span class="nav-number">6.3.</span> <span class="nav-text">Selection Criteria</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Transactions"><span class="nav-number">7.</span> <span class="nav-text">Transactions</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Replication-and-Sharding"><span class="nav-number">8.</span> <span class="nav-text">Replication and Sharding</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Wrapping-Up"><span class="nav-number">9.</span> <span class="nav-text">Wrapping Up</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">429</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">650</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="languages">
+    <label class="lang-select-label">
+      <i class="fa fa-language"></i>
+      <span>English</span>
+      <i class="fa fa-angle-up" aria-hidden="true"></i>
+    </label>
+    <select class="lang-select" data-canonical="">
+      
+        <option value="ko" data-href="/posts/mongodb-basics/" selected="">
+          한국어
+        </option>
+      
+        <option value="en" data-href="/en/posts/mongodb-basics/" selected="">
+          English
+        </option>
+      
+    </select>
+  </div>
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>

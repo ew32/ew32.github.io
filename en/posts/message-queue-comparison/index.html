@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ew32.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="A comparison of the models, pros and cons, and suitable scenarios of three representative message queue&#x2F;streaming platforms - Kafka, RabbitMQ, and AWS SQS.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Comparing Message Queues - Kafka, RabbitMQ, SQS">
+<meta property="og:url" content="https://ew32.github.io/en/posts/message-queue-comparison/">
+<meta property="og:site_name" content="EW32 Tech Blog">
+<meta property="og:description" content="A comparison of the models, pros and cons, and suitable scenarios of three representative message queue&#x2F;streaming platforms - Kafka, RabbitMQ, and AWS SQS.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-05-23T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-22T14:03:12.799Z">
+<meta property="article:author" content="EW32">
+<meta property="article:tag" content="Kafka">
+<meta property="article:tag" content="Message Queue">
+<meta property="article:tag" content="RabbitMQ">
+<meta property="article:tag" content="SQS">
+<meta property="article:tag" content="Architecture">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://ew32.github.io/en/posts/message-queue-comparison/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1041908788954754" crossorigin="anonymous"></script>
+
+  <title>Comparing Message Queues - Kafka, RabbitMQ, SQS | EW32 Tech Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MB9340YWGS"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MB9340YWGS');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="EW32 Tech Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">EW32 Tech Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">실무 중심 개발·인프라·보안 아카이브</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-contact">
+
+    <a href="/contact/" rel="section"><i class="fa fa-envelope fa-fw"></i>contact</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/message-queue-comparison/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Comparing Message Queues - Kafka, RabbitMQ, SQS
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2026-05-23 10:00:00" itemprop="dateCreated datePublished" datetime="2026-05-23T10:00:00+09:00">2026-05-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2026-05-22 23:03:12" itemprop="dateModified" datetime="2026-05-22T23:03:12+09:00">2026-05-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Backend/" itemprop="url" rel="index"><span itemprop="name">Backend</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">A comparison of the models, pros and cons, and suitable scenarios of three representative message queue/streaming platforms - Kafka, RabbitMQ, and AWS SQS.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Why-a-Message-Queue"><a href="#Why-a-Message-Queue" class="headerlink" title="Why a Message Queue"></a>Why a Message Queue</h2><p>In a distributed system, a message queue lowers coupling between<br>services, absorbs traffic spikes, and enables asynchronous<br>processing and event-driven architecture. The three representative<br>solutions — Kafka, RabbitMQ, and AWS SQS — all “exchange messages,”<br>but differ in model and strengths.</p>
+<h2 id="Apache-Kafka"><a href="#Apache-Kafka" class="headerlink" title="Apache Kafka"></a>Apache Kafka</h2><p>A distributed event-streaming platform that started at LinkedIn.<br>Strictly speaking, it’s closer to a “distributed commit log” than a<br>“message queue.”</p>
+<p><strong>Model</strong></p>
+<ul>
+<li>A topic is split into partitions</li>
+<li>Each partition is an append-only log</li>
+<li>Consumers manage an offset and can read from any position</li>
+</ul>
+<p><strong>Characteristics</strong></p>
+<ul>
+<li>Very high throughput (hundreds of thousands to millions of messages per second)</li>
+<li>Retains messages, so multiple consumer groups can reprocess the same data</li>
+<li>Strong ordering guarantees (within a partition)</li>
+<li>Pairs with the stream-processing ecosystem (Kafka Streams, Flink)</li>
+</ul>
+<p><strong>Weaknesses</strong></p>
+<ul>
+<li>Operationally complex (brokers, ZooKeeper&#x2F;KRaft, monitoring)</li>
+<li>An offset-commit model rather than per-message ack — different usage patterns</li>
+<li>Overkill infrastructure for large messages or a handful of queues</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Kafka Producer</span></span><br><span class="line"><span class="type">Properties</span> <span class="variable">p</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Properties</span>();</span><br><span class="line">p.put(<span class="string">&quot;bootstrap.servers&quot;</span>, <span class="string">&quot;localhost:9092&quot;</span>);</span><br><span class="line">p.put(<span class="string">&quot;key.serializer&quot;</span>, StringSerializer.class.getName());</span><br><span class="line">p.put(<span class="string">&quot;value.serializer&quot;</span>, StringSerializer.class.getName());</span><br><span class="line"></span><br><span class="line">KafkaProducer&lt;String, String&gt; producer = <span class="keyword">new</span> <span class="title class_">KafkaProducer</span>&lt;&gt;(p);</span><br><span class="line">producer.send(<span class="keyword">new</span> <span class="title class_">ProducerRecord</span>&lt;&gt;(<span class="string">&quot;orders&quot;</span>, order.getId(), order.toJson()));</span><br></pre></td></tr></table></figure>
+
+<h2 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a>RabbitMQ</h2><p>A traditional message broker implementing AMQP (Advanced Message<br>Queuing Protocol).</p>
+<p><strong>Model</strong></p>
+<ul>
+<li>Producer → Exchange → Queue → Consumer</li>
+<li>Exchange types (direct, fanout, topic, headers) for flexible routing</li>
+<li>Supports per-message ack&#x2F;nack</li>
+<li>Queues are generally emptied once consumed</li>
+</ul>
+<p><strong>Characteristics</strong></p>
+<ul>
+<li>Rich routing patterns (header-based routing, RPC, dead-letter)</li>
+<li>Naturally expresses task queues, publish-subscribe, RPC, and more</li>
+<li>Relatively simple operation; clustering is possible</li>
+<li>Rich queue features — priority queues, TTL, delayed messages</li>
+</ul>
+<p><strong>Weaknesses</strong></p>
+<ul>
+<li>Lower throughput than Kafka (typically tens of thousands to hundreds of thousands msg&#x2F;s)</li>
+<li>Not suited to long retention&#x2F;reprocessing scenarios</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pika</span><br><span class="line"></span><br><span class="line">connection = pika.BlockingConnection(pika.ConnectionParameters(<span class="string">&#x27;localhost&#x27;</span>))</span><br><span class="line">channel = connection.channel()</span><br><span class="line">channel.queue_declare(queue=<span class="string">&#x27;tasks&#x27;</span>, durable=<span class="literal">True</span>)</span><br><span class="line">channel.basic_publish(</span><br><span class="line">    exchange=<span class="string">&#x27;&#x27;</span>,</span><br><span class="line">    routing_key=<span class="string">&#x27;tasks&#x27;</span>,</span><br><span class="line">    body=<span class="string">&#x27;process order #123&#x27;</span>,</span><br><span class="line">    properties=pika.BasicProperties(delivery_mode=<span class="number">2</span>)  <span class="comment"># persistent</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h2 id="AWS-SQS"><a href="#AWS-SQS" class="headerlink" title="AWS SQS"></a>AWS SQS</h2><p>A fully managed message queue service.</p>
+<p><strong>Model</strong></p>
+<ul>
+<li>Standard queue: nearly unlimited throughput, at-least-once delivery, no ordering guarantee</li>
+<li>FIFO queue: ordering guarantee + exactly-once processing, throughput limit (3000 msg&#x2F;s per partition)</li>
+</ul>
+<p><strong>Characteristics</strong></p>
+<ul>
+<li>Zero infrastructure operation (serverless)</li>
+<li>Natural integration with the AWS ecosystem (Lambda, SNS, EventBridge)</li>
+<li>Auto-scaling, multi-AZ redundancy</li>
+<li>Pay-as-you-go</li>
+</ul>
+<p><strong>Weaknesses</strong></p>
+<ul>
+<li>Message retention up to 14 days</li>
+<li>No consumer-group concept (use SNS fan-out to deliver the same message to several consumers)</li>
+<li>Polling-based (long polling recommended)</li>
+<li>256KB message-size limit</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> boto3</span><br><span class="line">sqs = boto3.client(<span class="string">&#x27;sqs&#x27;</span>)</span><br><span class="line">sqs.send_message(</span><br><span class="line">    QueueUrl=<span class="string">&#x27;https://sqs.ap-northeast-2.amazonaws.com/123/orders&#x27;</span>,</span><br><span class="line">    MessageBody=<span class="string">&#x27;&#123;&quot;orderId&quot;:123&#125;&#x27;</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h2 id="Comparison-Summary"><a href="#Comparison-Summary" class="headerlink" title="Comparison Summary"></a>Comparison Summary</h2><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Kafka</th>
+<th>RabbitMQ</th>
+<th>SQS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Model</td>
+<td>Distributed log</td>
+<td>Message broker</td>
+<td>Managed queue</td>
+</tr>
+<tr>
+<td>Throughput</td>
+<td>Very high</td>
+<td>Medium-high</td>
+<td>Very high (Standard)</td>
+</tr>
+<tr>
+<td>Ordering</td>
+<td>Within a partition</td>
+<td>Within a queue</td>
+<td>FIFO only</td>
+</tr>
+<tr>
+<td>Retention</td>
+<td>Configurable (can be permanent)</td>
+<td>Removed on consumption</td>
+<td>Up to 14 days</td>
+</tr>
+<tr>
+<td>Reprocessing</td>
+<td>Offset rewind</td>
+<td>Hard</td>
+<td>Not possible</td>
+</tr>
+<tr>
+<td>Routing</td>
+<td>Topics&#x2F;partitions</td>
+<td>Rich Exchanges</td>
+<td>A single queue</td>
+</tr>
+<tr>
+<td>Operational burden</td>
+<td>High</td>
+<td>Medium</td>
+<td>None (managed)</td>
+</tr>
+<tr>
+<td>Pricing model</td>
+<td>Self-hosted</td>
+<td>Self-hosted</td>
+<td>Usage-based</td>
+</tr>
+</tbody></table>
+<h2 id="What-to-Use-When"><a href="#What-to-Use-When" class="headerlink" title="What to Use When"></a>What to Use When</h2><ul>
+<li><strong>Kafka</strong>: event sourcing, stream processing, data pipelines, large volumes of logs&#x2F;metrics, independent processing by many consumer groups</li>
+<li><strong>RabbitMQ</strong>: task queues, complex routing, RPC, priority&#x2F;delayed messages, passing commands between microservices</li>
+<li><strong>SQS</strong>: low-ops asynchronous queues in an AWS environment, Lambda triggers, traffic buffering</li>
+</ul>
+<h2 id="Related-Concepts-to-Consider"><a href="#Related-Concepts-to-Consider" class="headerlink" title="Related Concepts to Consider"></a>Related Concepts to Consider</h2><ul>
+<li><strong>Outbox pattern</strong>: atomicity between a transaction and message publication</li>
+<li><strong>Idempotent consumer</strong>: prepare for at-least-once delivery</li>
+<li><strong>Dead Letter Queue</strong>: isolate messages that fail processing</li>
+<li><strong>Backpressure</strong>: flow control matched to consumer speed</li>
+</ul>
+<h2 id="Wrapping-Up"><a href="#Wrapping-Up" class="headerlink" title="Wrapping Up"></a>Wrapping Up</h2><p>The three solutions are less competitors than tools for different<br>purposes. Answer “do I need streaming&#x2F;event logs, task<br>distribution, or a quick start in an AWS environment?” first, and<br>the choice follows naturally. In large systems, using all three<br>together is common.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Kafka/" rel="tag"># Kafka</a>
+              <a href="/tags/Message-Queue/" rel="tag"># Message Queue</a>
+              <a href="/tags/RabbitMQ/" rel="tag"># RabbitMQ</a>
+              <a href="/tags/SQS/" rel="tag"># SQS</a>
+              <a href="/tags/Architecture/" rel="tag"># Architecture</a>
+          </div>
+
+        
+
+
+        
+      <div class="post-nav">
+        <div class="post-nav-item">
+      <a href="/en/posts/http2-vs-http3/" rel="prev" title="A Summary of HTTP/2 vs HTTP/3 Differences">
+        <i class="fa fa-chevron-left"></i> A Summary of HTTP/2 vs HTTP/3 Differences
+      </a></div>
+        <div class="post-nav-item">
+      <a href="/en/posts/tcp-vs-udp/" rel="next" title="Comparing the TCP and UDP Protocols">
+        Comparing the TCP and UDP Protocols <i class="fa fa-chevron-right"></i>
+      </a></div>
+      </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Why-a-Message-Queue"><span class="nav-number">1.</span> <span class="nav-text">Why a Message Queue</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Apache-Kafka"><span class="nav-number">2.</span> <span class="nav-text">Apache Kafka</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitMQ"><span class="nav-number">3.</span> <span class="nav-text">RabbitMQ</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AWS-SQS"><span class="nav-number">4.</span> <span class="nav-text">AWS SQS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Comparison-Summary"><span class="nav-number">5.</span> <span class="nav-text">Comparison Summary</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#What-to-Use-When"><span class="nav-number">6.</span> <span class="nav-text">What to Use When</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Related-Concepts-to-Consider"><span class="nav-number">7.</span> <span class="nav-text">Related Concepts to Consider</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Wrapping-Up"><span class="nav-number">8.</span> <span class="nav-text">Wrapping Up</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">EW32</p>
+  <div class="site-description" itemprop="description">백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">429</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">650</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ew32" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ew32" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:[YOUR_EMAIL]" title="E-Mail → mailto:[YOUR_EMAIL]" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+<div class="sidebar-panel sidebar-panel-active">
+  <div class="sidebar-panel-container">
+    <div class="sidebar-panel-header">
+      <i class="fa fa-cloud"></i>
+      <span class="sidebar-panel-title">날씨 정보</span>
+    </div>
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-loading" id="weather-loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>날씨 정보를 불러오는 중...</span>
+      </div>
+      <div class="weather-content" id="weather-content" style="display: none;">
+        <div class="weather-location" id="weather-location">
+          <i class="fa fa-map-marker-alt"></i>
+          <span id="weather-location-text">위치 확인 중...</span>
+        </div>
+        <div class="weather-current">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon"></div>
+            <div class="weather-temp" id="weather-temp"></div>
+          </div>
+          <div class="weather-description" id="weather-description"></div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fa fa-tint"></i>
+              <span>습도: </span>
+              <span id="weather-humidity"></span>
+            </div>
+            <div class="weather-detail">
+              <i class="fa fa-wind"></i>
+              <span>풍속: </span>
+              <span id="weather-wind"></span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+          <div class="forecast-title">
+            <i class="fa fa-calendar-alt"></i>
+            <span>3일 예보</span>
+          </div>
+          <div class="forecast-list" id="forecast-list"></div>
+        </div>
+        <div class="weather-update" id="weather-update"></div>
+      </div>
+      <div class="weather-error" id="weather-error" style="display: none;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>날씨 정보를 불러올 수 없습니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="languages">
+    <label class="lang-select-label">
+      <i class="fa fa-language"></i>
+      <span>English</span>
+      <i class="fa fa-angle-up" aria-hidden="true"></i>
+    </label>
+    <select class="lang-select" data-canonical="">
+      
+        <option value="ko" data-href="/posts/message-queue-comparison/" selected="">
+          한국어
+        </option>
+      
+        <option value="en" data-href="/en/posts/message-queue-comparison/" selected="">
+          English
+        </option>
+      
+    </select>
+  </div>
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">EW32</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+// 날씨 위젯 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initWeatherWidget();
+});
+
+function initWeatherWidget() {
+  // 위치 정보를 가져와서 날씨 정보 표시
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      function(error) {
+        console.log('위치 정보를 가져올 수 없습니다:', error);
+        // 기본값으로 서울 날씨 표시
+        fetchWeatherByCity('Seoul');
+      }
+    );
+  } else {
+    console.log('브라우저가 위치 정보를 지원하지 않습니다.');
+    // 기본값으로 서울 날씨 표시
+    fetchWeatherByCity('Seoul');
+  }
+}
+
+function fetchWeatherByCoords(lat, lon) {
+  // Open-Meteo API - 현재 날씨와 3일 예보 포함
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia/Seoul&forecast_days=4`;
+  
+  // 위치 정보 가져오기 (역지오코딩)
+  const geocodingUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  
+  Promise.all([
+    fetch(apiUrl).then(response => response.json()),
+    fetch(geocodingUrl).then(response => response.json())
+  ])
+    .then(([weatherData, locationData]) => {
+      displayWeather(weatherData, locationData);
+    })
+    .catch(error => {
+      console.error('날씨 정보를 가져오는데 실패했습니다:', error);
+      showWeatherError();
+    });
+}
+
+function fetchWeatherByCity(city) {
+  // 서울의 좌표로 기본 날씨 정보 가져오기
+  const lat = 37.5665;
+  const lon = 126.9780;
+  fetchWeatherByCoords(lat, lon);
+}
+
+function displayWeather(weatherData, locationData) {
+  const current = weatherData.current_weather;
+  const daily = weatherData.daily;
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  if (!current) {
+    showWeatherError();
+    return;
+  }
+
+  // 로딩 숨기기, 콘텐츠 표시
+  loading.style.display = 'none';
+  error.style.display = 'none';
+  content.style.display = 'block';
+
+  // 위치 정보 표시
+  const locationText = getLocationText(locationData);
+  document.getElementById('weather-location-text').textContent = locationText;
+  
+  // 현재 날씨
+  document.getElementById('weather-temp').textContent = Math.round(current.temperature) + '°C';
+  
+  const weatherIcon = getWeatherIcon(current.weathercode, current.is_day);
+  document.getElementById('weather-icon').innerHTML = weatherIcon;
+  
+  const description = getWeatherDescription(current.weathercode);
+  document.getElementById('weather-description').textContent = description;
+  
+  document.getElementById('weather-wind').textContent = current.windspeed + ' km/h';
+  document.getElementById('weather-humidity').textContent = 'N/A';
+  
+  // 3일 예보 표시
+  displayForecast(daily);
+  
+  // 업데이트 시간
+  const updateTime = new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('weather-update').textContent = `최종 업데이트: ${updateTime}`;
+}
+
+function getWeatherIcon(weatherCode, isDay) {
+  // WMO Weather Code를 기반으로 아이콘 반환
+  const iconMap = {
+    0: isDay ? '☀️' : '🌙', // Clear sky
+    1: isDay ? '🌤️' : '🌙', // Mainly clear
+    2: '⛅', // Partly cloudy
+    3: '☁️', // Overcast
+    45: '🌫️', // Fog
+    48: '🌫️', // Depositing rime fog
+    51: '🌦️', // Light drizzle
+    53: '🌦️', // Moderate drizzle
+    55: '🌦️', // Dense drizzle
+    61: '🌧️', // Slight rain
+    63: '🌧️', // Moderate rain
+    65: '🌧️', // Heavy rain
+    71: '🌨️', // Slight snow
+    73: '🌨️', // Moderate snow
+    75: '🌨️', // Heavy snow
+    77: '❄️', // Snow grains
+    80: '🌦️', // Slight rain showers
+    81: '🌧️', // Moderate rain showers
+    82: '🌧️', // Violent rain showers
+    85: '🌨️', // Slight snow showers
+    86: '🌨️', // Heavy snow showers
+    95: '⛈️', // Thunderstorm
+    96: '⛈️', // Thunderstorm with slight hail
+    99: '⛈️'  // Thunderstorm with heavy hail
+  };
+  
+  return iconMap[weatherCode] || '❓';
+}
+
+function getWeatherDescription(weatherCode) {
+  const descriptionMap = {
+    0: '맑음',
+    1: '대체로 맑음',
+    2: '부분적으로 흐림',
+    3: '흐림',
+    45: '안개',
+    48: '서리 안개',
+    51: '가벼운 이슬비',
+    53: '보통 이슬비',
+    55: '진한 이슬비',
+    61: '약한 비',
+    63: '보통 비',
+    65: '강한 비',
+    71: '약한 눈',
+    73: '보통 눈',
+    75: '강한 눈',
+    77: '눈알갱이',
+    80: '약한 소나기',
+    81: '보통 소나기',
+    82: '강한 소나기',
+    85: '약한 눈 소나기',
+    86: '강한 눈 소나기',
+    95: '뇌우',
+    96: '약한 우박을 동반한 뇌우',
+    99: '강한 우박을 동반한 뇌우'
+  };
+  
+  return descriptionMap[weatherCode] || '알 수 없음';
+}
+
+function getLocationText(locationData) {
+  if (!locationData) return '현재 위치';
+  
+  // 한국어 위치 정보 조합
+  let location = '';
+  if (locationData.city) {
+    location = locationData.city;
+  } else if (locationData.locality) {
+    location = locationData.locality;
+  } else if (locationData.countryName) {
+    location = locationData.countryName;
+  }
+  
+  // 구/군 정보 추가
+  if (locationData.principalSubdivision && location !== locationData.principalSubdivision) {
+    location = `${locationData.principalSubdivision} ${location}`;
+  }
+  
+  return location || '현재 위치';
+}
+
+function displayForecast(daily) {
+  if (!daily || !daily.time || daily.time.length < 4) return;
+  
+  const forecastList = document.getElementById('forecast-list');
+  forecastList.innerHTML = '';
+  
+  // 오늘 제외하고 3일간 예보 표시 (인덱스 1, 2, 3)
+  for (let i = 1; i <= 3; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = getDayName(date);
+    const weatherCode = daily.weather_code[i];
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    
+    const forecastItem = document.createElement('div');
+    forecastItem.className = 'forecast-item';
+    
+    forecastItem.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-weather">
+        <div class="forecast-icon">${getWeatherIcon(weatherCode, true)}</div>
+        <div class="forecast-desc">${getWeatherDescription(weatherCode)}</div>
+      </div>
+      <div class="forecast-temps">
+        <span class="temp-high">${maxTemp}°</span>
+        <span class="temp-low">${minTemp}°</span>
+      </div>
+    `;
+    
+    forecastList.appendChild(forecastItem);
+  }
+}
+
+function getDayName(date) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '오늘';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '내일';
+  } else {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()] + '요일';
+  }
+}
+
+function showWeatherError() {
+  const loading = document.getElementById('weather-loading');
+  const content = document.getElementById('weather-content');
+  const error = document.getElementById('weather-error');
+  
+  loading.style.display = 'none';
+  content.style.display = 'none';
+  error.style.display = 'block';
+}
+</script>
+</body>
+</html>
