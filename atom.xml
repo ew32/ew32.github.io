@@ -10,7 +10,7 @@
   <rights>All rights reserved 2026, EW32</rights>
   <subtitle>실무 중심 개발·인프라·보안 아카이브</subtitle>
   <title>EW32 Tech Blog</title>
-  <updated>2026-05-22T14:03:12.792Z</updated>
+  <updated>2026-05-26T08:04:26.239Z</updated>
   <entry>
     <author>
       <name>EW32</name>
@@ -25,7 +25,7 @@
     <published>2026-07-18T01:00:00.000Z</published>
     <summary>Docker 기반 Dev Containers로 팀원 모두 동일한 개발환경을 사용하도록 구성하는 방법을 정리합니다.</summary>
     <title>VSCode Dev Containers로 일관된 개발환경 만들기</title>
-    <updated>2026-05-22T14:03:12.792Z</updated>
+    <updated>2026-05-26T08:04:26.239Z</updated>
   </entry>
   <entry>
     <author>
@@ -41,7 +41,7 @@
     <published>2026-07-18T01:00:00.000Z</published>
     <summary>How to use Docker-based Dev Containers so the whole team works in the same development environment.</summary>
     <title>Building Consistent Dev Environments with VSCode Dev Containers</title>
-    <updated>2026-05-22T14:03:12.795Z</updated>
+    <updated>2026-05-26T08:04:26.242Z</updated>
   </entry>
   <entry>
     <author>
@@ -57,7 +57,7 @@
     <published>2026-07-17T01:00:00.000Z</published>
     <summary>설정 파일을 Git으로 관리하고 새 기기에서 즉시 복원하는 dotfiles 워크플로를 소개합니다.</summary>
     <title>dotfiles 관리법 - 내 환경을 코드로</title>
-    <updated>2026-05-22T14:03:12.792Z</updated>
+    <updated>2026-05-26T08:04:26.239Z</updated>
   </entry>
   <entry>
     <author>
@@ -73,7 +73,7 @@
     <published>2026-07-17T01:00:00.000Z</published>
     <summary>A workflow for managing your configuration files in Git and restoring them on a new machine instantly.</summary>
     <title>Managing Dotfiles - Your Environment as Code</title>
-    <updated>2026-05-22T14:03:12.795Z</updated>
+    <updated>2026-05-26T08:04:26.242Z</updated>
   </entry>
   <entry>
     <author>
@@ -89,7 +89,7 @@
     <published>2026-07-16T01:00:00.000Z</published>
     <summary>Zsh의 강점과 Oh My Zsh, Powerlevel10k, 자동완성/하이라이트 플러그인으로 생산성 높은 터미널을 구성하는 방법.</summary>
     <title>Zsh와 Oh My Zsh로 셸 환경 꾸미기</title>
-    <updated>2026-05-22T14:03:12.815Z</updated>
+    <updated>2026-05-26T08:04:26.262Z</updated>
   </entry>
   <entry>
     <author>
@@ -105,7 +105,7 @@
     <published>2026-07-16T01:00:00.000Z</published>
     <summary>The strengths of Zsh, and how to build a productive terminal with Oh My Zsh, Powerlevel10k, and autosuggestion/highlighting plugins.</summary>
     <title>Customizing Your Shell with Zsh and Oh My Zsh</title>
-    <updated>2026-05-22T14:03:12.806Z</updated>
+    <updated>2026-05-26T08:04:26.252Z</updated>
   </entry>
   <entry>
     <author>
@@ -121,7 +121,7 @@
     <published>2026-07-15T01:00:00.000Z</published>
     <summary>Git Hooks의 종류와 활용법, Husky를 이용한 팀 단위 공유 설정까지 정리합니다.</summary>
     <title>Git Hooks로 워크플로 자동화하기</title>
-    <updated>2026-05-22T14:03:12.806Z</updated>
+    <updated>2026-05-26T08:04:26.253Z</updated>
   </entry>
   <entry>
     <author>
@@ -137,7 +137,7 @@
     <published>2026-07-15T01:00:00.000Z</published>
     <summary>The kinds of Git hooks and how to use them, plus team-wide setup through Husky.</summary>
     <title>Automating Your Workflow with Git Hooks</title>
-    <updated>2026-05-22T14:03:12.796Z</updated>
+    <updated>2026-05-26T08:04:26.243Z</updated>
   </entry>
   <entry>
     <author>
@@ -153,7 +153,7 @@
     <published>2026-07-14T01:00:00.000Z</published>
     <summary>Git의 두 통합 방법인 rebase와 merge의 차이, 장단점, 그리고 팀에서의 선택 가이드를 정리합니다.</summary>
     <title>Git Rebase vs Merge 전략</title>
-    <updated>2026-05-22T14:03:12.806Z</updated>
+    <updated>2026-05-26T08:04:26.253Z</updated>
   </entry>
   <entry>
     <author>
@@ -169,7 +169,7 @@
     <published>2026-07-14T01:00:00.000Z</published>
     <summary>The differences between Git's two integration methods - rebase and merge - their pros and cons, and a guide for choosing in a team setting.</summary>
     <title>Git Rebase vs Merge Strategy</title>
-    <updated>2026-05-22T14:03:12.796Z</updated>
+    <updated>2026-05-26T08:04:26.243Z</updated>
   </entry>
   <entry>
     <author>
@@ -185,7 +185,7 @@
     <published>2026-07-13T01:00:00.000Z</published>
     <summary>벡터 DB의 개념과 작동 원리, 주요 서비스인 Pinecone, Weaviate, Qdrant를 비교합니다.</summary>
     <title>벡터 데이터베이스 입문 - Pinecone, Weaviate, Qdrant 비교</title>
-    <updated>2026-05-22T14:03:12.814Z</updated>
+    <updated>2026-05-26T08:04:26.261Z</updated>
   </entry>
   <entry>
     <author>
@@ -201,7 +201,7 @@
     <published>2026-07-13T01:00:00.000Z</published>
     <summary>The concept and operating principle of vector DBs, and a comparison of the major services Pinecone, Weaviate, and Qdrant.</summary>
     <title>Intro to Vector Databases: Pinecone, Weaviate, and Qdrant Compared</title>
-    <updated>2026-05-22T14:03:12.805Z</updated>
+    <updated>2026-05-26T08:04:26.251Z</updated>
   </entry>
   <entry>
     <author>
@@ -217,7 +217,7 @@
     <published>2026-07-12T01:00:00.000Z</published>
     <summary>LLM 파인튜닝의 개념과 종류, LoRA와 SFT의 차이, 실제 작업 흐름까지 입문자 관점에서 정리합니다.</summary>
     <title>LLM 파인튜닝 기초</title>
-    <updated>2026-05-22T14:03:12.809Z</updated>
+    <updated>2026-05-26T08:04:26.256Z</updated>
   </entry>
   <entry>
     <author>
@@ -233,7 +233,7 @@
     <published>2026-07-12T01:00:00.000Z</published>
     <summary>The concept and types of LLM fine-tuning, the difference between LoRA and SFT, and the actual workflow, from a beginner's perspective.</summary>
     <title>LLM Fine-Tuning Basics</title>
-    <updated>2026-05-22T14:03:12.799Z</updated>
+    <updated>2026-05-26T08:04:26.246Z</updated>
   </entry>
   <entry>
     <author>
@@ -249,7 +249,7 @@
     <published>2026-07-11T01:00:00.000Z</published>
     <summary>LangChain의 Agent와 Tool 추상화를 살펴보고, 외부 도구를 호출하는 LLM 에이전트를 구현하는 방법을 정리합니다.</summary>
     <title>LangChain Agents와 Tools 이해하기</title>
-    <updated>2026-05-22T14:03:12.809Z</updated>
+    <updated>2026-05-26T08:04:26.255Z</updated>
   </entry>
   <entry>
     <author>
@@ -265,7 +265,7 @@
     <published>2026-07-11T01:00:00.000Z</published>
     <summary>A look at LangChain's Agent and Tool abstractions and how to build an LLM agent that calls external tools.</summary>
     <title>Understanding LangChain Agents and Tools</title>
-    <updated>2026-05-22T14:03:12.798Z</updated>
+    <updated>2026-05-26T08:04:26.245Z</updated>
   </entry>
   <entry>
     <author>
@@ -281,7 +281,7 @@
     <published>2026-07-10T01:00:00.000Z</published>
     <summary>AI 코딩 도구에서 일관되고 정확한 결과를 얻기 위한 실용 프롬프트 패턴 모음입니다.</summary>
     <title>AI 코딩을 위한 프롬프트 패턴</title>
-    <updated>2026-05-22T14:03:12.789Z</updated>
+    <updated>2026-05-26T08:04:26.237Z</updated>
   </entry>
   <entry>
     <author>
@@ -297,7 +297,7 @@
     <published>2026-07-10T01:00:00.000Z</published>
     <summary>A collection of practical prompt patterns for getting consistent, accurate results out of AI coding tools.</summary>
     <title>Prompt Patterns for AI-Assisted Coding</title>
-    <updated>2026-05-22T14:03:12.792Z</updated>
+    <updated>2026-05-26T08:04:26.239Z</updated>
   </entry>
   <entry>
     <author>
@@ -313,7 +313,7 @@
     <published>2026-07-09T01:00:00.000Z</published>
     <summary>AI 네이티브 코드 에디터 Cursor의 핵심 기능과 단축키, 효율적인 사용 패턴을 소개합니다.</summary>
     <title>Cursor IDE 활용 팁</title>
-    <updated>2026-05-22T14:03:12.791Z</updated>
+    <updated>2026-05-26T08:04:26.238Z</updated>
   </entry>
   <entry>
     <author>
@@ -329,6 +329,6 @@
     <published>2026-07-09T01:00:00.000Z</published>
     <summary>An introduction to the core features, shortcuts, and efficient usage patterns of Cursor, the AI-native code editor.</summary>
     <title>Tips for Using the Cursor IDE</title>
-    <updated>2026-05-22T14:03:12.794Z</updated>
+    <updated>2026-05-26T08:04:26.241Z</updated>
   </entry>
 </feed>
