@@ -209,6 +209,574 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/postgresql-%EB%B0%B1%EC%97%85%EB%B3%B5%EC%9B%90-%EB%B0%8F-%EC%9D%B4%EA%B4%80-%EC%A0%95%EB%A6%AC/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/posts/postgresql-%EB%B0%B1%EC%97%85%EB%B3%B5%EC%9B%90-%EB%B0%8F-%EC%9D%B4%EA%B4%80-%EC%A0%95%EB%A6%AC/" class="post-title-link" itemprop="url">PostgreSQL 백업/복원 및 이관 정리</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+              
+
+              <time title="Post created: 2026-06-05 04:33:36 / Updated at: 13:33:46" itemprop="dateCreated datePublished" datetime="2026-06-05T04:33:36+09:00">2026-06-05</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="1-pg-dump란"><a href="#1-pg-dump란" class="headerlink" title="1. pg_dump란?"></a>1. pg_dump란?</h2><p>pg_dump는 PostgreSQL에서 제공하는 공식 논리 백업(Logical Backup) 도구이다.</p>
+<p>DB 파일 자체를 복사하는 것이 아니라 DB의 구조와 데이터를 추출하여 다시 생성할 수 있는 형태로 저장한다.</p>
+<p>예시:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_dump mydb &gt; mydb.sql</span><br></pre></td></tr></table></figure>
+
+<p>또는</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_dump -Fc mydb &gt; mydb.backup</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="2-논리-백업-Logical-Backup"><a href="#2-논리-백업-Logical-Backup" class="headerlink" title="2. 논리 백업(Logical Backup)"></a>2. 논리 백업(Logical Backup)</h1><h2 id="의미"><a href="#의미" class="headerlink" title="의미"></a>의미</h2><p>DB의 “구조와 데이터의 의미”를 저장하는 방식이다.</p>
+<p>예시:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> USER_INFO (</span><br><span class="line">    ID <span class="type">INTEGER</span>,</span><br><span class="line">    NAME <span class="type">VARCHAR</span>(<span class="number">100</span>)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> USER_INFO <span class="keyword">VALUES</span> (<span class="number">1</span>, <span class="string">&#x27;Kim&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>복원 시 해당 SQL을 다시 실행하여 DB를 생성한다.</p>
+<h2 id="특징"><a href="#특징" class="headerlink" title="특징"></a>특징</h2><ul>
+<li>구조(DDL) 저장</li>
+<li>데이터 저장</li>
+<li>함수(Function) 저장</li>
+<li>View 저장</li>
+<li>Index 저장</li>
+<li>Constraint 저장</li>
+</ul>
+<h2 id="장점"><a href="#장점" class="headerlink" title="장점"></a>장점</h2><ul>
+<li>다른 서버 이관 가능</li>
+<li>OS 변경 가능</li>
+<li>버전 업그레이드 가능</li>
+<li>특정 테이블만 복원 가능</li>
+<li>사람이 확인 가능</li>
+</ul>
+<h2 id="단점"><a href="#단점" class="headerlink" title="단점"></a>단점</h2><ul>
+<li>물리 백업보다 느림</li>
+<li>대용량 DB에서는 시간이 오래 걸림</li>
+</ul>
+<hr>
+<h1 id="3-물리-백업-Physical-Backup"><a href="#3-물리-백업-Physical-Backup" class="headerlink" title="3. 물리 백업(Physical Backup)"></a>3. 물리 백업(Physical Backup)</h1><h2 id="의미-1"><a href="#의미-1" class="headerlink" title="의미"></a>의미</h2><p>PostgreSQL이 사용하는 실제 데이터 파일을 그대로 복사하는 방식이다.</p>
+<p>예시 디렉터리:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">base/</span><br><span class="line">global/</span><br><span class="line">pg_wal/</span><br></pre></td></tr></table></figure>
+
+<h2 id="특징-1"><a href="#특징-1" class="headerlink" title="특징"></a>특징</h2><p>DB 엔진이 사용하는 내부 바이너리 파일을 그대로 백업한다.</p>
+<h2 id="장점-1"><a href="#장점-1" class="headerlink" title="장점"></a>장점</h2><ul>
+<li>매우 빠름</li>
+<li>장애 복구에 적합</li>
+<li>대용량 DB에 유리</li>
+</ul>
+<h2 id="단점-1"><a href="#단점-1" class="headerlink" title="단점"></a>단점</h2><ul>
+<li>버전 의존적</li>
+<li>OS 의존적</li>
+<li>부분 복원 어려움</li>
+<li>다른 환경으로 이관 어려움</li>
+</ul>
+<hr>
+<h1 id="4-논리-백업-vs-물리-백업"><a href="#4-논리-백업-vs-물리-백업" class="headerlink" title="4. 논리 백업 vs 물리 백업"></a>4. 논리 백업 vs 물리 백업</h1><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>논리 백업</th>
+<th>물리 백업</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>저장 형태</td>
+<td>SQL 또는 논리 포맷</td>
+<td>DB 파일</td>
+</tr>
+<tr>
+<td>사람이 읽기 가능</td>
+<td>O</td>
+<td>X</td>
+</tr>
+<tr>
+<td>부분 복원</td>
+<td>O</td>
+<td>X</td>
+</tr>
+<tr>
+<td>버전 업그레이드</td>
+<td>O</td>
+<td>제한적</td>
+</tr>
+<tr>
+<td>속도</td>
+<td>느림</td>
+<td>빠름</td>
+</tr>
+<tr>
+<td>장애 복구</td>
+<td>보통</td>
+<td>매우 우수</td>
+</tr>
+<tr>
+<td>서버 이전</td>
+<td>우수</td>
+<td>제한적</td>
+</tr>
+</tbody></table>
+<hr>
+<h1 id="5-논리-백업과-물리-백업의-비유"><a href="#5-논리-백업과-물리-백업의-비유" class="headerlink" title="5. 논리 백업과 물리 백업의 비유"></a>5. 논리 백업과 물리 백업의 비유</h1><h2 id="논리-백업"><a href="#논리-백업" class="headerlink" title="논리 백업"></a>논리 백업</h2><p>집의 설계도 + 자재 목록</p>
+<p>집을 다시 지을 수 있다.</p>
+<h2 id="물리-백업"><a href="#물리-백업" class="headerlink" title="물리 백업"></a>물리 백업</h2><p>집 자체를 통째로 옮기는 것</p>
+<p>복구는 빠르지만 다른 환경으로 이동하기 어렵다.</p>
+<hr>
+<h1 id="6-논리-백업-Raw-SQL-인가"><a href="#6-논리-백업-Raw-SQL-인가" class="headerlink" title="6. 논리 백업 &#x3D; Raw SQL 인가?"></a>6. 논리 백업 &#x3D; Raw SQL 인가?</h1><p>부분적으로 맞다.</p>
+<p>예:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> ...</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> ...</span><br></pre></td></tr></table></figure>
+
+<p>이 경우는 실제 SQL이다.</p>
+<p>하지만 PostgreSQL은 SQL 외에도 논리 백업 전용 포맷을 제공한다.</p>
+<p>예:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_dump -Fc mydb &gt; mydb.backup</span><br></pre></td></tr></table></figure>
+
+<p>파일은 바이너리지만 논리 백업이다.</p>
+<p>이유는 내부 내용이 DB 구조와 데이터의 논리적 표현이기 때문이다.</p>
+<p>따라서</p>
+<p>“논리 백업 &#x3D; SQL”</p>
+<p>은 완전히 맞는 말은 아니다.</p>
+<p>정확한 표현은</p>
+<p>“논리 백업 &#x3D; DB를 재구성할 수 있는 논리 표현”</p>
+<p>이다.</p>
+<hr>
+<h1 id="7-물리-백업-Binary-인가"><a href="#7-물리-백업-Binary-인가" class="headerlink" title="7. 물리 백업 &#x3D; Binary 인가?"></a>7. 물리 백업 &#x3D; Binary 인가?</h1><p>거의 정확하다.</p>
+<p>예:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">base/</span><br><span class="line">global/</span><br><span class="line">pg_wal/</span><br></pre></td></tr></table></figure>
+
+<p>또는</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">MDF</span><br><span class="line">LDF</span><br><span class="line">IBD</span><br></pre></td></tr></table></figure>
+
+<p>같은 DB 엔진 내부 파일이다.</p>
+<p>사람이 읽을 수 없다.</p>
+<hr>
+<h1 id="8-물리-백업이-빠른데-왜-논리-백업을-사용하는가"><a href="#8-물리-백업이-빠른데-왜-논리-백업을-사용하는가" class="headerlink" title="8. 물리 백업이 빠른데 왜 논리 백업을 사용하는가?"></a>8. 물리 백업이 빠른데 왜 논리 백업을 사용하는가?</h1><p>속도보다 유연성이 중요하기 때문이다.</p>
+<h2 id="물리-백업의-문제점"><a href="#물리-백업의-문제점" class="headerlink" title="물리 백업의 문제점"></a>물리 백업의 문제점</h2><h3 id="1-버전-종속"><a href="#1-버전-종속" class="headerlink" title="1. 버전 종속"></a>1. 버전 종속</h3><p>예:</p>
+<ul>
+<li>PostgreSQL 14 → PostgreSQL 15</li>
+<li>PostgreSQL 15 → PostgreSQL 18</li>
+</ul>
+<p>복원 시 문제가 발생할 수 있다.</p>
+<h3 id="2-부분-복원-어려움"><a href="#2-부분-복원-어려움" class="headerlink" title="2. 부분 복원 어려움"></a>2. 부분 복원 어려움</h3><p>특정 테이블만 복원하기 어렵다.</p>
+<h3 id="3-개발-환경-복제-어려움"><a href="#3-개발-환경-복제-어려움" class="headerlink" title="3. 개발 환경 복제 어려움"></a>3. 개발 환경 복제 어려움</h3><p>운영 DB 전체를 복사해야 한다.</p>
+<h3 id="4-데이터-정제-어려움"><a href="#4-데이터-정제-어려움" class="headerlink" title="4. 데이터 정제 어려움"></a>4. 데이터 정제 어려움</h3><p>불필요한 데이터 제거가 어렵다.</p>
+<hr>
+<h2 id="논리-백업의-장점"><a href="#논리-백업의-장점" class="headerlink" title="논리 백업의 장점"></a>논리 백업의 장점</h2><h3 id="1-다른-서버-이관"><a href="#1-다른-서버-이관" class="headerlink" title="1. 다른 서버 이관"></a>1. 다른 서버 이관</h3><ul>
+<li>Windows → Linux</li>
+<li>On-Premise → Cloud</li>
+</ul>
+<p>가능</p>
+<h3 id="2-버전-업그레이드"><a href="#2-버전-업그레이드" class="headerlink" title="2. 버전 업그레이드"></a>2. 버전 업그레이드</h3><p>가장 많이 사용하는 방식</p>
+<h3 id="3-부분-복원"><a href="#3-부분-복원" class="headerlink" title="3. 부분 복원"></a>3. 부분 복원</h3><ul>
+<li>특정 스키마</li>
+<li>특정 테이블</li>
+</ul>
+<p>복원 가능</p>
+<h3 id="4-데이터-가공"><a href="#4-데이터-가공" class="headerlink" title="4. 데이터 가공"></a>4. 데이터 가공</h3><p>마스킹 및 샘플링 가능</p>
+<hr>
+<h1 id="9-PostgreSQL이-논리-백업-최강이라고-평가받는-이유"><a href="#9-PostgreSQL이-논리-백업-최강이라고-평가받는-이유" class="headerlink" title="9. PostgreSQL이 논리 백업 최강이라고 평가받는 이유"></a>9. PostgreSQL이 논리 백업 최강이라고 평가받는 이유</h1><h2 id="1-pg-catalog-기반"><a href="#1-pg-catalog-기반" class="headerlink" title="1. pg_catalog 기반"></a>1. pg_catalog 기반</h2><p>PostgreSQL은 시스템 카탈로그에 모든 메타데이터를 저장한다.</p>
+<p>예:</p>
+<ul>
+<li>Table</li>
+<li>View</li>
+<li>Function</li>
+<li>Sequence</li>
+<li>Index</li>
+</ul>
+<hr>
+<h2 id="2-의존성-분석"><a href="#2-의존성-분석" class="headerlink" title="2. 의존성 분석"></a>2. 의존성 분석</h2><p>예:</p>
+<ul>
+<li>Table → Sequence</li>
+<li>View → Table</li>
+<li>Function → Type</li>
+</ul>
+<p>관계를 분석하여 올바른 순서로 복원한다.</p>
+<hr>
+<h2 id="3-복원-성공률이-높음"><a href="#3-복원-성공률이-높음" class="headerlink" title="3. 복원 성공률이 높음"></a>3. 복원 성공률이 높음</h2><p>복잡한 스키마도 재현 가능</p>
+<hr>
+<h2 id="4-버전-업그레이드에-강함"><a href="#4-버전-업그레이드에-강함" class="headerlink" title="4. 버전 업그레이드에 강함"></a>4. 버전 업그레이드에 강함</h2><p>실무에서 PostgreSQL 버전 업그레이드는 대부분</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_dump</span><br></pre></td></tr></table></figure>
+
+<p>후</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_restore</span><br></pre></td></tr></table></figure>
+
+<p>방식으로 진행한다.</p>
+<hr>
+<h2 id="5-다양한-포맷-지원"><a href="#5-다양한-포맷-지원" class="headerlink" title="5. 다양한 포맷 지원"></a>5. 다양한 포맷 지원</h2><h3 id="Plain"><a href="#Plain" class="headerlink" title="Plain"></a>Plain</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_dump mydb &gt; mydb.sql</span><br></pre></td></tr></table></figure>
+
+<h3 id="Custom"><a href="#Custom" class="headerlink" title="Custom"></a>Custom</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_dump -Fc mydb &gt; mydb.backup</span><br></pre></td></tr></table></figure>
+
+<h3 id="Directory"><a href="#Directory" class="headerlink" title="Directory"></a>Directory</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_dump -Fd mydb -f dumpdir</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="10-DB-이관-방식-종류"><a href="#10-DB-이관-방식-종류" class="headerlink" title="10. DB 이관 방식 종류"></a>10. DB 이관 방식 종류</h1><h2 id="1-논리-덤프"><a href="#1-논리-덤프" class="headerlink" title="1. 논리 덤프"></a>1. 논리 덤프</h2><p>도구:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_dump</span><br></pre></td></tr></table></figure>
+
+<p>특징:</p>
+<ul>
+<li>가장 범용적</li>
+<li>가장 안전</li>
+<li>가장 많이 사용</li>
+</ul>
+<hr>
+<h2 id="2-물리-백업-복원"><a href="#2-물리-백업-복원" class="headerlink" title="2. 물리 백업 복원"></a>2. 물리 백업 복원</h2><p>도구:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_basebackup</span><br></pre></td></tr></table></figure>
+
+<p>특징:</p>
+<ul>
+<li>빠름</li>
+<li>장애 복구용</li>
+</ul>
+<hr>
+<h2 id="3-Replication"><a href="#3-Replication" class="headerlink" title="3. Replication"></a>3. Replication</h2><p>예:</p>
+<ul>
+<li>Streaming Replication</li>
+</ul>
+<p>특징:</p>
+<ul>
+<li>실시간 동기화</li>
+<li>무중단 이전 가능</li>
+</ul>
+<hr>
+<h2 id="4-ETL"><a href="#4-ETL" class="headerlink" title="4. ETL"></a>4. ETL</h2><p>예:</p>
+<ul>
+<li>AWS DMS</li>
+<li>Airbyte</li>
+<li>Apache NiFi</li>
+</ul>
+<p>특징:</p>
+<ul>
+<li>데이터 변환</li>
+<li>이기종 DB 이전</li>
+</ul>
+<hr>
+<h2 id="5-애플리케이션-재적재"><a href="#5-애플리케이션-재적재" class="headerlink" title="5. 애플리케이션 재적재"></a>5. 애플리케이션 재적재</h2><p>예:</p>
+<ul>
+<li>API</li>
+<li>Batch 프로그램</li>
+</ul>
+<p>특징:</p>
+<ul>
+<li>가장 느림</li>
+<li>특수한 경우 사용</li>
+</ul>
+<hr>
+<h1 id="11-PostgreSQL-백업-파일-종류"><a href="#11-PostgreSQL-백업-파일-종류" class="headerlink" title="11. PostgreSQL 백업 파일 종류"></a>11. PostgreSQL 백업 파일 종류</h1><h2 id="SQL"><a href="#SQL" class="headerlink" title="SQL"></a>SQL</h2><p>생성:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_dump mydb &gt; mydb.sql</span><br></pre></td></tr></table></figure>
+
+<p>복원:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">psql mydb &lt; mydb.sql</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="Custom-Format"><a href="#Custom-Format" class="headerlink" title="Custom Format"></a>Custom Format</h2><p>생성:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_dump -Fc mydb &gt; mydb.backup</span><br></pre></td></tr></table></figure>
+
+<p>복원:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_restore -d mydb mydb.backup</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="Directory-Format"><a href="#Directory-Format" class="headerlink" title="Directory Format"></a>Directory Format</h2><p>생성:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_dump -Fd mydb -f dumpdir</span><br></pre></td></tr></table></figure>
+
+<p>복원:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_restore -Fd -d mydb dumpdir</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="12-pg-dump-pg-restore-psql-차이"><a href="#12-pg-dump-pg-restore-psql-차이" class="headerlink" title="12. pg_dump, pg_restore, psql 차이"></a>12. pg_dump, pg_restore, psql 차이</h1><table>
+<thead>
+<tr>
+<th>실행파일</th>
+<th>역할</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>pg_dump.exe</td>
+<td>백업</td>
+</tr>
+<tr>
+<td>pg_restore.exe</td>
+<td>Custom&#x2F;Directory 복원</td>
+</tr>
+<tr>
+<td>psql.exe</td>
+<td>SQL 실행</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="SQL-파일-복원"><a href="#SQL-파일-복원" class="headerlink" title="SQL 파일 복원"></a>SQL 파일 복원</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">psql -U postgres -d mydb -f mydb.sql</span><br></pre></td></tr></table></figure>
+
+<p>또는</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">psql mydb &lt; mydb.sql</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="backup-파일-복원"><a href="#backup-파일-복원" class="headerlink" title="backup 파일 복원"></a>backup 파일 복원</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_restore -d mydb mydb.backup</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="13-DataGrip과-PostgreSQL"><a href="#13-DataGrip과-PostgreSQL" class="headerlink" title="13. DataGrip과 PostgreSQL"></a>13. DataGrip과 PostgreSQL</h1><p>DataGrip은 자체 백업 엔진이 없다.</p>
+<p>내부적으로 다음 실행 파일을 호출한다.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pg_dump.exe</span><br><span class="line">pg_restore.exe</span><br><span class="line">psql.exe</span><br></pre></td></tr></table></figure>
+
+<p>따라서 PostgreSQL Client Tools가 설치되어 있어야 한다.</p>
+<hr>
+<h1 id="14-Windows-기본-경로"><a href="#14-Windows-기본-경로" class="headerlink" title="14. Windows 기본 경로"></a>14. Windows 기본 경로</h1><p>예시:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">C:\Program Files\PostgreSQL\16\bin\</span><br></pre></td></tr></table></figure>
+
+<p>포함 파일:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pg_dump.exe</span><br><span class="line">pg_restore.exe</span><br><span class="line">psql.exe</span><br></pre></td></tr></table></figure>
+
+<p>버전 확인:</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pg_dump --version</span><br><span class="line">pg_restore --version</span><br><span class="line">psql --version</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="15-실무-권장-방식"><a href="#15-실무-권장-방식" class="headerlink" title="15. 실무 권장 방식"></a>15. 실무 권장 방식</h1><h2 id="운영-서버-장애-복구"><a href="#운영-서버-장애-복구" class="headerlink" title="운영 서버 장애 복구"></a>운영 서버 장애 복구</h2><ul>
+<li>Physical Backup</li>
+<li>WAL Archive</li>
+<li>PITR</li>
+</ul>
+<hr>
+<h2 id="DB-이전"><a href="#DB-이전" class="headerlink" title="DB 이전"></a>DB 이전</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_dump -Fc</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li></li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_restore</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="버전-업그레이드"><a href="#버전-업그레이드" class="headerlink" title="버전 업그레이드"></a>버전 업그레이드</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_dump</span><br></pre></td></tr></table></figure>
+
+<p>후</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_restore</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="개발-DB-생성"><a href="#개발-DB-생성" class="headerlink" title="개발 DB 생성"></a>개발 DB 생성</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_dump</span><br></pre></td></tr></table></figure>
+
+<p>후</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pg_restore</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="핵심-한-줄-요약"><a href="#핵심-한-줄-요약" class="headerlink" title="핵심 한 줄 요약"></a>핵심 한 줄 요약</h1><ul>
+<li>논리 백업 &#x3D; DB를 재생성하는 설계도</li>
+<li>물리 백업 &#x3D; DB 자체를 복사</li>
+<li>장애 복구는 물리 백업</li>
+<li>서버 이전은 논리 백업</li>
+<li>PostgreSQL은 pg_dump 덕분에 논리 백업 분야에서 가장 강력한 DBMS 중 하나이다.</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/react-server-components/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/posts/react-server-components/" class="post-title-link" itemprop="url">React Server Components 이해하기</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-06-04 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-04T10:00:00+09:00">2026-06-04</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>React Server Components(RSC)의 동작 원리와 클라이언트 컴포넌트와의 차이, 도입 시 주의점을 정리합니다.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/posts/react-server-components/">
+                더 읽어보기 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/react-server-components/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/en/posts/react-server-components/" class="post-title-link" itemprop="url">Understanding React Server Components</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-06-04 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-04T10:00:00+09:00">2026-06-04</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>How React Server Components (RSC) work, how they differ from client components, and caveats when adopting them.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/en/posts/react-server-components/">
+                더 읽어보기 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
     <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/javascript-functional-programming/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -240,7 +808,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-26 17:04:26" itemprop="dateModified" datetime="2026-05-26T17:04:26+09:00">2026-05-26</time>
+                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -325,7 +893,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-26 17:04:26" itemprop="dateModified" datetime="2026-05-26T17:04:26+09:00">2026-05-26</time>
+                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -410,7 +978,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-26 17:04:26" itemprop="dateModified" datetime="2026-05-26T17:04:26+09:00">2026-05-26</time>
+                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -491,7 +1059,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-26 17:04:26" itemprop="dateModified" datetime="2026-05-26T17:04:26+09:00">2026-05-26</time>
+                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -572,7 +1140,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-26 17:04:26" itemprop="dateModified" datetime="2026-05-26T17:04:26+09:00">2026-05-26</time>
+                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -653,7 +1221,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-26 17:04:26" itemprop="dateModified" datetime="2026-05-26T17:04:26+09:00">2026-05-26</time>
+                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -734,7 +1302,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-26 17:04:26" itemprop="dateModified" datetime="2026-05-26T17:04:26+09:00">2026-05-26</time>
+                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -784,265 +1352,10 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/javascript-symbol-and-reflect/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="EW32">
-      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="EW32 Tech Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/en/posts/javascript-symbol-and-reflect/" class="post-title-link" itemprop="url">JavaScript Metaprogramming with Symbol, Reflect, and Proxy</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">작성일</span>
-
-              <time title="Post created: 2026-05-31 10:00:00" itemprop="dateCreated datePublished" datetime="2026-05-31T10:00:00+09:00">2026-05-31</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-26 17:04:26" itemprop="dateModified" datetime="2026-05-26T17:04:26+09:00">2026-05-26</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>JavaScript metaprogramming techniques - creating unique keys with Symbol and intercepting object behavior with Proxy/Reflect.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/en/posts/javascript-symbol-and-reflect/">
-                더 읽어보기 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/javascript-memory-leaks/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="EW32">
-      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="EW32 Tech Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/javascript-memory-leaks/" class="post-title-link" itemprop="url">JavaScript 메모리 누수 - 원인과 진단</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">작성일</span>
-
-              <time title="Post created: 2026-05-30 10:00:00" itemprop="dateCreated datePublished" datetime="2026-05-30T10:00:00+09:00">2026-05-30</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-26 17:04:26" itemprop="dateModified" datetime="2026-05-26T17:04:26+09:00">2026-05-26</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>JavaScript에서 발생하는 대표적인 메모리 누수 원인과 Chrome DevTools를 이용한 진단 및 해결 방법을 정리합니다.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/javascript-memory-leaks/">
-                더 읽어보기 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/javascript-memory-leaks/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="EW32">
-      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="EW32 Tech Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/en/posts/javascript-memory-leaks/" class="post-title-link" itemprop="url">JavaScript Memory Leaks - Causes and Diagnosis</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">작성일</span>
-
-              <time title="Post created: 2026-05-30 10:00:00" itemprop="dateCreated datePublished" datetime="2026-05-30T10:00:00+09:00">2026-05-30</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-05-26 17:04:26" itemprop="dateModified" datetime="2026-05-26T17:04:26+09:00">2026-05-26</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Common causes of memory leaks in JavaScript and how to diagnose and fix them with Chrome DevTools.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/en/posts/javascript-memory-leaks/">
-                더 읽어보기 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/9/"><i class="fa fa-angle-left" aria-label="이전 페이지"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/9/">9</a><span class="page-number current">10</span><a class="page-number" href="/page/11/">11</a><span class="space">&hellip;</span><a class="page-number" href="/page/43/">43</a><a class="extend next" rel="next" href="/page/11/"><i class="fa fa-angle-right" aria-label="다음 페이지"></i></a>
+    <a class="extend prev" rel="prev" href="/page/9/"><i class="fa fa-angle-left" aria-label="이전 페이지"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/9/">9</a><span class="page-number current">10</span><a class="page-number" href="/page/11/">11</a><span class="space">&hellip;</span><a class="page-number" href="/page/44/">44</a><a class="extend next" rel="next" href="/page/11/"><i class="fa fa-angle-right" aria-label="다음 페이지"></i></a>
   </nav>
 
 
@@ -1108,7 +1421,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">430</span>
+          <span class="site-state-item-count">431</span>
           <span class="site-state-item-name">포스트</span>
         </a>
       </div>
