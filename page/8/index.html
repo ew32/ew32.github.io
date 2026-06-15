@@ -209,6 +209,346 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/android-16kb-page-size-explained/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/posts/android-16kb-page-size-explained/" class="post-title-link" itemprop="url">android-16kb-page-size-explained</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+              
+
+              <time title="Post created: 2026-06-15 04:11:47 / Updated at: 13:11:59" itemprop="dateCreated datePublished" datetime="2026-06-15T04:11:47+09:00">2026-06-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Android-16KB-Page-Size-대응이란-Google-Play-Console-경고-해결"><a href="#Android-16KB-Page-Size-대응이란-Google-Play-Console-경고-해결" class="headerlink" title="Android 16KB Page Size 대응이란? (Google Play Console 경고 해결)"></a>Android 16KB Page Size 대응이란? (Google Play Console 경고 해결)</h1><p>최근 Google Play Console에서 다음과 같은 경고를 볼 수 있다.</p>
+<blockquote>
+<p>Your app must support 16 KB memory page sizes</p>
+</blockquote>
+<p>처음 보면 생소하지만, 이는 Android 운영체제의 메모리 관리 방식과 관련된 내용이다.</p>
+<hr>
+<h1 id="16KB-Page-Size란"><a href="#16KB-Page-Size란" class="headerlink" title="16KB Page Size란?"></a>16KB Page Size란?</h1><p>운영체제는 메모리를 한 번에 관리하지 않고 일정한 크기의 <strong>페이지(Page)</strong> 단위로 나누어 관리한다.</p>
+<p>기존 Android 기기 대부분은 다음과 같이 4KB 페이지를 사용했다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Page 0 : 4KB</span><br><span class="line">Page 1 : 4KB</span><br><span class="line">Page 2 : 4KB</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>하지만 최신 ARM64 기반 Android 기기에서는 다음과 같이 16KB 페이지를 사용하는 경우가 등장하고 있다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Page 0 : 16KB</span><br><span class="line">Page 1 : 16KB</span><br><span class="line">Page 2 : 16KB</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>즉, 이번 이슈는 운영체제의 <strong>메모리 페이징(Page Size)</strong> 자체와 관련된 이야기이다.</p>
+<hr>
+<h1 id="왜-Google이-16KB-지원을-요구하는가"><a href="#왜-Google이-16KB-지원을-요구하는가" class="headerlink" title="왜 Google이 16KB 지원을 요구하는가?"></a>왜 Google이 16KB 지원을 요구하는가?</h1><p>16KB 페이지를 사용하면 다음과 같은 장점이 있다.</p>
+<ul>
+<li>Page Table 크기 감소</li>
+<li>TLB(Translation Lookaside Buffer) 효율 향상</li>
+<li>메모리 관리 비용 감소</li>
+<li>성능 및 전력 효율 향상</li>
+</ul>
+<p>특히 대용량 메모리를 사용하는 최신 ARM64 기기에서 효과가 크다.</p>
+<hr>
+<h1 id="어떤-앱이-영향을-받을까"><a href="#어떤-앱이-영향을-받을까" class="headerlink" title="어떤 앱이 영향을 받을까?"></a>어떤 앱이 영향을 받을까?</h1><p>주로 <strong>네이티브 코드(.so)</strong> 를 사용하는 앱이 영향을 받는다.</p>
+<h3 id="영향이-큰-경우"><a href="#영향이-큰-경우" class="headerlink" title="영향이 큰 경우"></a>영향이 큰 경우</h3><ul>
+<li>NDK 사용</li>
+<li>C&#x2F;C++ 라이브러리</li>
+<li>OpenCV</li>
+<li>FFmpeg</li>
+<li>SQLCipher</li>
+<li>TensorFlow Lite</li>
+<li>Unity</li>
+<li>Flutter 플러그인</li>
+<li>React Native Native Module</li>
+</ul>
+<h3 id="대부분-영향이-없는-경우"><a href="#대부분-영향이-없는-경우" class="headerlink" title="대부분 영향이 없는 경우"></a>대부분 영향이 없는 경우</h3><ul>
+<li>순수 Java 앱</li>
+<li>순수 Kotlin 앱</li>
+<li>Retrofit</li>
+<li>Room</li>
+<li>Firebase</li>
+</ul>
+<p>Java&#x2F;Kotlin 코드는 ART(Android Runtime) 위에서 실행되므로 직접적인 영향을 거의 받지 않는다.</p>
+<hr>
+<h1 id="so-파일이-왜-문제가-되는가"><a href="#so-파일이-왜-문제가-되는가" class="headerlink" title=".so 파일이 왜 문제가 되는가?"></a>.so 파일이 왜 문제가 되는가?</h1><p>네이티브 라이브러리(.so)는 실행 시 메모리에 직접 매핑(mmap)된다.</p>
+<p>예전에는 대부분 4KB 기준으로 만들어졌다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Alignment = 4KB</span><br></pre></td></tr></table></figure>
+
+<p>하지만 16KB 페이지를 사용하는 환경에서는 다음과 같이 16KB 정렬이 필요하다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Alignment = 16KB</span><br></pre></td></tr></table></figure>
+
+<p>Google Play는 APK나 AAB 내부의 .so 파일을 검사하여 이를 확인한다.</p>
+<hr>
+<h1 id="APK-Analyzer에서-확인하기"><a href="#APK-Analyzer에서-확인하기" class="headerlink" title="APK Analyzer에서 확인하기"></a>APK Analyzer에서 확인하기</h1><p>Android Studio에서</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Build</span><br><span class="line">→ Analyze APK</span><br></pre></td></tr></table></figure>
+
+<p>를 선택하여 APK를 열 수 있다.</p>
+<p>다음 위치를 확인한다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">lib/</span><br><span class="line"> ├─ arm64-v8a/</span><br><span class="line"> │   ├─ libexample1.so</span><br><span class="line"> │   ├─ libexample2.so</span><br><span class="line"> │   └─ ...</span><br></pre></td></tr></table></figure>
+
+<p>오른쪽의 <strong>Alignment</strong> 컬럼을 확인한다.</p>
+<h2 id="정상"><a href="#정상" class="headerlink" title="정상"></a>정상</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Alignment : 16 KB</span><br></pre></td></tr></table></figure>
+
+<p>16KB 대응 완료 상태이다.</p>
+<h2 id="문제-있음"><a href="#문제-있음" class="headerlink" title="문제 있음"></a>문제 있음</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Alignment : 4 KB</span><br></pre></td></tr></table></figure>
+
+<p>또는 경고 메시지가 표시된다.</p>
+<hr>
+<h1 id="실제-예시"><a href="#실제-예시" class="headerlink" title="실제 예시"></a>실제 예시</h1><p>다음과 같은 라이브러리가 있다고 가정하자.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">libcreatedata.so</span><br><span class="line">libfsdither.so</span><br><span class="line">libimage_processing_util_jni.so</span><br></pre></td></tr></table></figure>
+
+<p>APK Analyzer에서 다음과 같이 표시된다면</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Alignment : 16 KB</span><br></pre></td></tr></table></figure>
+
+<p>Google이 요구하는 조건을 만족하는 상태이다.</p>
+<hr>
+<h1 id="해결-방법"><a href="#해결-방법" class="headerlink" title="해결 방법"></a>해결 방법</h1><p>대부분은 라이브러리 및 빌드 환경을 최신화하면 해결된다.</p>
+<h2 id="Android-Gradle-Plugin-업데이트"><a href="#Android-Gradle-Plugin-업데이트" class="headerlink" title="Android Gradle Plugin 업데이트"></a>Android Gradle Plugin 업데이트</h2><figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">classpath</span> <span class="string">&#x27;com.android.tools.build:gradle:8.5.0&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="Gradle-업데이트"><a href="#Gradle-업데이트" class="headerlink" title="Gradle 업데이트"></a>Gradle 업데이트</h2><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">distributionUrl</span>=<span class="string">https\://services.gradle.org/distributions/gradle-8.7-bin.zip</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="NDK-최신화"><a href="#NDK-최신화" class="headerlink" title="NDK 최신화"></a>NDK 최신화</h2><figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">    ndkVersion <span class="string">&quot;28.0.13004108&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Android Studio에서</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SDK Manager</span><br><span class="line">→ SDK Tools</span><br><span class="line">→ NDK (Side by side)</span><br></pre></td></tr></table></figure>
+
+<p>에서 최신 버전을 설치한다.</p>
+<hr>
+<h1 id="Windows와-macOS에서-결과가-다를-수도-있다"><a href="#Windows와-macOS에서-결과가-다를-수도-있다" class="headerlink" title="Windows와 macOS에서 결과가 다를 수도 있다"></a>Windows와 macOS에서 결과가 다를 수도 있다</h1><p>빌드 환경에 따라 결과가 달라질 수 있다.</p>
+<p>대표적인 원인</p>
+<ul>
+<li>서로 다른 NDK 버전 사용</li>
+<li>Android Studio 버전 차이</li>
+<li>Gradle 캐시 차이</li>
+<li>오래된 .so 파일 사용 여부</li>
+</ul>
+<p>예를 들어</p>
+<p>Windows</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NDK r25</span><br></pre></td></tr></table></figure>
+
+<p>macOS</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NDK r28</span><br></pre></td></tr></table></figure>
+
+<p>을 사용한다면 동일한 프로젝트라도 결과가 달라질 수 있다.</p>
+<p>따라서 다음과 같이 명시적으로 지정하는 것을 권장한다.</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">    ndkVersion <span class="string">&quot;28.0.13004108&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="결론"><a href="#결론" class="headerlink" title="결론"></a>결론</h1><p>16KB Page Size 이슈는 운영체제의 메모리 페이지 크기가 4KB에서 16KB로 확대되는 흐름에 대응하기 위한 것이다.</p>
+<p>핵심은 다음 한 줄로 정리할 수 있다.</p>
+<blockquote>
+<p>“네이티브 라이브러리(.so)가 16KB 페이지를 사용하는 Android 환경에서도 정상적으로 메모리에 로딩될 수 있도록 빌드되어야 한다.”</p>
+</blockquote>
+<p>APK Analyzer에서</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Alignment : 16 KB</span><br></pre></td></tr></table></figure>
+
+<p>라고 표시된다면 이미 대응이 완료된 상태이며, Google Play 요구사항을 충족할 가능성이 높다.</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/web-fonts-optimization/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/posts/web-fonts-optimization/" class="post-title-link" itemprop="url">웹폰트 최적화 - font-display, preload, subset</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-06-14 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-14T10:00:00+09:00">2026-06-14</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-06-15 13:11:59" itemprop="dateModified" datetime="2026-06-15T13:11:59+09:00">2026-06-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>웹폰트로 인한 렌더링 지연과 레이아웃 시프트를 줄이기 위한 font-display, preload, 서브셋 등 핵심 최적화 기법을 정리합니다.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/posts/web-fonts-optimization/">
+                더 읽어보기 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/web-fonts-optimization/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="EW32">
+      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="EW32 Tech Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/en/posts/web-fonts-optimization/" class="post-title-link" itemprop="url">Web Font Optimization: font-display, preload, and subsetting</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+
+              <time title="Post created: 2026-06-14 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-14T10:00:00+09:00">2026-06-14</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Updated at: 2026-06-15 13:11:59" itemprop="dateModified" datetime="2026-06-15T13:11:59+09:00">2026-06-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Core optimization techniques — font-display, preload, subsetting, and more — for reducing the rendering delay and layout shift caused by web fonts.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/en/posts/web-fonts-optimization/">
+                더 읽어보기 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
     <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/css-bem-methodology/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -240,7 +580,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
+                <time title="Updated at: 2026-06-15 13:11:59" itemprop="dateModified" datetime="2026-06-15T13:11:59+09:00">2026-06-15</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -325,7 +665,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
+                <time title="Updated at: 2026-06-15 13:11:59" itemprop="dateModified" datetime="2026-06-15T13:11:59+09:00">2026-06-15</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -410,7 +750,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
+                <time title="Updated at: 2026-06-15 13:11:59" itemprop="dateModified" datetime="2026-06-15T13:11:59+09:00">2026-06-15</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -495,7 +835,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
+                <time title="Updated at: 2026-06-15 13:11:59" itemprop="dateModified" datetime="2026-06-15T13:11:59+09:00">2026-06-15</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -580,7 +920,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
+                <time title="Updated at: 2026-06-15 13:11:59" itemprop="dateModified" datetime="2026-06-15T13:11:59+09:00">2026-06-15</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -665,7 +1005,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
+                <time title="Updated at: 2026-06-15 13:11:59" itemprop="dateModified" datetime="2026-06-15T13:11:59+09:00">2026-06-15</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -750,7 +1090,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
+                <time title="Updated at: 2026-06-15 13:11:59" itemprop="dateModified" datetime="2026-06-15T13:11:59+09:00">2026-06-15</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -781,261 +1121,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/posts/css-grid-advanced-techniques/">
-                더 읽어보기 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/css-grid-advanced-techniques/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="EW32">
-      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="EW32 Tech Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/en/posts/css-grid-advanced-techniques/" class="post-title-link" itemprop="url">Advanced CSS Grid Techniques</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">작성일</span>
-
-              <time title="Post created: 2026-06-10 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-10T10:00:00+09:00">2026-06-10</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/CSS/" itemprop="url" rel="index"><span itemprop="name">CSS</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Practical advanced techniques in CSS Grid - subgrid, named lines, auto-fit/auto-fill, grid-template-areas, and more.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/en/posts/css-grid-advanced-techniques/">
-                더 읽어보기 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="ko,en,default">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/posts/nextjs-data-fetching-strategies/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="EW32">
-      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="EW32 Tech Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/nextjs-data-fetching-strategies/" class="post-title-link" itemprop="url">Next.js 데이터 패칭 전략 - SSR, SSG, ISR, CSR</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">작성일</span>
-
-              <time title="Post created: 2026-06-09 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-09T10:00:00+09:00">2026-06-09</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Next.js에서 페이지를 만드는 네 가지 렌더링 전략과 App Router 환경에서의 선택 기준을 정리합니다.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/nextjs-data-fetching-strategies/">
-                더 읽어보기 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://ew32.github.io/en/posts/nextjs-data-fetching-strategies/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="EW32">
-      <meta itemprop="description" content="백엔드, 인프라, 웹 기술을 중심으로 실무에서 바로 활용 가능한 학습 내용을 기록하는 기술 블로그입니다.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="EW32 Tech Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/en/posts/nextjs-data-fetching-strategies/" class="post-title-link" itemprop="url">Next.js Data Fetching Strategies - SSR, SSG, ISR, CSR</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">작성일</span>
-
-              <time title="Post created: 2026-06-09 10:00:00" itemprop="dateCreated datePublished" datetime="2026-06-09T10:00:00+09:00">2026-06-09</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2026-06-05 13:33:46" itemprop="dateModified" datetime="2026-06-05T13:33:46+09:00">2026-06-05</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/" itemprop="url" rel="index"><span itemprop="name">Frontend</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Frontend/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>The four rendering strategies for building pages in Next.js and how to choose among them in the App Router.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/en/posts/nextjs-data-fetching-strategies/">
                 더 읽어보기 &raquo;
               </a>
             </div>
@@ -1124,7 +1209,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">431</span>
+          <span class="site-state-item-count">432</span>
           <span class="site-state-item-name">포스트</span>
         </a>
       </div>
